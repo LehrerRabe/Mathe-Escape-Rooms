@@ -18,8 +18,10 @@ für eine zweite Runde oder zur Differenzierung.
 4. Nach ein bis zwei Minuten ist die Seite erreichbar unter
    `https://<benutzername>.github.io/Mathe-Escape-Rooms/`
 
-Die Dateien `check.mjs`, `test-browser.mjs`, `screenshots*.mjs`, `node_modules/` und
-`testausgabe/` werden für die Seite **nicht** gebraucht und können weggelassen werden.
+Die Dateien `check.mjs`, `test-browser.mjs`, `screenshots*.mjs`, `icons.mjs`,
+`node_modules/` und `testausgabe/` werden für die Seite **nicht** gebraucht und können
+weggelassen werden. Die Symbole (`icon*.png`, `icon.svg`, `apple-touch-icon.png`) und
+`manifest.webmanifest` dagegen schon.
 
 ## Bedienung
 
@@ -34,7 +36,7 @@ Die Dateien `check.mjs`, `test-browser.mjs`, `screenshots*.mjs`, `node_modules/`
 
 ### Lehrkraft
 
-* Oben rechts **Lehreransicht**, Passwort: muss angefragt werden
+* Oben rechts **Lehreransicht**, Passwort: `Tagaki`
 * Alle Räume aller Jahrgangsstufen sind sichtbar, inklusive **Lösungen und Codes**.
 * Pro Raum oder für eine Auswahl lässt sich ein **QR-Code** erzeugen; er kann
   angezeigt, gedruckt oder als Link kopiert werden.
@@ -63,11 +65,36 @@ Was das bedeutet:
   Lösungen und Codes stehen im Quelltext der Seite. Für benotete
   Leistungsüberprüfungen ist eine rein statische Seite deshalb nicht geeignet.
 
+## Auf dem Startbildschirm ablegen
+
+Die Seite lässt sich wie eine App auf den Startbildschirm legen. Sie startet dann im
+Vollbild – ohne Adressleiste und Tabs – unter dem Namen **Escape Rooms**.
+
+* **iPhone/iPad (Safari):** Seite öffnen → Teilen-Symbol → *Zum Home-Bildschirm*
+* **Android (Chrome):** Seite öffnen → Menü (drei Punkte) → *App installieren* bzw.
+  *Zum Startbildschirm zufügen*
+* **Windows/Mac (Chrome, Edge):** Symbol zum Installieren rechts in der Adressleiste
+
+Das funktioniert nur über die GitHub-Pages-Adresse (https). Wird die `index.html` direkt
+als Datei geöffnet, bietet der Browser das Ablegen nicht an.
+
+Die Symbole liegen als `icon.svg`, `icon-192.png`, `icon-512.png`,
+`icon-maskable-512.png` und `apple-touch-icon.png` bei; `manifest.webmanifest` beschreibt
+Name, Farben und Startverhalten. Neu erzeugen lassen sie sich mit `node icons.mjs`
+(Entwurf oben in der Datei umstellen, `node icons.mjs muster` zeigt alle Entwürfe).
+
+Falls Android das Symbol nicht übernimmt, prüfe, ob der Server `manifest.webmanifest`
+als JSON ausliefert; notfalls die Datei in `manifest.json` umbenennen und den Verweis in
+`index.html` anpassen.
+
 ## Aufbau der Dateien
 
 | Datei | Inhalt |
 | --- | --- |
 | `index.html` | Einstieg |
+| `manifest.webmanifest` | Name, Farben und Startverhalten für den Startbildschirm |
+| `icon.svg`, `icon-*.png`, `apple-touch-icon.png` | App-Symbole |
+| `icons.mjs` | erzeugt die Symbole neu (braucht die Bibliothek „sharp") |
 | `app.css` | Gestaltung, hell und dunkel |
 | `app.js` | Seitensteuerung und alle Ansichten |
 | `engine.js` | Rätseltypen, digitales Schloss, Tippkarten |

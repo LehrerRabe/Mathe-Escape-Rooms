@@ -19,6 +19,7 @@ const TYPEN = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
   '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
   '.svg': 'image/svg+xml', '.json': 'application/json', '.md': 'text/plain; charset=utf-8',
+  '.webmanifest': 'application/manifest+json', '.png': 'image/png',
 };
 
 let fehler = 0;
@@ -326,6 +327,52 @@ async function pruefeSpeichern(browser, raum, stufe) {
   await kontext.close();
 }
 
+async function pruefeStartbildschirm(browser) {
+  console.log('\n== Symbol und Startbildschirm');
+  const kontext = await browser.newContext();
+  const seite = await kontext.newPage();
+  await seite.goto(BASIS);
+
+  const verweis = await seite.locator('link[rel=manifest]').getAttribute('href').catch(() => null);
+  if (!verweis) { nicht('kein manifest verlinkt'); await kontext.close(); return; }
+
+  const antwort = await seite.request.get(new URL(verweis, BASIS).href);
+  if (!antwort.ok()) { nicht(`manifest nicht erreichbar (${antwort.status()})`); await kontext.close(); return; }
+  const typ = antwort.headers()['content-type'] || '';
+  if (!/json/.test(typ)) nicht(`manifest wird als "${typ}" ausgeliefert – sollte JSON sein`);
+
+  let manifest;
+  try { manifest = JSON.parse(await antwort.text()); }
+  catch (e) { nicht('manifest ist kein gültiges JSON: ' + e.message); await kontext.close(); return; }
+  ok(`manifest gelesen: "${manifest.name}", display "${manifest.display}"`);
+
+  if (manifest.display !== 'standalone') nicht(`display ist "${manifest.display}" statt "standalone"`);
+  if (!manifest.short_name) nicht('short_name fehlt – der Name unter dem Symbol wäre leer');
+  if ((manifest.short_name || '').length > 14) nicht(`short_name "${manifest.short_name}" ist für den Startbildschirm zu lang`);
+  if (!manifest.start_url) nicht('start_url fehlt');
+
+  for (const symbol of manifest.icons || []) {
+    const a = await seite.request.get(new URL(symbol.src, new URL(verweis, BASIS)).href);
+    if (!a.ok()) nicht(`Symbol ${symbol.src} fehlt (${a.status()})`);
+  }
+  const maskierbar = (manifest.icons || []).some(s => (s.purpose || '').includes('maskable'));
+  if (!maskierbar) nicht('kein maskierbares Symbol – Android beschneidet sonst das Bild');
+  ok(`${(manifest.icons || []).length} Symbole vorhanden, davon eines maskierbar`);
+
+  const apple = await seite.locator('link[rel="apple-touch-icon"]').getAttribute('href').catch(() => null);
+  if (!apple) nicht('kein apple-touch-icon – iPhone und iPad zeigen sonst ein Bildschirmfoto');
+  else {
+    const a = await seite.request.get(new URL(apple, BASIS).href);
+    if (!a.ok()) nicht(`apple-touch-icon fehlt (${a.status()})`);
+    else ok('apple-touch-icon vorhanden');
+  }
+
+  const titel = await seite.locator('meta[name="apple-mobile-web-app-title"]').getAttribute('content').catch(() => null);
+  if (!titel) nicht('apple-mobile-web-app-title fehlt');
+
+  await kontext.close();
+}
+
 async function pruefeFreigabeFehler(browser) {
   console.log('\n== Fehlerhafte Freigabe');
   const kontext = await browser.newContext();
@@ -348,6 +395,7 @@ const browser = await chromium.launch();
 try {
   for (const s of STUFEN.filter(x => x.fertig)) {
     const daten = (await import(`./raeume-${s.stufe}.js`)).default;
+    await pruefeStartbildschirm(browser);
     await pruefeLehreransicht(browser, s.stufe);
     await pruefeFreigabeFehler(browser);
     await pruefeSpeichern(browser, daten.raeume[0], s.stufe);

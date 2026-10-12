@@ -11,7 +11,7 @@ const WURZEL = import.meta.dirname;
 const PORT = 8126;
 const BASIS = `http://127.0.0.1:${PORT}/index.html`;
 const AUS = join(WURZEL, 'testausgabe');
-const TYPEN = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8' };
+const TYPEN = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.webmanifest': 'application/manifest+json', '.png': 'image/png', '.svg': 'image/svg+xml' };
 
 const server = createServer(async (req, res) => {
   try {
