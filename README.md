@@ -36,7 +36,7 @@ weggelassen werden. Die Symbole (`icon*.png`, `icon.svg`, `apple-touch-icon.png`
 
 ### Lehrkraft
 
-* Oben rechts **Lehreransicht**, Passwort: `Tagaki`
+* Oben rechts **Lehreransicht**
 * Alle Räume aller Jahrgangsstufen sind sichtbar, inklusive **Lösungen und Codes**.
 * Pro Raum oder für eine Auswahl lässt sich ein **QR-Code** erzeugen; er kann
   angezeigt, gedruckt oder als Link kopiert werden.
