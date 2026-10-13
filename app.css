@@ -161,8 +161,8 @@ button.klein { padding: .3rem .6rem; min-height: 2.1rem; font-size: .85rem; }
 }
 
 .raster {
-  display: grid; gap: .9rem;
-  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  display: grid; gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
 }
 
 .stufenkachel {
@@ -181,12 +181,30 @@ button.klein { padding: .3rem .6rem; min-height: 2.1rem; font-size: .85rem; }
   opacity: .1; pointer-events: none;
 }
 
+.kapitelzeile {
+  display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap;
+  margin: 1.6rem 0 .7rem; font-size: 1.1rem;
+}
+.kapitelzeile:first-of-type { margin-top: .6rem; }
+.kapitelnummer {
+  font-size: .76rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+  background: var(--akzent-sanft); color: var(--akzent);
+  padding: .2rem .55rem; border-radius: 999px;
+}
+
+.kapiteltrenner {
+  margin: 1rem 0 .2rem; font-size: .78rem; font-weight: 800;
+  letter-spacing: .05em; text-transform: uppercase; color: var(--text-leise);
+  border-top: 1px solid var(--rand); padding-top: .7rem;
+}
+.lehrerzeile + .kapiteltrenner { margin-top: .4rem; }
+
 .raumkarte {
   background: var(--bg-karte); border: 1px solid var(--rand);
   border-radius: var(--radius); box-shadow: var(--schatten);
   padding: 0; overflow: hidden; display: flex; flex-direction: column;
 }
-.raumkarte .kopfband { height: 72px; position: relative; }
+.raumkarte .kopfband { height: 190px; position: relative; }
 .raumkarte .kopfband svg { width: 100%; height: 100%; display: block; }
 .raumkarte .inhalt { padding: .85rem 1rem 1rem; display: flex; flex-direction: column; gap: .35rem; flex: 1; }
 .raumkarte h3 { margin: 0; }
@@ -228,6 +246,9 @@ button.klein { padding: .3rem .6rem; min-height: 2.1rem; font-size: .85rem; }
   padding: .35rem .85rem; display: inline-flex; gap: .4rem; align-items: center;
 }
 .timer svg { width: 16px; height: 16px; }
+
+.musikknopf { padding: .5rem .6rem; }
+.musikknopf.aktiv { background: var(--akzent-sanft); border-color: var(--akzent); color: var(--akzent); }
 
 .fortschritt { display: flex; gap: .35rem; align-items: center; margin-left: auto; }
 .fortschritt .punkt {

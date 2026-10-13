@@ -2,7 +2,7 @@
    Aufruf:  node check.mjs
    Prüft Struktur, Codes, Tippkarten und – wo möglich – die Code-Herleitung. */
 
-import { STUFEN } from './config.js';
+import { STUFEN, ladeStufe } from './config.js';
 import { motivVorhanden } from './motive.js';
 import { zahl, antwortStimmt } from './util.js';
 
@@ -27,6 +27,9 @@ function pruefeRaetsel(ort, r) {
   }
   if (!r.loesung) fehl(ort, 'keine Lösung für die Lehreransicht');
   if (!r.auftrag) fehl(ort, 'kein Auftrag');
+  const rahmen = (r.text || '').replace(/<[^>]+>/g, '');
+  if (!rahmen) fehl(ort, 'keine Rahmenhandlung');
+  else if (rahmen.length < 120) warn(ort, `Rahmenhandlung ist mit ${rahmen.length} Zeichen sehr knapp`);
 
   const einerRegel = /Einerziffer/i.test(r.codeRegel || '');
   const hunderterRegel = /Hunderterziffer/i.test(r.codeRegel || '');
@@ -142,7 +145,7 @@ for (const s of STUFEN) {
   if (!s.fertig) { console.log(`Klasse ${s.stufe}: in Vorbereitung – übersprungen.`); continue; }
   let daten;
   try {
-    daten = (await import(`./raeume-${s.stufe}.js`)).default;
+    daten = await ladeStufe(s.stufe);          // inkl. der Rätsel aus raetsel-zusatz-<stufe>.js
   } catch (e) {
     fehl(`Klasse ${s.stufe}`, 'Datei kann nicht geladen werden: ' + e.message);
     continue;

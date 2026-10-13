@@ -3,7 +3,10 @@
 Interaktive Escape Rooms für den Mathematikunterricht am Gymnasium in NRW (G9),
 Jahrgangsstufe 5–10. Reine statische Webseite: kein Server, kein Konto, kein Build-Schritt.
 
-**Stand:** Klasse 5 und Klasse 6 vollständig – **19 Räume mit 77 Rätseln**. Klassen 7–10 folgen.
+**Stand:** Klasse 5 und Klasse 6 vollständig – **19 Räume mit 115 Rätseln**. Klassen 7–10 folgen.
+
+Jeder Raum enthält **sechs Rätsel** (Raum 5-7: sieben) und dauert damit etwa 50 bis 65 Minuten.
+In der Übersicht einer Jahrgangsstufe sind die Räume **nach Kapiteln** gruppiert.
 
 Zu jedem der sechs Kapitel der Klasse 5 gibt es **zwei** Escape Rooms mit unterschiedlichen
 Geschichten und Aufgaben (5-1 bis 5-6 sowie 5-7 bis 5-12). Das eignet sich für Parallelgruppen,
@@ -19,6 +22,7 @@ für eine zweite Runde oder zur Differenzierung.
    `https://<benutzername>.github.io/Mathe-Escape-Rooms/`
 
 Die Dateien `check.mjs`, `test-browser.mjs`, `screenshots*.mjs`, `icons.mjs`,
+`hoerprobe.mjs`, `neue-texte.py`,
 `node_modules/` und `testausgabe/` werden für die Seite **nicht** gebraucht und können
 weggelassen werden. Die Symbole (`icon*.png`, `icon.svg`, `apple-touch-icon.png`) und
 `manifest.webmanifest` dagegen schon.
@@ -36,7 +40,7 @@ weggelassen werden. Die Symbole (`icon*.png`, `icon.svg`, `apple-touch-icon.png`
 
 ### Lehrkraft
 
-* Oben rechts **Lehreransicht**
+* Oben rechts **Lehreransicht**, Passwort: `Tagaki`
 * Alle Räume aller Jahrgangsstufen sind sichtbar, inklusive **Lösungen und Codes**.
 * Pro Raum oder für eine Auswahl lässt sich ein **QR-Code** erzeugen; er kann
   angezeigt, gedruckt oder als Link kopiert werden.
@@ -87,6 +91,27 @@ Falls Android das Symbol nicht übernimmt, prüfe, ob der Server `manifest.webma
 als JSON ausliefert; notfalls die Datei in `manifest.json` umbenennen und den Verweis in
 `index.html` anpassen.
 
+## Musik
+
+Jeder Raum hat eine eigene Klangstimmung. Sie wird **im Browser erzeugt** (Web Audio) –
+es gibt keine Audiodateien, nichts wird nachgeladen, und es sind keine Rechte zu klären.
+
+* Der Knopf mit dem Lautsprecher steht in der Spielansicht neben *Menü*.
+* **Beim Betreten eines Raums ist die Musik aus.** Wer sie einschaltet, hört sie auch in
+  den folgenden Räumen – das Gerät merkt sich die Wahl.
+* Beim Verlassen des Raums und sobald der Tab in den Hintergrund rutscht, verstummt sie.
+
+Welche Stimmung ein Raum bekommt, ergibt sich aus seinem Motiv (`musik.js`, `NACH_MOTIV`):
+*feierlich* (Museum), *geheimnis* (Spiegelsaal, Tresor), *werkstatt* (Schmiede, Uhrmacher,
+Fabrik, Baustelle), *weit* (Sternwarte, Hafen, Wetterstation), *heiter* (Pizzeria, Markt,
+Bäckerei), *labor*, *ruhig*.
+
+Eine Hörprobe als WAV erzeugt `node hoerprobe.mjs` (braucht Playwright) – wahlweise für
+alle Stimmungen oder für eine einzelne, z. B. `node hoerprobe.mjs geheimnis`. Das Skript
+rendert die Musik offline und meldet nebenbei, ob sie überhaupt klingt.
+
+Lautstärke und Klangfarben stehen oben in `musik.js` (`LAUTSTAERKE`, `STIMMUNGEN`).
+
 ## Aufbau der Dateien
 
 | Datei | Inhalt |
@@ -98,6 +123,8 @@ als JSON ausliefert; notfalls die Datei in `manifest.json` umbenennen und den Ve
 | `app.css` | Gestaltung, hell und dunkel |
 | `app.js` | Seitensteuerung und alle Ansichten |
 | `engine.js` | Rätseltypen, digitales Schloss, Tippkarten |
+| `musik.js` | Raummusik, im Browser erzeugt |
+| `hoerprobe.mjs` | rendert die Musik offline als WAV zum Anhören |
 | `config.js` | Version, Passwort-Prüfsumme, Liste der Jahrgangsstufen |
 | `freigabe.js` | Freigabe-Links und gespeicherte Freigaben |
 | `qr.js`, `qrcode-lib.mjs` | QR-Codes (fest eingebaut, offlinefähig) |
@@ -107,6 +134,7 @@ als JSON ausliefert; notfalls die Datei in `manifest.json` umbenennen und den Ve
 | `raeume-5.js` | Inhalte der Klasse 5, erster Satz (6 Räume) |
 | `raeume-5-weitere.js` | Inhalte der Klasse 5, zweiter Satz (6 Räume) |
 | `raeume-6.js` | Inhalte der Klasse 6 (7 Räume) |
+| `raetsel-zusatz-5.js`, `raetsel-zusatz-6.js` | die später ergänzten Rätsel 5 und 6 je Raum |
 | `check.mjs` | prüft alle Rätseldaten |
 | `test-browser.mjs` | spielt jeden Raum im Browser komplett durch |
 | `screenshots.mjs`, `screenshots6.mjs` | erzeugen Bildschirmfotos zur Sichtprüfung |
@@ -128,8 +156,10 @@ Schritt (`zeichen` je Teilaufgabe) oder erst am Ende (`codeAmEnde: true`).
 ## Eine Jahrgangsstufe ergänzen
 
 1. Datei `raeume-7.js` nach dem Muster von `raeume-5.js` bzw. `raeume-6.js` anlegen.
-2. In `config.js` bei der Stufe `fertig: true` setzen.
-3. `node check.mjs` und `node test-browser.mjs` laufen lassen.
+2. Datei `raetsel-zusatz-7.js` anlegen – auch eine leere Zuordnung (`export default {};`) genügt,
+   `ladeStufe()` in `config.js` erwartet die Datei.
+3. In `config.js` bei der Stufe `fertig: true` setzen.
+4. `node check.mjs` und `node test-browser.mjs` laufen lassen.
 
 ## Prüfen
 

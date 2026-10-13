@@ -25,10 +25,22 @@ export const STUFEN = [
   { stufe: 10, titel: 'Klasse 10', zusatz: 'Ähnlichkeit, Exponential, Trigo',    fertig: false },
 ];
 
-/** Lädt die Räume einer Jahrgangsstufe nach (nur bei Bedarf). */
+/**
+ * Lädt die Räume einer Jahrgangsstufe nach (nur bei Bedarf).
+ * Die später ergänzten Rätsel stehen in `raetsel-zusatz-<stufe>.js` und werden
+ * hier an die jeweiligen Räume angehängt – so bleiben die großen Raumdateien ruhig.
+ */
 export async function ladeStufe(stufe) {
   const eintrag = STUFEN.find(s => s.stufe === Number(stufe));
   if (!eintrag || !eintrag.fertig) return null;
-  const modul = await import(`./raeume-${stufe}.js`);
-  return modul.default;
+
+  const daten = (await import(`./raeume-${stufe}.js`)).default;
+  const zusatz = (await import(`./raetsel-zusatz-${stufe}.js`)).default;
+
+  return {
+    ...daten,
+    raeume: daten.raeume.map(r => (zusatz[r.id]
+      ? { ...r, raetsel: [...r.raetsel, ...zusatz[r.id]] }
+      : r)),
+  };
 }

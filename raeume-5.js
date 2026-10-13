@@ -76,16 +76,18 @@ const GRUNDRAEUME = [
       kurz: 'Große Zahlen, Runden, Rechnen mit Geld, Längen, Gewichten und Zeit.',
       motiv: 'museum',
       farbe: '#1d4ed8',
-      dauer: '35–45 Minuten',
+      dauer: '50–65 Minuten',
       intro: 'Die Museumsnacht ist zu Ende, die Türen sind verschlossen – und ihr steht noch mitten in der '
-        + 'Abteilung der Rekorde. Der Nachtwächter hat vier Schlösser gesichert. Nur wer die Zahlen und Größen '
+        + 'Abteilung der Rekorde. Der Nachtwächter hat sechs Schlösser gesichert. Nur wer die Zahlen und Größen '
         + 'im Museum richtig liest, kommt wieder hinaus.',
       ende: 'Mit einem leisen Klicken öffnet sich die Glastür zum Foyer. Draußen wird es schon hell – '
         + 'und auf dem Rekordschild steht jetzt euer Name.',
       raetsel: [
         {
           titel: 'Rätsel 1: Die Vitrine der großen Zahlen',
-          text: 'In der ersten Vitrine liegen die Besucherbücher des Museums.',
+          text: 'Die Notbeleuchtung summt, eure Schritte hallen durch die leere Halle. In der ersten Vitrine liegen die Besucherbücher '
+            + 'des Museums, aufgeschlagen auf der letzten Seite. Daneben klemmt ein Zettel hinter dem Glas: „Wer zählen kann, kommt '
+            + 'weiter."',
           auftrag: 'Rechne die vier Aufgaben. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
           typ: 'rechnen',
           aufgaben: [
@@ -105,8 +107,9 @@ const GRUNDRAEUME = [
         },
         {
           titel: 'Rätsel 2: Das Schild mit den Einheiten',
-          text: 'Beim Umbau sind die Schilder der Vitrinen durcheinandergeraten. Jede Angabe gibt es zweimal – '
-            + 'einmal in der einen, einmal in einer anderen Einheit.',
+          text: 'Beim Umbau sind die Schilder der Vitrinen durcheinandergeraten und liegen nun in zwei Stapeln auf dem Boden. Jede '
+            + 'Angabe gibt es zweimal – einmal in der einen, einmal in einer anderen Einheit. Erst wenn die Paare wieder '
+            + 'zusammenliegen, gibt der Kasten den nächsten Code frei.',
           auftrag: 'Verbinde die sechs Paare, die gleich groß sind. Tippe links eine Karte an, dann rechts die passende.',
           typ: 'zuordnen',
           titelLinks: 'Angabe',
@@ -132,7 +135,8 @@ const GRUNDRAEUME = [
         },
         {
           titel: 'Rätsel 3: Die Zeitleiste der Rekorde',
-          text: 'An der Wand hängt eine Leiste mit fünf Rekordlängen. Der Nachtwächter hat die Tafeln vertauscht.',
+          text: 'An der Wand hängt eine lange Leiste mit fünf Rekordlängen, von der kürzesten bis zur längsten. Der Nachtwächter hat die '
+            + 'Tafeln beim Putzen abgenommen und falsch wieder eingehängt. Die Leiste klemmt, solange die Reihenfolge nicht stimmt.',
           auftrag: 'Ordne die fünf Angaben von der <strong>kleinsten</strong> zur <strong>größten</strong> Länge.',
           typ: 'reihenfolge',
           codeAmEnde: true,
@@ -155,7 +159,8 @@ const GRUNDRAEUME = [
         },
         {
           titel: 'Rätsel 4: Der Zahlenschrank',
-          text: 'Im Schrank des Nachtwächters liegen Karten mit Besucherzahlen. Nur bestimmte Karten passen ins Schloss.',
+          text: 'Im Schrank des Nachtwächters liegen Dutzende Karteikarten mit Besucherzahlen, achtlos übereinandergeworfen. Nur ein '
+            + 'Teil davon passt in den Kartenleser am letzten Schloss – der Rest ist Ausschuss aus alten Jahren.',
           auftrag: 'Markiere alle Zahlen, die <strong>auf Hunderter gerundet 2 500</strong> ergeben.',
           typ: 'gitter',
           spalten: 4,
@@ -187,15 +192,16 @@ const GRUNDRAEUME = [
       kurz: 'Achsen- und Punktsymmetrie, Koordinatensystem, Eigenschaften von Vielecken.',
       motiv: 'spiegel',
       farbe: '#7c3aed',
-      dauer: '35–45 Minuten',
-      intro: 'Im Spiegelsaal des alten Schlosses sieht jede Wand gleich aus. Vier Spiegel versperren den Weg nach draußen. '
+      dauer: '50–65 Minuten',
+      intro: 'Im Spiegelsaal des alten Schlosses sieht jede Wand gleich aus. Sechs Spiegel versperren den Weg nach draußen. '
         + 'Jeder Spiegel öffnet sich nur, wenn ihr seine Symmetrie durchschaut.',
       ende: 'Der letzte Spiegel dreht sich zur Seite und gibt den Blick auf die Treppe frei. Hinter euch schließt sich der Saal – '
         + 'perfekt symmetrisch, wie immer.',
       raetsel: [
         {
           titel: 'Rätsel 1: Die Begriffstafel',
-          text: 'Auf einer Messingtafel stehen vier Aussagen über Figuren und Geraden.',
+          text: 'Neben der ersten Spiegeltür hängt eine angelaufene Messingtafel. Vier Aussagen über Figuren und Geraden sind '
+            + 'eingraviert, nicht alle davon stimmen. Wer sie auseinanderhält, hört das Schloss klicken.',
           auftrag: 'Entscheide bei jeder Aussage, ob sie <strong>wahr</strong> oder <strong>falsch</strong> ist. Jede richtige Antwort deckt einen Buchstaben auf.',
           typ: 'auswahl',
           fragen: [
@@ -215,8 +221,9 @@ const GRUNDRAEUME = [
         },
         {
           titel: 'Rätsel 2: Das Koordinatengitter',
-          text: 'Auf dem Boden ist ein Koordinatensystem eingelegt. Die rote Gerade x = 5 und die blaue Gerade y = 4 sind Spiegelachsen, '
-            + 'der Punkt Z(5|5) ist ein Spiegelpunkt.',
+          text: 'Im zweiten Raum ist ein Koordinatensystem in den Boden eingelegt, die Linien aus hellem Messing. Die rote Gerade x = 5 '
+            + 'und die blaue Gerade y = 4 sind Spiegelachsen, der Punkt Z(5|5) ist ein Spiegelpunkt. Vier Punkte leuchten schwach – '
+            + 'ihre Bildpunkte müsst ihr selbst finden.',
           auftrag: 'Spiegle wie angegeben und trage die gesuchte Koordinate als Zahl ein. Jede richtige Antwort deckt eine Codeziffer auf.',
           typ: 'rechnen',
           bild: koordinatenBild(),
@@ -237,7 +244,8 @@ const GRUNDRAEUME = [
         },
         {
           titel: 'Rätsel 3: Die Scherben am Boden',
-          text: 'Zwölf Figuren liegen als Spiegelscherben auf dem Boden.',
+          text: 'Vor der dritten Tür liegen zwölf Spiegelscherben, jede in der Form einer anderen Figur. Dreht man manche von ihnen auf '
+            + 'dem Boden um ihren Mittelpunkt, sehen sie danach genauso aus wie vorher. Nur diese Scherben gehören in den Rahmen.',
           auftrag: 'Markiere alle Figuren, die <strong>punktsymmetrisch</strong> sind.',
           typ: 'gitter',
           spalten: 3,
@@ -266,7 +274,8 @@ const GRUNDRAEUME = [
         },
         {
           titel: 'Rätsel 4: Die Spiegelachsen',
-          text: 'Über der Tür hängen sechs Figuren. Der Riegel löst sich, wenn sie richtig sortiert sind.',
+          text: 'Über der letzten Tür hängen sechs Figuren an dünnen Ketten, alle durcheinander. Der Riegel ist mit den Haken verbunden '
+            + 'und löst sich erst, wenn die Figuren in der richtigen Ordnung hängen.',
           auftrag: 'Ordne die Figuren nach der <strong>Anzahl ihrer Symmetrieachsen</strong> – von der kleinsten zur größten Anzahl.',
           typ: 'reihenfolge',
           codeAmEnde: true,
@@ -302,15 +311,16 @@ const GRUNDRAEUME = [
       kurz: 'Rechengesetze, Potenzen, Teilbarkeit, Primfaktoren und schriftliche Verfahren.',
       motiv: 'schmiede',
       farbe: '#b45309',
-      dauer: '35–45 Minuten',
-      intro: 'In der alten Zahlenschmiede glüht noch die Esse. Der Schmied ist fort, seine vier Werkzeugkisten sind verriegelt. '
+      dauer: '50–65 Minuten',
+      intro: 'In der alten Zahlenschmiede glüht noch die Esse. Der Schmied ist fort, seine sechs Werkzeugkisten sind verriegelt. '
         + 'Wer die Zahlen beherrscht, öffnet sie – wer schlampig rechnet, bleibt eingeschlossen.',
       ende: 'Die letzte Kiste springt auf. Darin liegt ein Schlüssel aus Messing – und ein Zettel: '
         + '„Wer rechnen kann, braucht keine Gewalt."',
       raetsel: [
         {
           titel: 'Rätsel 1: Die Primzahl-Esse',
-          text: 'Im Feuer liegen sechzehn Eisenplatten mit Zahlen.',
+          text: 'In der Esse glüht noch das Feuer. Sechzehn Eisenplatten liegen auf dem Rost, in jede ist eine Zahl geschlagen. Der '
+            + 'Schmied hat nur die unteilbaren aufgehoben – die anderen wanderten zurück in den Schmelztiegel.',
           auftrag: 'Markiere alle <strong>Primzahlen</strong>.',
           typ: 'gitter',
           spalten: 4,
@@ -331,7 +341,9 @@ const GRUNDRAEUME = [
         },
         {
           titel: 'Rätsel 2: Der Hammer der Rechengesetze',
-          text: 'Auf dem Amboss liegen vier Rechnungen. Der Schmied rechnete nie umständlich.',
+          text: 'Auf dem Amboss liegen vier Rechnungen, mit Kreide daneben gekritzelt. Der Schmied rechnete nie umständlich: Wo andere '
+            + 'lange multiplizierten, sortierte er die Zahlen erst einmal um. Der schwere Hammer hebt sich nur bei vier richtigen '
+            + 'Ergebnissen.',
           auftrag: 'Rechne möglichst geschickt. Jede richtige Antwort deckt einen Buchstaben auf.',
           typ: 'rechnen',
           aufgaben: [
@@ -351,7 +363,9 @@ const GRUNDRAEUME = [
         },
         {
           titel: 'Rätsel 3: Die Primfaktor-Zange',
-          text: 'Sechs Zahlen und sechs Zerlegungen hängen an der Wand.',
+          text: 'An der Wand hängen sechs Zangen, jede mit einer Zahl beschriftet, daneben sechs Schilder mit Zerlegungen. Der Schmied '
+            + 'sagte immer, jede Zahl sei aus Bausteinen geschmiedet. Nur wer die Bausteine richtig zuordnet, bekommt die letzte Kiste '
+            + 'auf.',
           auftrag: 'Verbinde jede Zahl mit ihrer Primfaktorzerlegung.',
           typ: 'zuordnen',
           titelLinks: 'Zahl',
@@ -377,7 +391,8 @@ const GRUNDRAEUME = [
         },
         {
           titel: 'Rätsel 4: Die Teilbarkeits-Waage',
-          text: 'Die letzte Kiste trägt vier Rechnungen, die der Schmied schriftlich gelöst hat.',
+          text: 'Die letzte Kiste hängt an einer Waage. Auf ihrem Deckel stehen vier Rechnungen, sauber untereinandergeschrieben, so wie '
+            + 'der Schmied sie gelöst hätte – ohne Taschenrechner, nur mit Bleistift und Geduld.',
           auftrag: 'Rechne schriftlich. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
           typ: 'rechnen',
           aufgaben: [
@@ -409,14 +424,15 @@ const GRUNDRAEUME = [
       kurz: 'Flächeneinheiten, Rechteck und rechtwinkliges Dreieck, Umfang, Maßstab.',
       motiv: 'baustelle',
       farbe: '#0f766e',
-      dauer: '35–45 Minuten',
-      intro: 'Morgen beginnt der Umbau des Schulhofs – doch der Bauplan ist verschwunden. Im Bauwagen liegen nur vier '
+      dauer: '50–65 Minuten',
+      intro: 'Morgen beginnt der Umbau des Schulhofs – doch der Bauplan ist verschwunden. Im Bauwagen liegen nur sechs '
         + 'verschlossene Mappen mit Notizen. Rechnet die Maße nach, dann gibt der Wagen den Plan heraus.',
       ende: 'In der letzten Mappe liegt der Bauplan – mit euren Maßen. Der Bagger kann kommen.',
       raetsel: [
         {
           titel: 'Rätsel 1: Die Mappe der Flächeninhalte',
-          text: 'Auf dem ersten Blatt stehen vier Teilflächen des Schulhofs.',
+          text: 'Die erste Mappe ist mit einer Schnur verschlossen. Auf dem obersten Blatt hat der Bauleiter vier Teilflächen des '
+            + 'Schulhofs skizziert und die Maße danebengeschrieben. Die Flächeninhalte fehlen – die wollte er heute nachtragen.',
           auftrag: 'Berechne die Flächeninhalte. Jede richtige Antwort deckt einen Buchstaben auf.',
           typ: 'rechnen',
           aufgaben: [
@@ -436,7 +452,8 @@ const GRUNDRAEUME = [
         },
         {
           titel: 'Rätsel 2: Die zusammengesetzte Fläche',
-          text: 'Der neue Spielbereich ist L-förmig. Alle Maße stehen in der Zeichnung.',
+          text: 'Der neue Spielbereich ist L-förmig: In einer Ecke springt die Fläche zurück, weil dort der alte Baum stehen bleibt. '
+            + 'Alle Maße stehen in der Zeichnung, alles Weitere muss gerechnet werden.',
           auftrag: 'Berechne die gesuchten Größen. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
           typ: 'rechnen',
           bild: lFlaecheBild(),
@@ -457,7 +474,8 @@ const GRUNDRAEUME = [
         },
         {
           titel: 'Rätsel 3: Sechs Flächen sortieren',
-          text: 'Auf sechs Karteikarten stehen Teilflächen des Schulhofs.',
+          text: 'In der dritten Mappe stecken sechs Karteikarten mit Teilflächen des Schulhofs, jede in einer anderen Form und Einheit. '
+            + 'Der Bauleiter hat sie immer nach Größe geordnet abgeheftet – jemand hat den Stapel fallen lassen.',
           auftrag: 'Ordne die Flächen nach ihrem <strong>Flächeninhalt</strong> – von der kleinsten zur größten.',
           typ: 'reihenfolge',
           codeAmEnde: true,
@@ -481,7 +499,8 @@ const GRUNDRAEUME = [
         },
         {
           titel: 'Rätsel 4: Der Maßstab 1 : 200',
-          text: 'Der Plan des Schulhofs ist im Maßstab 1 : 200 gezeichnet.',
+          text: 'Die Planrolle ist mit einem Zahlenschloss gesichert. Unten rechts auf jedem Blatt steht der Maßstab 1 : 200, mit '
+            + 'Bleistift unterstrichen. Vier Längen wollen zwischen Plan und Wirklichkeit übersetzt werden.',
           auftrag: 'Rechne zwischen Plan und Wirklichkeit um. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
           typ: 'rechnen',
           aufgaben: [
@@ -513,15 +532,16 @@ const GRUNDRAEUME = [
       kurz: 'Netze und Schrägbilder, Volumeneinheiten, Volumen und Oberfläche von Quader und Würfel.',
       motiv: 'fabrik',
       farbe: '#be123c',
-      dauer: '35–45 Minuten',
+      dauer: '50–65 Minuten',
       intro: 'Im Lager der Verpackungsfabrik stehen die Bänder still. Die Hallentür ist zu, und die Steuerung fragt nach '
-        + 'vier Codes. Die alte Vorarbeiterin hat ihre Notizen über Kisten und Würfel hinterlassen.',
+        + 'sechs Codes. Die alte Vorarbeiterin hat ihre Notizen über Kisten und Würfel hinterlassen.',
       ende: 'Das Band ruckt an, das Hallentor rollt nach oben. Zwischen den Kisten liegt ein Zettel: '
         + '„Gut gemessen ist halb verpackt."',
       raetsel: [
         {
           titel: 'Rätsel 1: Die Volumen-Maschine',
-          text: 'Die Steuerung zeigt vier Kisten mit ihren Maßen.',
+          text: 'Die Steuerung am ersten Band erwacht mit einem Piepen. Auf dem Bildschirm erscheinen vier Kisten mit ihren Maßen, '
+            + 'darunter blinkt eine leere Zeile. Ohne Volumenangabe läuft hier nichts weiter.',
           auftrag: 'Berechne. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
           typ: 'rechnen',
           aufgaben: [
@@ -541,7 +561,8 @@ const GRUNDRAEUME = [
         },
         {
           titel: 'Rätsel 2: Netze auf dem Förderband',
-          text: 'Auf dem Band liegen aufgeklappte Kartons. Die Steuerung fragt nach ihren Eigenschaften.',
+          text: 'Auf dem zweiten Band liegen aufgeklappte Kartons, flach wie Papierbögen. Die Steuerung fragt diesmal nicht nach Maßen, '
+            + 'sondern nach Flächen, Kanten und Ecken – Wissen, das hier jede Packerin im Schlaf hat.',
           auftrag: 'Wähle bei jeder Frage die richtige Antwort. Jede richtige Antwort deckt einen Buchstaben auf.',
           typ: 'auswahl',
           fragen: [
@@ -565,7 +586,8 @@ const GRUNDRAEUME = [
         },
         {
           titel: 'Rätsel 3: Die Volumeneinheiten',
-          text: 'An der Wand hängt die alte Umrechnungstafel – leider in zwei Hälften zerrissen.',
+          text: 'An der Wand hängt die alte Umrechnungstafel aus Blech, auf der hier jeder nachgeschaut hat. Beim Aufräumen ist sie in '
+            + 'zwei Hälften zerrissen; die Angaben links suchen ihre Partner rechts.',
           auftrag: 'Verbinde jeweils die beiden gleich großen Angaben.',
           typ: 'zuordnen',
           titelLinks: 'Angabe',
@@ -591,7 +613,8 @@ const GRUNDRAEUME = [
         },
         {
           titel: 'Rätsel 4: Die letzte Kiste',
-          text: 'Vor dem Hallentor steht die letzte Kiste. Die Steuerung stellt vier Fragen.',
+          text: 'Vor dem Hallentor steht die letzte Kiste, schon verschlossen und beschriftet. Die Steuerung stellt vier Fragen, bevor '
+            + 'sie das Tor freigibt – vier Fragen zu Kanten, Grundflächen und Litern.',
           auftrag: 'Rechne. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
           typ: 'rechnen',
           aufgaben: [
@@ -623,14 +646,15 @@ const GRUNDRAEUME = [
       kurz: 'Anteile, Kürzen und Erweitern, Brüche vergleichen, Prozente. Dieses Kapitel wird auch in Klasse 6 unterrichtet.',
       motiv: 'pizzeria',
       farbe: '#c2410c',
-      dauer: '35–45 Minuten',
+      dauer: '50–65 Minuten',
       intro: 'Kurz vor Feierabend fällt in der Pizzeria Bella Frazione die Kasse aus. Der Chef hat die Tageskasse im Safe '
-        + 'eingeschlossen und nur vier Notizzettel hinterlassen – alle über Anteile, Brüche und Prozente.',
+        + 'eingeschlossen und nur sechs Notizzettel hinterlassen – alle über Anteile, Brüche und Prozente.',
       ende: 'Der Safe öffnet sich. Obendrauf liegt ein Gutschein: eine ganze Pizza – nicht nur ein Achtel.',
       raetsel: [
         {
           titel: 'Rätsel 1: Die Karte der Anteile',
-          text: 'Der erste Zettel klebt an der Speisekarte.',
+          text: 'Der erste Zettel klebt mit Mehl an der Speisekarte. Der Chef hat darauf notiert, wie er die Portionen aufteilt – '
+            + 'natürlich in Anteilen, denn Zahlen mag er nur, wenn sie zu einer Pizza gehören.',
           auftrag: 'Rechne. Jede richtige Antwort deckt eine Codeziffer auf.',
           typ: 'rechnen',
           aufgaben: [
@@ -650,7 +674,8 @@ const GRUNDRAEUME = [
         },
         {
           titel: 'Rätsel 2: Die Bestellung ordnen',
-          text: 'Auf sechs Bestellzetteln steht, welchen Anteil einer Pizza die Gäste bestellt haben.',
+          text: 'Auf sechs Bestellzetteln steht, welchen Anteil einer Pizza die Gäste bestellt haben. Der Chef steckt die Zettel immer '
+            + 'der Größe nach auf den Nagel neben dem Ofen – heute hängt alles durcheinander.',
           auftrag: 'Ordne die Brüche von der <strong>kleinsten</strong> zur <strong>größten</strong> Zahl.',
           typ: 'reihenfolge',
           codeAmEnde: true,
@@ -674,7 +699,8 @@ const GRUNDRAEUME = [
         },
         {
           titel: 'Rätsel 3: Bruch und Prozent',
-          text: 'Der Chef notiert Rabatte manchmal als Bruch, manchmal in Prozent.',
+          text: 'Der Chef notiert Rabatte mal als Bruch, mal in Prozent, je nachdem, was ihm zuerst einfällt. An der Kasse hängen beide '
+            + 'Sorten Zettel und wollen paarweise zusammengelegt werden.',
           auftrag: 'Verbinde jeden Bruch mit der passenden Prozentangabe.',
           typ: 'zuordnen',
           titelLinks: 'Bruch',
@@ -700,7 +726,8 @@ const GRUNDRAEUME = [
         },
         {
           titel: 'Rätsel 4: Die Scheiben am Zahlenstrahl',
-          text: 'Auf zwölf Pizzaschachteln steht je ein Bruch. Nur bestimmte Schachteln gehören ins linke Regal.',
+          text: 'Im Lager stapeln sich zwölf Pizzaschachteln, auf jeder steht ein Bruch. Ins linke Regal gehören nur die kleinen '
+            + 'Portionen – der Chef hat die Grenze mit einem roten Strich markiert.',
           auftrag: 'Markiere alle Brüche, die <strong>kleiner als <sup>1</sup>⁄<sub>2</sub></strong> sind.',
           typ: 'gitter',
           spalten: 4,

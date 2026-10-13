@@ -91,16 +91,17 @@ export default {
         + 'Dasselbe Kapitel gibt es mit anderen Rätseln als »Pizzeria Bella Frazione« in Klasse 5.',
       motiv: 'torte',
       farbe: '#9d174d',
-      dauer: '35–45 Minuten',
+      dauer: '50–65 Minuten',
       intro: 'Die Konditorei Goldstück schließt gleich, und die Chefin hat die Rezeptmappe im Kühlraum '
-        + 'eingeschlossen. Vier Schlösser sichern die Tür – und alle vier drehen sich um Anteile, '
+        + 'eingeschlossen. Sechs Schlösser sichern die Tür – und alle sechs drehen sich um Anteile, '
         + 'Bruchteile und Prozente.',
       ende: 'Der Kühlraum öffnet sich. Auf der Rezeptmappe klebt ein Zettel: '
         + '„Wer teilen kann, bekommt am Ende mehr."',
       raetsel: [
         {
           titel: 'Rätsel 1: Die Tortenbestellung',
-          text: 'Auf dem Bestellzettel stehen lauter Anteile.',
+          text: 'Auf dem Tresen liegt der Bestellzettel für morgen, mit Puderzucker bestäubt. Die Chefin schreibt Mengen grundsätzlich '
+            + 'als Anteile auf – wie viel das in Stück und Gramm ist, rechnet sie beim Backen aus.',
           auftrag: 'Rechne die vier Aufgaben. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
           typ: 'rechnen',
           aufgaben: [
@@ -120,7 +121,8 @@ export default {
         },
         {
           titel: 'Rätsel 2: Gekürzt und erweitert',
-          text: 'An der Kühlraumtür hängen sechs Zettel mit Brüchen – und sechs mit den vollständig gekürzten Brüchen.',
+          text: 'An der Kühlraumtür hängen zwölf Zettel an Magneten: sechs mit Brüchen, wie sie beim Abzählen entstanden sind, und sechs '
+            + 'mit denselben Brüchen in kürzester Form. Die Chefin duldet keinen Bruch, der sich noch kürzen lässt.',
           auftrag: 'Verbinde jeden Bruch mit seiner <strong>vollständig gekürzten</strong> Form.',
           typ: 'zuordnen',
           titelLinks: 'Bruch',
@@ -146,7 +148,8 @@ export default {
         },
         {
           titel: 'Rätsel 3: Am Zahlenstrahl',
-          text: 'Sechs Mengenangaben sollen auf dem Zahlenstrahl eingetragen werden.',
+          text: 'Im Hinterzimmer hängt ein langer Zahlenstrahl von 0 bis 1, an dem die Chefin ihre Portionsgrößen markiert. Sechs '
+            + 'Angaben warten darauf, eingetragen zu werden – mal als Bruch, mal in Prozent.',
           auftrag: 'Ordne die Angaben von der <strong>kleinsten</strong> zur <strong>größten</strong>.',
           typ: 'reihenfolge',
           codeAmEnde: true,
@@ -170,7 +173,8 @@ export default {
         },
         {
           titel: 'Rätsel 4: Die Pralinenschachteln',
-          text: 'Auf zwölf Schachteln steht je ein Bruch. Nur bestimmte Schachteln gehören zusammen in das obere Fach.',
+          text: 'Auf zwölf Pralinenschachteln steht je ein Bruch, mit Goldstift geschrieben. Ins obere Fach gehören nur die Schachteln, '
+            + 'die zusammenpassen – auch wenn die Zahlen darauf ganz verschieden aussehen.',
           auftrag: 'Markiere alle Brüche, die <strong>denselben Wert</strong> haben wie <sup>3</sup>⁄<sub>5</sub>.',
           typ: 'gitter',
           spalten: 4,
@@ -205,16 +209,18 @@ export default {
       kurz: 'Dezimalschreibweise, Vergleichen und Runden, abbrechende und periodische Dezimalzahlen, Größen.',
       motiv: 'tresor',
       farbe: '#0369a1',
-      dauer: '35–45 Minuten',
+      dauer: '50–65 Minuten',
       intro: 'Im Hinterzimmer der alten Sparkasse steht ein Tresor, auf dessen Zifferblatt nur Kommazahlen stehen. '
-        + 'Vier Schlösser halten ihn verschlossen. Die Bankangestellte von damals hat ihre Notizen hinterlassen – '
+        + 'Sechs Schlösser halten ihn verschlossen. Die Bankangestellte von damals hat ihre Notizen hinterlassen – '
         + 'alle über Dezimalzahlen.',
       ende: 'Mit einem satten Klacken schwingt die Tresortür auf. Darin: eine Stellenwerttafel aus Messing – '
         + 'und die Erkenntnis, dass hinter dem Komma die Hundertstel wohnen.',
       raetsel: [
         {
           titel: 'Rätsel 1: Die Stellenwerttafel',
-          text: 'Auf dem ersten Zettel stehen vier Aufgaben zur Schreibweise.',
+          text: 'Auf dem Schreibtisch vor dem Tresor liegt ein Zettel mit vier Aufgaben, mit Füller geschrieben. Die Bankangestellte hat '
+            + 'früher alles doppelt notiert: einmal als Bruch, einmal mit Komma. Das Tresorschloss versteht nur die Schreibweise mit '
+            + 'Komma.',
           auftrag: 'Rechne bzw. wandle um. Jede richtige Antwort deckt einen Buchstaben auf.',
           typ: 'rechnen',
           aufgaben: [
@@ -234,7 +240,8 @@ export default {
         },
         {
           titel: 'Rätsel 2: Abbrechend oder periodisch?',
-          text: 'Das zweite Schloss fragt nach der Art der Dezimalzahlen.',
+          text: 'Das zweite Schloss ist ein Drehknopf mit vier Stellungen. Auf dem Messingschild darüber steht nur: „Hört es auf oder '
+            + 'nicht?" Gemeint sind Dezimalzahlen – manche brechen ab, andere laufen endlos weiter.',
           auftrag: 'Wähle bei jeder Frage die richtige Antwort. Jede richtige Antwort deckt einen Buchstaben auf.',
           typ: 'auswahl',
           fragen: [
@@ -258,7 +265,8 @@ export default {
         },
         {
           titel: 'Rätsel 3: Größen in Dezimalschreibweise',
-          text: 'Auf der Innenseite der Tresortür klebt eine zerrissene Umrechnungstabelle.',
+          text: 'Auf der Innenseite der Tresortür klebt eine Umrechnungstabelle, an den Rändern vergilbt. Jemand hat sie längs '
+            + 'zerrissen: Links stehen die Angaben mit Komma, rechts dieselben Größen in kleineren Einheiten.',
           auftrag: 'Verbinde jeweils die beiden gleich großen Angaben.',
           typ: 'zuordnen',
           titelLinks: 'Angabe',
@@ -284,7 +292,8 @@ export default {
         },
         {
           titel: 'Rätsel 4: Das Zahlenschloss',
-          text: 'Auf dem Zifferblatt des Tresors stehen zwölf Kommazahlen.',
+          text: 'Auf dem Zifferblatt des Tresors stehen zwölf Kommazahlen, dicht an dicht. Der Zeiger rastet nur bei bestimmten Zahlen '
+            + 'ein – bei denen nämlich, die gerundet auf derselben Marke landen.',
           auftrag: 'Markiere alle Zahlen, die <strong>auf Zehntel gerundet 4,3</strong> ergeben.',
           typ: 'gitter',
           spalten: 4,
@@ -316,15 +325,16 @@ export default {
       kurz: 'Brüche und Dezimalzahlen addieren und subtrahieren, geschicktes Rechnen, Größen.',
       motiv: 'labor',
       farbe: '#047857',
-      dauer: '35–45 Minuten',
-      intro: 'Im Chemielabor der Schule blinkt die Absauganlage rot: Die Tür verriegelt erst wieder, wenn vier '
-        + 'Mischungen stimmen. Auf dem Pult liegen die Notizen der Laborantin – alle über Summen und Differenzen.',
+      dauer: '50–65 Minuten',
+      intro: 'Im Chemielabor der Schule blinkt die Absauganlage rot: Die Tür verriegelt erst wieder, wenn sechs '
+        + 'Prüfungen stimmen. Auf dem Pult liegen die Notizen der Laborantin – alle über Summen und Differenzen.',
       ende: 'Die Lüftung schaltet ab, die Tür entriegelt. An der Tafel steht in Kreide: '
         + '„Erst gleichnamig machen, dann addieren."',
       raetsel: [
         {
           titel: 'Rätsel 1: Die erste Mischung',
-          text: 'Vier Rechnungen mit Brüchen stehen auf dem Laborblatt.',
+          text: 'Auf dem Laborblatt stehen vier Mischungen, jede aus zwei oder drei Anteilen. Die Laborantin hat sie mit Bleistift '
+            + 'notiert, bevor sie den Raum verlassen musste. Die Anlage prüft jede Summe, bevor sie weiterläuft.',
           auftrag: 'Berechne und gib das Ergebnis als Bruch an. Jede richtige Antwort deckt einen Buchstaben auf.',
           typ: 'rechnen',
           aufgaben: [
@@ -344,7 +354,8 @@ export default {
         },
         {
           titel: 'Rätsel 2: Die Rechenkarten',
-          text: 'Sechs Rechnungen und sechs Ergebnisse liegen durcheinander auf dem Pult.',
+          text: 'Auf dem Pult liegen zwölf Karten durcheinander: sechs Rechnungen und sechs Ergebnisse. Ein Luftzug vom Abzug hat sie '
+            + 'vom Stapel geweht, kurz bevor die Anlage verriegelte.',
           auftrag: 'Verbinde jede Rechnung mit ihrem Ergebnis.',
           typ: 'zuordnen',
           titelLinks: 'Rechnung',
@@ -370,7 +381,8 @@ export default {
         },
         {
           titel: 'Rätsel 3: Die Reagenzgläser',
-          text: 'Sechs Reagenzgläser sind mit Rechnungen beschriftet und sollen nach ihrem Inhalt geordnet werden.',
+          text: 'Sechs Reagenzgläser stehen im Ständer, jedes mit einer Rechnung beschriftet. Je größer das Ergebnis, desto voller das '
+            + 'Glas – und der Ständer ist nach Füllhöhe geordnet.',
           auftrag: 'Ordne die Rechnungen nach ihrem <strong>Ergebnis</strong> – vom kleinsten zum größten.',
           typ: 'reihenfolge',
           codeAmEnde: true,
@@ -394,7 +406,8 @@ export default {
         },
         {
           titel: 'Rätsel 4: Die Abrechnung',
-          text: 'Zum Schluss verlangt die Anlage die Protokollwerte.',
+          text: 'Zum Schluss verlangt die Anlage die Protokollwerte des Tages: Gewichte, Mengen und Zeiten, sauber in eine Einheit '
+            + 'gebracht. Erst dann schaltet die Lüftung ab und die Tür entriegelt.',
           auftrag: 'Rechne. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
           typ: 'rechnen',
           aufgaben: [
@@ -426,15 +439,16 @@ export default {
       kurz: 'Ganze Zahlen und erweitertes Koordinatensystem, Verschiebungen und Drehungen, Kreise und Winkel.',
       motiv: 'sternwarte',
       farbe: '#4338ca',
-      dauer: '35–45 Minuten',
+      dauer: '50–65 Minuten',
       intro: 'Oben in der Sternwarte klemmt die Kuppel. Die Steuerung arbeitet mit Koordinaten, Winkeln und '
-        + 'Temperaturen – und sie ist strikt: Erst wenn vier Codes stimmen, dreht sich das Dach wieder.',
+        + 'Temperaturen – und sie ist strikt: Erst wenn sechs Codes stimmen, dreht sich das Dach wieder.',
       ende: 'Die Kuppel dreht sich knirschend auf, der Spalt gibt den Blick auf den Nachthimmel frei. '
         + 'Im Logbuch steht: „Koordinaten zuerst, dann der Winkel."',
       raetsel: [
         {
           titel: 'Rätsel 1: Das erweiterte Koordinatensystem',
-          text: 'Die Steuerung zeigt vier Punkte im Koordinatensystem.',
+          text: 'Der Bildschirm der Steuerung zeigt vier Punkte in einem Koordinatensystem, das nach allen Seiten über die Null '
+            + 'hinausreicht. Bevor sich die Kuppel dreht, will die Steuerung wissen, wohin die Punkte wandern.',
           auftrag: 'Beantworte die vier Fragen. Die <strong>vier Ergebnisse</strong> ergeben von oben nach unten den Code.',
           typ: 'rechnen',
           bild: koordinatenBild6(),
@@ -455,7 +469,8 @@ export default {
         },
         {
           titel: 'Rätsel 2: Die Winkelskala',
-          text: 'Am Teleskop hängt eine Skala, auf der Beschreibungen und Winkelgrößen vertauscht wurden.',
+          text: 'Am Teleskop hängt eine Skala aus Messing, auf der Beschreibungen und Winkelgrößen vertauscht wurden. Wer durch das '
+            + 'Okular etwas sehen will, muss die Skala erst wieder richtig zusammensetzen.',
           auftrag: 'Verbinde jede Beschreibung mit der richtigen Winkelgröße.',
           typ: 'zuordnen',
           titelLinks: 'Beschreibung',
@@ -481,7 +496,8 @@ export default {
         },
         {
           titel: 'Rätsel 3: Die Nachttemperaturen',
-          text: 'Das Logbuch der Sternwarte listet sechs Nächte mit ihren Temperaturen.',
+          text: 'Das Logbuch der Sternwarte listet sechs Nächte mit ihren Temperaturen, viele davon weit unter null. Die Steuerung '
+            + 'ordnet die Nächte von der kältesten zur mildesten – und wartet darauf, dass ihr dasselbe tut.',
           auftrag: 'Ordne die Temperaturen von der <strong>kältesten</strong> zur <strong>wärmsten</strong>.',
           typ: 'reihenfolge',
           codeAmEnde: true,
@@ -505,7 +521,8 @@ export default {
         },
         {
           titel: 'Rätsel 4: Die Quadrantenkarte',
-          text: 'Auf der Sternkarte sind zwölf Punkte eingetragen.',
+          text: 'Auf der Sternkarte sind zwölf Punkte eingetragen, jeder mit seinen Koordinaten beschriftet. Die Kuppel fährt nur auf, '
+            + 'wenn genau die Punkte aus einem bestimmten Viertel des Himmels markiert sind.',
           auftrag: 'Markiere alle Punkte, die im <strong>III. Quadranten</strong> liegen.',
           typ: 'gitter',
           spalten: 4,
@@ -537,15 +554,16 @@ export default {
       kurz: 'Brüche multiplizieren und dividieren, Kommaverschiebung, Dezimalzahlen mal und geteilt, Rechenvorteile.',
       motiv: 'markt',
       farbe: '#a16207',
-      dauer: '35–45 Minuten',
+      dauer: '50–65 Minuten',
       intro: 'Der Nachtmarkt hat geschlossen, das Tor ist zu – und ihr steht noch zwischen den Ständen. '
-        + 'Der Marktmeister hat vier Preisschilder zurückgelassen. Nur wer richtig malnimmt und teilt, kommt hinaus.',
+        + 'Der Marktmeister hat sechs Aufgaben zurückgelassen. Nur wer richtig malnimmt und teilt, kommt hinaus.',
       ende: 'Das Tor schwingt auf. Am Stand hängt ein letztes Schild: '
         + '„Durch einen Bruch teilen heißt: mit dem Kehrbruch malnehmen."',
       raetsel: [
         {
           titel: 'Rätsel 1: Die Preisschilder',
-          text: 'Auf vier Schildern steht je eine Rechnung mit Zehnerzahlen.',
+          text: 'Zwischen den leeren Ständen hängen vier Preisschilder und schaukeln im Wind. Auf jedem steht eine Rechnung mit 10, 100 '
+            + 'oder 1000 – der Marktmeister rechnete Preise gern gleich für ganze Kisten um.',
           auftrag: 'Rechne. Jede richtige Antwort deckt einen Buchstaben auf.',
           typ: 'rechnen',
           aufgaben: [
@@ -565,7 +583,8 @@ export default {
         },
         {
           titel: 'Rätsel 2: Die Bruchrechen-Stände',
-          text: 'Sechs Rechnungen und sechs Ergebnisse hängen an den Marktständen.',
+          text: 'An sechs Ständen hängen Rechnungen, an sechs weiteren die Ergebnisse. Der Marktmeister hat sie abends immer '
+            + 'zusammengesteckt – gestern Abend offenbar nicht mehr.',
           auftrag: 'Verbinde jede Rechnung mit ihrem Ergebnis.',
           typ: 'zuordnen',
           titelLinks: 'Rechnung',
@@ -591,7 +610,8 @@ export default {
         },
         {
           titel: 'Rätsel 3: Die Marktwaage',
-          text: 'Der Marktmeister rechnet gern im Kopf – ihr dürft schriftlich.',
+          text: 'An der großen Marktwaage lehnt ein Notizblock. Der Marktmeister rechnete Preise und Mengen stets im Kopf, während er '
+            + 'abwog. Ihr dürft schriftlich rechnen, so lange ihr wollt – nur das Tor wartet nicht ewig.',
           auftrag: 'Rechne. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
           typ: 'rechnen',
           aufgaben: [
@@ -611,7 +631,8 @@ export default {
         },
         {
           titel: 'Rätsel 4: Die letzte Kiste',
-          text: 'Auf zwölf Kisten steht je eine Rechnung. Nur bestimmte Kisten dürfen auf den Wagen.',
+          text: 'Auf zwölf Kisten steht je eine Rechnung, mit Kreide auf das Holz geschrieben. Auf den Wagen darf nur, was der '
+            + 'Marktmeister als voll markiert hätte – die übrigen Kisten bleiben stehen.',
           auftrag: 'Markiere alle Rechnungen, deren Ergebnis <strong>größer als 1</strong> ist.',
           typ: 'gitter',
           spalten: 4,
@@ -646,16 +667,16 @@ export default {
       kurz: 'Häufigkeiten und Diagramme, arithmetisches Mittel, Median, Spannweite, Untersuchungen auswerten.',
       motiv: 'diagramm',
       farbe: '#0e7490',
-      dauer: '35–45 Minuten',
+      dauer: '50–65 Minuten',
       intro: 'Die automatische Wetterstation auf dem Schuldach hat sich abgeschaltet und verlangt eine Prüfung: '
-        + 'Vier Auswertungen sind zu liefern, sonst bleibt der Datenspeicher verriegelt.',
+        + 'Sechs Auswertungen sind zu liefern, sonst bleibt der Datenspeicher verriegelt.',
       ende: 'Die Station fährt hoch, der Datenspeicher ist frei. Auf dem Display blinkt: '
         + '„Mittelwert und Median sind nicht dasselbe."',
       raetsel: [
         {
           titel: 'Rätsel 1: Die Messreihe',
-          text: 'Zwölf Messwerte liegen bereits der Größe nach geordnet vor: '
-            + '<strong>3, 5, 5, 7, 8, 9, 13, 14, 15, 20, 21, 24</strong>',
+          text: 'Der Datenspeicher gibt als Erstes zwölf Messwerte aus, bereits der Größe nach geordnet: <strong>3, 5, 5, 7, 8, 9, 13, '
+            + '14, 15, 20, 21, 24</strong>. Vier Kennzahlen dazu verlangt die Station, bevor sie weiterarbeitet.',
           auftrag: 'Werte die Messreihe aus. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
           typ: 'rechnen',
           bild: messwerteBild(MESSREIHE, '#0e7490'),
@@ -676,7 +697,8 @@ export default {
         },
         {
           titel: 'Rätsel 2: Das Diagramm lesen',
-          text: 'Die Station zeigt die Regentage des ersten Halbjahrs.',
+          text: 'Auf dem Display baut sich ein Säulendiagramm auf: die Regentage des ersten Halbjahrs, Monat für Monat. Die Station '
+            + 'prüft, ob ihr das Diagramm wirklich lesen könnt – oder nur daraufschaut.',
           auftrag: 'Beantworte die vier Fragen zum Diagramm. Jede richtige Antwort deckt einen Buchstaben auf.',
           typ: 'auswahl',
           bild: balkenBild([16, 10, 12, 9, 8, 5], ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun'], '#0e7490', 'Regentage je Monat'),
@@ -697,7 +719,8 @@ export default {
         },
         {
           titel: 'Rätsel 3: Sechs Messstationen',
-          text: 'Sechs Stationen haben je fünf Werte geliefert.',
+          text: 'Sechs Nachbarstationen haben je fünf Werte gefunkt. Die Zentrale sortiert sie nach dem mittleren Wert jeder Reihe – wer '
+            + 'dabei nur an den Durchschnitt denkt, tappt in die Falle.',
           auftrag: 'Ordne die Stationen nach ihrem <strong>Median</strong> – vom kleinsten zum größten.',
           typ: 'reihenfolge',
           codeAmEnde: true,
@@ -721,7 +744,8 @@ export default {
         },
         {
           titel: 'Rätsel 4: Die Temperaturtage',
-          text: 'Zwölf Tage mit ihren Höchsttemperaturen stehen im Speicher.',
+          text: 'Zwölf Tage mit ihren Höchsttemperaturen liegen im Speicher. Die Station markiert immer die wärmeren Tage farbig – '
+            + 'gemeint sind die, die über dem Durchschnitt des ganzen Zeitraums liegen.',
           auftrag: 'Markiere alle Tage, an denen die Temperatur <strong>über dem arithmetischen Mittel</strong> aller zwölf Tage lag.',
           typ: 'gitter',
           spalten: 4,
@@ -753,15 +777,16 @@ export default {
       kurz: 'Zahlenfolgen fortsetzen, Abhängigkeiten mit Termen beschreiben, Dreisatz, proportionale Zuordnungen.',
       motiv: 'uhrwerk',
       farbe: '#7e22ce',
-      dauer: '35–45 Minuten',
+      dauer: '50–65 Minuten',
       intro: 'Im Turmzimmer steht ein altes Uhrwerk, das nicht mit Zeigern arbeitet, sondern mit Zahlenfolgen. '
-        + 'Vier Zahnräder sind blockiert. Jedes löst sich, wenn ihr das Muster dahinter erkennt.',
+        + 'Sechs Zahnräder sind blockiert. Jedes löst sich, wenn ihr das Muster dahinter erkennt.',
       ende: 'Das letzte Zahnrad greift, und das Uhrwerk setzt sich in Bewegung. '
         + 'Auf dem Zifferblatt steht statt Zahlen nur: „Muster sind Regeln, die man aufschreiben kann."',
       raetsel: [
         {
           titel: 'Rätsel 1: Die Zahlenfolgen',
-          text: 'Auf dem ersten Zahnrad stehen vier angefangene Folgen.',
+          text: 'Auf dem ersten Zahnrad sind vier Zahlenfolgen eingestanzt, jede bricht mitten im Lauf ab. Das Rad greift erst, wenn zu '
+            + 'jeder Folge die nächste Zahl eingetragen ist.',
           auftrag: 'Setze jede Folge um ein Glied fort. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
           typ: 'rechnen',
           aufgaben: [
@@ -781,7 +806,8 @@ export default {
         },
         {
           titel: 'Rätsel 2: Der Dreisatz-Stand',
-          text: 'Das zweite Zahnrad verlangt vier Dreisatzaufgaben.',
+          text: 'Das zweite Zahnrad trägt vier Aufgaben aus dem Alltag: Preise, Verbrauch, Stückzahlen. Alle folgen demselben Muster – '
+            + 'was für eines gilt, gilt auch für viele.',
           auftrag: 'Rechne mit dem Dreisatz. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
           typ: 'rechnen',
           aufgaben: [
@@ -801,7 +827,8 @@ export default {
         },
         {
           titel: 'Rätsel 3: Worte werden Terme',
-          text: 'Auf dem dritten Zahnrad stehen sechs Beschreibungen und sechs Terme.',
+          text: 'Auf dem dritten Zahnrad stehen sechs Beschreibungen in Worten, auf dem Gegenrad sechs Terme. Die beiden Räder greifen '
+            + 'nur ineinander, wenn jede Beschreibung ihrem Term gegenübersteht.',
           auftrag: 'Verbinde jede Beschreibung mit dem passenden Term. <em>n</em> steht dabei für die Zahl.',
           typ: 'zuordnen',
           titelLinks: 'Beschreibung',
@@ -827,7 +854,8 @@ export default {
         },
         {
           titel: 'Rätsel 4: Proportional oder nicht?',
-          text: 'Das letzte Zahnrad zeigt neun Zuordnungen.',
+          text: 'Das letzte Zahnrad zeigt neun Zuordnungen aus dem täglichen Leben. Nur bei manchen gilt: doppelt so viel von dem einen, '
+            + 'doppelt so viel von dem anderen. Genau diese halten das Uhrwerk am Laufen.',
           auftrag: 'Markiere alle Zuordnungen, die <strong>proportional</strong> sind.',
           typ: 'gitter',
           spalten: 3,

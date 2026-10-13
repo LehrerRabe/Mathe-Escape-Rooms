@@ -185,17 +185,17 @@ export default [
     kurz: 'Zweiter Raum zu Kapitel I: große Zahlen, Stellenwerte, Runden, Größen, Rechnen mit Geld und ein Säulendiagramm.',
     motiv: 'uhr',
     farbe: BLAU,
-    dauer: '40–50 Minuten',
+    dauer: '60–75 Minuten',
     intro: 'Uhrmacher Theodor Zahn ist überraschend in den Ruhestand gegangen – und hat seine Werkstatt '
-      + 'verschlossen zurückgelassen. Fünf Schlösser trennen euch von der Turmuhr, die morgen im Rathaus '
+      + 'verschlossen zurückgelassen. Sieben Schlösser trennen euch von der Turmuhr, die morgen im Rathaus '
       + 'eingebaut werden soll. Zum Glück war Theodor ein ordentlicher Mensch: Überall hat er Notizen hinterlassen.',
     ende: 'Mit einem letzten Klicken springt die Werkstatttür auf. Auf dem Tisch liegt die fertige Turmuhr – '
       + 'und darunter ein Zettel: „Wer mit Zahlen und Größen umgehen kann, dem läuft die Zeit nie davon."',
     raetsel: [
       {
         titel: 'Rätsel 1: Das Ziffernschloss der Standuhr',
-        text: 'An der großen Standuhr hängen vier Messingplättchen mit eingravierten Zahlen. Theodors Notiz: '
-          + '„Von klein nach groß – dann lesen sich die Buchstaben von allein."',
+        text: 'Die große Standuhr steht still, ihr Pendel hängt reglos hinter dem Glas. An der Tür hängen vier Messingplättchen mit '
+          + 'eingravierten Zahlen, daneben Theodors Notiz: „Von klein nach groß – dann lesen sich die Buchstaben von allein."',
         auftrag: 'Bringe die Zahlen in die richtige Reihenfolge: <strong>von der kleinsten zur größten</strong>.',
         typ: 'reihenfolge',
         saat: 19,
@@ -216,7 +216,8 @@ export default [
       },
       {
         titel: 'Rätsel 2: Die Stellenwerttafel',
-        text: 'Im Regal steht eine Holztafel mit den Spalten M – HT – ZT – T – H – Z – E. Vier Karteikarten stecken darin.',
+        text: 'Im Regal steht eine Holztafel mit den Spalten M – HT – ZT – T – H – Z – E, abgegriffen von jahrzehntelangem Gebrauch. '
+          + 'Vier Karteikarten stecken darin, jede mit einer Frage in Theodors schmaler Handschrift.',
         auftrag: 'Beantworte die vier Fragen. Die <strong>vier Ziffern</strong> ergeben von oben nach unten den Code.',
         typ: 'rechnen',
         aufgaben: [
@@ -236,7 +237,8 @@ export default [
       },
       {
         titel: 'Rätsel 3: Die Werkzeugwand',
-        text: 'An der Wand hängen Werkzeuge mit Etiketten. Jedes Etikett hat einen Zwilling – dieselbe Größe, nur anders geschrieben.',
+        text: 'An der Wand hängt jedes Werkzeug an seinem Haken, darunter ein Etikett mit einer Größenangabe. Theodor hat jede Angabe '
+          + 'doppelt geschrieben – dieselbe Größe, nur in einer anderen Einheit. Beim Umhängen ist die Ordnung verloren gegangen.',
         auftrag: 'Verbinde die sechs Paare, die gleich groß sind.',
         typ: 'zuordnen',
         titelLinks: 'Etikett',
@@ -262,8 +264,8 @@ export default [
       },
       {
         titel: 'Rätsel 4: Der Kassenzettel',
-        text: 'In der Schublade liegt Theodors letzter Einkaufszettel. Er kaufte <strong>3 Zahnräder</strong> zu je 4,50 €, '
-          + '<strong>2 Federn</strong> zu je 7,25 € und <strong>1 Zifferblatt</strong> für 18,90 €. Bezahlt hat er mit einem 50-€-Schein.',
+        text: 'In der Schublade liegt Theodors letzter Einkaufszettel, der Betrag ganz unten ist mit Öl verschmiert. Er kaufte 3 '
+          + 'Zahnräder zu je 4,50 €, 2 Federn zu je 7,25 € und 1 Zifferblatt für 18,90 € – bezahlt hat er mit einem 50-€-Schein.',
         auftrag: 'Rechne den Einkauf nach. Der Code steckt im Gesamtpreis.',
         typ: 'rechnen',
         codeAmEnde: true,
@@ -284,7 +286,8 @@ export default [
       },
       {
         titel: 'Rätsel 5: Das Reparaturbuch',
-        text: 'Ganz hinten liegt Theodors Reparaturbuch. Jede Woche hat er als Säulendiagramm festgehalten.',
+        text: 'Ganz hinten auf der Werkbank liegt Theodors Reparaturbuch. Jede Woche hat er als Säulendiagramm festgehalten, fein mit '
+          + 'Lineal gezogen. Die letzte Woche verrät euch den letzten Code.',
         auftrag: 'Werte die letzte Woche aus. Schreibe die drei Ergebnisse direkt hintereinander.',
         typ: 'rechnen',
         codeAmEnde: true,
@@ -315,19 +318,20 @@ export default [
     thema: 'Symmetrie',
     kapitel: 'Kapitel II',
     kurz: 'Zweiter Raum zu Kapitel II: Spiegeln und Verschieben im Koordinatensystem, ein achsensymmetrisches Fensterbild, Punktsymmetrie, Vierecke.',
-    motiv: 'spiegel',
+    motiv: 'schloss',
     farbe: LILA,
-    dauer: '40–50 Minuten',
+    dauer: '50–65 Minuten',
     intro: 'Der Spiegelsaal von Schloss Falkenstein wird seit Jahren nicht mehr betreten. Die Schlossherrin hat '
-      + 'ihren Schlüssel in vier Rätseln versteckt – alle haben mit Spiegeln, Achsen und Formen zu tun. '
+      + 'ihren Schlüssel in sechs Rätseln versteckt – alle haben mit Spiegeln, Achsen und Formen zu tun. '
       + 'Wer den Saal verlassen will, muss sehr genau hinsehen.',
     ende: 'Die letzte Spiegeltür schwingt auf. Dahinter liegt der Ausgang – und an der Wand steht in geschwungener '
       + 'Schrift: „Was sich spiegelt, verändert sich nicht. Es sieht nur die Welt von der anderen Seite."',
     raetsel: [
       {
         titel: 'Rätsel 1: Die Spiegelgalerie',
-        text: 'Auf dem Boden ist ein großes Koordinatensystem eingelegt. Die grün gestrichelten Linien sind die '
-          + 'Spiegelachsen <strong>x = 5</strong> und <strong>y = 4</strong>, der gelbe Punkt <strong>Z</strong> ist das Spiegelzentrum.',
+        text: 'Im ersten Saal ist ein großes Koordinatensystem in den Parkettboden eingelegt. Die grün gestrichelten Linien sind die '
+          + 'Spiegelachsen x = 5 und y = 4, der gelbe Punkt Z ist das Spiegelzentrum. Vier Punkte leuchten auf – gesucht sind ihre '
+          + 'Bildpunkte.',
         auftrag: 'Bestimme jeweils die gefragte Koordinate des Bildpunktes. Jede richtige Antwort deckt einen Buchstaben auf.',
         typ: 'rechnen',
         bild: spiegelKoordinatenSvg(LILA),
@@ -348,8 +352,8 @@ export default [
       },
       {
         titel: 'Rätsel 2: Das zerbrochene Fensterbild',
-        text: 'Ein buntes Fenster ist zur Hälfte zersprungen. Die linke Hälfte ist noch da (gefüllte Felder), '
-          + 'die grüne Linie in der Mitte ist die Spiegelachse.',
+        text: 'Ein buntes Bleiglasfenster ist zur Hälfte zersprungen, die Scherben liegen längst im Hof. Die linke Hälfte steht noch '
+          + '(die gefüllten Felder), und die grüne Linie in der Mitte war schon immer die Mittelachse des Musters.',
         auftrag: 'Klicke die Felder rechts der Achse an, bis das Muster wieder <strong>achsensymmetrisch</strong> ist.',
         typ: 'gitter',
         spalten: 8,
@@ -367,8 +371,8 @@ export default [
       },
       {
         titel: 'Rätsel 3: Die Wappengalerie',
-        text: 'Sechs Wappen hängen im Saal. Die Schlossherrin liebte die Punktsymmetrie – nur die passenden Wappen '
-          + 'lassen sich von der Wand nehmen.',
+        text: 'Sechs Wappen hängen im Saal, jedes auf einer drehbaren Scheibe. Die Schlossherrin liebte Figuren, die auf dem Kopf '
+          + 'genauso aussehen wie richtig herum – nur diese Wappen lassen sich von der Wand nehmen.',
         auftrag: 'Markiere <strong>alle</strong> Figuren, die <strong>punktsymmetrisch</strong> sind.',
         typ: 'gitter',
         spalten: 3,
@@ -391,7 +395,8 @@ export default [
       },
       {
         titel: 'Rätsel 4: Der Schlüsselkasten',
-        text: 'Im Schlüsselkasten liegen sechs Namensschildchen und sechs Beschreibungen.',
+        text: 'Im Schlüsselkasten liegen sechs Namensschildchen und sechs vergilbte Beschreibungen, früher ordentlich mit Fäden '
+          + 'verbunden. Die Fäden sind morsch geworden und gerissen.',
         auftrag: 'Ordne jedem Fachbegriff seine Beschreibung zu.',
         typ: 'zuordnen',
         titelLinks: 'Fachbegriff',
@@ -429,17 +434,17 @@ export default [
     kurz: 'Zweiter Raum zu Kapitel III: Rechenvorteile, Teilbarkeit durch 6, Primfaktoren und schriftliche Verfahren.',
     motiv: 'labor',
     farbe: GRUEN,
-    dauer: '35–45 Minuten',
+    dauer: '50–65 Minuten',
     intro: 'Professor Primus ist verschwunden. Sein Labor ist verriegelt, und auf dem Schreibtisch liegt nur ein '
-      + 'Zettel: „Wer rechnen kann, kommt hinein." Vier Apparaturen versperren den Weg zum Tresor – und jede prüft '
+      + 'Zettel: „Wer rechnen kann, kommt hinein." Sechs Apparaturen versperren den Weg zum Tresor – und jede prüft '
       + 'eine andere Rechenfertigkeit.',
     ende: 'Der Tresor öffnet sich. Darin: ein Notizbuch voller Primzahlen und ein handgeschriebener Satz – '
       + '„Jede Zahl hat ihre Bausteine. Wer sie kennt, versteht die Zahl."',
     raetsel: [
       {
         titel: 'Rätsel 1: Der Rechenvorteil-Automat',
-        text: 'Ein Apparat mit vier Hebeln. Über jedem Hebel steht eine Rechnung – aber ohne Taschenrechner. '
-          + 'Daneben steht: „Wer geschickt rechnet, spart Zeit."',
+        text: 'Gleich hinter der Tür steht ein Apparat mit vier Hebeln, über jedem eine Rechnung auf Milchglas. Einen Taschenrechner '
+          + 'sucht man im ganzen Labor vergeblich. Daneben steht in Kreide: „Wer geschickt rechnet, spart Zeit."',
         auftrag: 'Nutze die Rechengesetze und rechne im Kopf. Von jedem Ergebnis ist die <strong>Hunderterziffer</strong> eine Codeziffer.',
         typ: 'rechnen',
         aufgaben: [
@@ -459,7 +464,8 @@ export default [
       },
       {
         titel: 'Rätsel 2: Der Teilbarkeits-Filter',
-        text: 'Eine Glasscheibe mit 25 eingravierten Zahlen. Nur bestimmte Felder leiten Strom – die Beschriftung lautet schlicht: „6".',
+        text: 'Eine Glasscheibe versperrt den Gang, 25 Zahlen sind hineingraviert. Nur bestimmte Felder leiten Strom, dann leuchtet '
+          + 'ein Pfad hindurch. Die einzige Beschriftung ist eine große, rot gemalte 6.',
         auftrag: 'Markiere <strong>alle</strong> Zahlen, die <strong>durch 6 teilbar</strong> sind.',
         typ: 'gitter',
         spalten: 5,
@@ -481,8 +487,8 @@ export default [
       },
       {
         titel: 'Rätsel 3: Die Primfaktor-Schleuse',
-        text: 'Vor dem Tresorraum steht eine Schleuse mit vier Anzeigen. Der Professor war überzeugt: '
-          + '„Primzahlen sind die Bausteine aller Zahlen."',
+        text: 'Vor dem Tresorraum steht eine Schleuse mit vier Anzeigen, die nacheinander aufblinken. Der Professor war überzeugt: '
+          + '„Primzahlen sind die Bausteine aller Zahlen." Sein handgeschriebenes Primzahl-Plakat hängt noch an der Wand.',
         auftrag: 'Beantworte die vier Fragen. Die <strong>vier Zahlen</strong> ergeben von oben nach unten den Code.',
         typ: 'rechnen',
         aufgaben: [
@@ -502,8 +508,8 @@ export default [
       },
       {
         titel: 'Rätsel 4: Das schriftliche Rechenwerk',
-        text: 'Die letzte Apparatur ist eine mechanische Rechenmaschine. Sie akzeptiert nur Ergebnisse, die sauber '
-          + 'schriftlich gerechnet wurden.',
+        text: 'Die letzte Apparatur ist eine mechanische Rechenmaschine mit Kurbel und Papierrolle. Sie nimmt nur Ergebnisse an, die '
+          + 'sauber schriftlich gerechnet wurden – wer rät, hört sie bloß ratternd zurückspulen.',
         auftrag: 'Rechne schriftlich. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
         typ: 'rechnen',
         aufgaben: [
@@ -533,18 +539,19 @@ export default [
     thema: 'Flächen, Umfang und Maßstab',
     kapitel: 'Kapitel IV',
     kurz: 'Zweiter Raum zu Kapitel IV: Flächeninhalt und Umfang, Flächeneinheiten sortieren, Zerlegen und Ergänzen, Maßstab.',
-    motiv: 'baustelle',
+    motiv: 'park',
     farbe: OCKER,
-    dauer: '35–45 Minuten',
+    dauer: '50–65 Minuten',
     intro: 'Der Stadtpark wird umgebaut – doch der Bauleiter ist erkrankt und hat den Bauwagen abgeschlossen. '
-      + 'In seinem Wagen liegen die Pläne, die morgen früh gebraucht werden. Vier Zahlenschlösser sichern den Wagen. '
+      + 'In seinem Wagen liegen die Pläne, die morgen früh gebraucht werden. Sechs Zahlenschlösser sichern den Wagen. '
       + 'Alles, was ihr braucht, steht auf den Bauplänen.',
     ende: 'Die Tür des Bauwagens geht auf, die Pläne liegen bereit. Auf dem obersten Blatt steht mit Bleistift: '
       + '„Erst messen, dann rechnen, dann bauen – in dieser Reihenfolge."',
     raetsel: [
       {
         titel: 'Rätsel 1: Der Bauplan',
-        text: 'Am Bauzaun hängt der Übersichtsplan: eine rechteckige Rasenfläche und ein rechtwinkliges Beet.',
+        text: 'Am Bauzaun flattert der Übersichtsplan im Wind, mit vier Reißnägeln befestigt. Zu sehen sind eine rechteckige '
+          + 'Rasenfläche und ein rechtwinkliges Beet, beide sauber vermaßt. Die Flächeninhalte hat der Bauleiter nie eingetragen.',
         auftrag: 'Berechne die vier Größen. Der Code setzt sich aus zwei davon zusammen.',
         typ: 'rechnen',
         codeAmEnde: true,
@@ -566,8 +573,8 @@ export default [
       },
       {
         titel: 'Rätsel 2: Der Einheiten-Turm',
-        text: 'Vier Schilder mit Flächenangaben liegen durcheinander. Der Bauleiter sortierte sie immer von der '
-          + 'kleinsten zur größten Fläche.',
+        text: 'Vier Schilder mit Flächenangaben lehnen durcheinander an der Wand des Bauwagens. Der Bauleiter stapelte sie immer von '
+          + 'der kleinsten zur größten Fläche – so fand er mit einem Griff das richtige.',
         auftrag: 'Sortiere die Flächen <strong>von der kleinsten zur größten</strong>.',
         typ: 'reihenfolge',
         saat: 67,
@@ -588,8 +595,8 @@ export default [
       },
       {
         titel: 'Rätsel 3: Das L-förmige Beet',
-        text: 'Der zweite Plan zeigt ein Beet, aus dem in der oberen rechten Ecke ein Teich ausgespart wurde. '
-          + 'Das gestrichelte Rechteck gehört <strong>nicht</strong> zum Beet.',
+        text: 'Der zweite Plan zeigt ein Beet, aus dem in der oberen rechten Ecke ein Teich ausgespart wurde. Das gestrichelte '
+          + 'Rechteck gehört nicht zum Beet. Gärtner und Zaunbauer brauchen beide Zahlen: die Fläche und den Umfang.',
         auftrag: 'Rechne Schritt für Schritt. Der Code setzt sich aus zwei Ergebnissen zusammen.',
         typ: 'rechnen',
         codeAmEnde: true,
@@ -611,8 +618,8 @@ export default [
       },
       {
         titel: 'Rätsel 4: Der Maßstab 1 : 200',
-        text: 'Das letzte Schloss sitzt an der Planrolle. <strong>Maßstab 1 : 200</strong> bedeutet: 1 cm auf dem Plan '
-          + 'entspricht 200 cm in Wirklichkeit.',
+        text: 'Das letzte Schloss sitzt an der Planrolle. Auf jedem Blatt steht unten rechts der Maßstab 1 : 200 – das heißt: 1 cm auf '
+          + 'dem Plan entspricht 200 cm in Wirklichkeit.',
         auftrag: 'Rechne zwischen Plan und Wirklichkeit um. Der Code sind die ersten beiden Antworten.',
         typ: 'rechnen',
         codeAmEnde: true,
@@ -645,16 +652,17 @@ export default [
     kurz: 'Zweiter Raum zu Kapitel V: Würfelnetze erkennen, Volumen, Oberflächeninhalt, Kantenlängen und Körpereigenschaften.',
     motiv: 'hafen',
     farbe: ROT,
-    dauer: '35–45 Minuten',
+    dauer: '50–65 Minuten',
     intro: 'In der Packstation am Hafen steht eine Kiste, die morgen verschifft werden muss – doch der Versandschein '
-      + 'liegt im verschlossenen Büro. Vier Schlösser, vier Aufgaben rund um Körper und Verpackungen. '
+      + 'liegt im verschlossenen Büro. Sechs Schlösser, sechs Aufgaben rund um Körper und Verpackungen. '
       + 'Danach kann die Kiste an Bord.',
     ende: 'Der Versandschein ist gefunden, die Kiste bekommt ihren Aufkleber. Der Lagerchef grinst: '
       + '„Wer Volumen und Oberfläche auseinanderhalten kann, verpackt richtig – und spart Material."',
     raetsel: [
       {
         titel: 'Rätsel 1: Die Würfelnetze',
-        text: 'An der Wand hängen sechs ausgeschnittene Pappvorlagen. Nur die echten Würfelnetze passen in die Faltmaschine.',
+        text: 'Draußen schlagen die Wellen gegen die Kaimauer. An der Wand der Packhalle hängen sechs ausgeschnittene Pappvorlagen, '
+          + 'alle aus sechs Quadraten. Nur die echten Würfelnetze nimmt die Faltmaschine an.',
         auftrag: 'Markiere <strong>alle</strong> Vorlagen, aus denen sich ein <strong>Würfel</strong> falten lässt.',
         typ: 'gitter',
         spalten: 3,
@@ -677,7 +685,8 @@ export default [
       },
       {
         titel: 'Rätsel 2: Der Volumen-Stapel',
-        text: 'Im Lagerregal stehen Kisten in verschiedenen Größen. Der Lagercomputer will vier Angaben sehen.',
+        text: 'Im Lagerregal stehen Kisten in allen Größen bis unter die Decke. Der Lagercomputer will vier Angaben sehen, bevor er '
+          + 'den nächsten Schein druckt – und er fragt nicht zweimal.',
         auftrag: 'Berechne die vier Werte. Der Code setzt sich aus drei Teilen zusammen.',
         typ: 'rechnen',
         codeAmEnde: true,
@@ -698,8 +707,8 @@ export default [
       },
       {
         titel: 'Rätsel 3: Die Kartonage',
-        text: 'Der Versandkarton soll neu beklebt werden. Er ist ein Quader mit den Maßen '
-          + '<strong>30 cm × 20 cm × 15 cm</strong>.',
+        text: 'Der Versandkarton soll neu beklebt werden, und die Rolle Papier ist knapp. Er ist ein Quader mit den Maßen 30 cm × 20 '
+          + 'cm × 15 cm. Wer zu viel abschneidet, fängt von vorn an.',
         auftrag: 'Berechne die drei Größen. Der Oberflächeninhalt ist zugleich der Code.',
         typ: 'rechnen',
         codeAmEnde: true,
@@ -720,7 +729,8 @@ export default [
       },
       {
         titel: 'Rätsel 4: Die Körper-Kartei',
-        text: 'Im Büro steht eine Kartei mit Körpermodellen.',
+        text: 'Im Büro steht eine Kartei mit Körpermodellen aus Holz, jedes in einem eigenen Fach. Zu jedem Modell gehört eine Karte '
+          + 'mit der Beschreibung – beim Umzug sind alle Karten aus den Fächern gefallen.',
         auftrag: 'Ordne jedem Körper seine Beschreibung zu.',
         typ: 'zuordnen',
         titelLinks: 'Körper',
@@ -758,16 +768,17 @@ export default [
     kurz: 'Zweiter Raum zu Kapitel VI: Anteile an Streifen ablesen und kürzen, Bruchteile von Größen, Prozente, Brüche vergleichen.',
     motiv: 'baeckerei',
     farbe: BRAUN,
-    dauer: '35–45 Minuten',
+    dauer: '50–65 Minuten',
     intro: 'Bäcker Bruno ist früh zum Markt gefahren und hat den Rezeptschrank abgeschlossen. In zwei Stunden kommt '
-      + 'die Schulklasse zur Backvorführung – ohne Rezepte wird das nichts. Vier Schlösser, vier Aufgaben rund um '
+      + 'die Schulklasse zur Backvorführung – ohne Rezepte wird das nichts. Sechs Schlösser, sechs Aufgaben rund um '
       + 'Anteile und Brüche stehen zwischen euch und dem Rezeptbuch.',
     ende: 'Der Rezeptschrank schwingt auf, es duftet nach Hefe. Auf dem obersten Rezept steht: „Ein Bruch sagt dir '
       + 'immer zwei Dinge: in wie viele Teile geteilt wurde – und wie viele du davon nimmst."',
     raetsel: [
       {
         titel: 'Rätsel 1: Die geteilten Kuchen',
-        text: 'In der Auslage liegen sechs Kuchenstreifen, jeder anders eingeteilt. Daneben liegen sechs Preisschilder mit Anteilen.',
+        text: 'In der Auslage liegen sechs Kuchenstreifen, jeder anders eingeteilt und zum Teil schon verkauft. Daneben liegen sechs '
+          + 'Preisschilder mit Anteilen. Bruno schreibt Anteile immer so knapp wie möglich – gekürzt, sagt er.',
         auftrag: 'Ordne jedem Streifen den passenden Anteil zu – und denke ans Kürzen!',
         typ: 'zuordnen',
         titelLinks: 'Kuchenstreifen',
@@ -793,7 +804,8 @@ export default [
       },
       {
         titel: 'Rätsel 2: Die Rezept-Waage',
-        text: 'Auf der Waage steht ein Zettel mit Brunos Mengenangaben – natürlich in Anteilen, wie immer.',
+        text: 'Auf der großen Waage steht ein Zettel mit Brunos Mengenangaben, daneben eine angebrochene Tüte Mehl. Natürlich hat er '
+          + 'alles in Anteilen notiert, wie immer – Gramm findet er langweilig.',
         auftrag: 'Rechne die Mengen aus. Der Code setzt sich aus vier Ziffern zusammen.',
         typ: 'rechnen',
         codeAmEnde: true,
@@ -815,7 +827,8 @@ export default [
       },
       {
         titel: 'Rätsel 3: Der Prozent-Ofen',
-        text: 'Der große Ofen hat ein Display, das nur Prozentzahlen versteht. Brüche musst du selbst umrechnen.',
+        text: 'Der große Ofen hat ein Display, das nur Prozentzahlen versteht. Bruno rechnet im Kopf um, während er den Teig knetet. '
+          + 'Ihr habt dafür etwas mehr Zeit – aber nicht viel.',
         auftrag: 'Rechne um. Der Code sind zwei der Antworten.',
         typ: 'rechnen',
         codeAmEnde: true,
@@ -836,7 +849,8 @@ export default [
       },
       {
         titel: 'Rätsel 4: Der Zahlenstrahl der Brötchen',
-        text: 'Am letzten Schrank hängt ein Zahlenstrahl mit vier Brötchenkarten. Bruno hat sie immer der Größe nach aufgehängt.',
+        text: 'Am letzten Schrank hängt ein Zahlenstrahl, daran vier Brötchenkarten an Wäscheklammern. Bruno hat sie immer der Größe '
+          + 'nach aufgehängt. Heute Morgen ging es offenbar schnell.',
         auftrag: 'Sortiere die Brüche <strong>vom kleinsten zum größten</strong>.',
         typ: 'reihenfolge',
         saat: 89,

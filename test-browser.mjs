@@ -7,7 +7,7 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { writeFile, mkdir } from 'node:fs/promises';
 import { extname, join } from 'node:path';
-import { STUFEN } from './config.js';
+import { STUFEN, ladeStufe } from './config.js';
 import { freigabeCode } from './freigabe.js';
 
 const WURZEL = import.meta.dirname;
@@ -373,6 +373,57 @@ async function pruefeStartbildschirm(browser) {
   await kontext.close();
 }
 
+async function pruefeMusik(browser, raum) {
+  console.log('\n== Musik');
+  const kontext = await browser.newContext();
+  const seite = await kontext.newPage();
+  const konsole = [];
+  seite.on('pageerror', e => konsole.push(e.message));
+  seite.on('console', m => { if (m.type() === 'error') konsole.push(m.text()); });
+
+  await seite.goto(`${BASIS}#/f/${freigabeCode([raum.id])}`);
+  await seite.goto(`${BASIS}#/spiel/${raum.id}`);
+  await seite.waitForSelector('.musikknopf');
+
+  const knopf = seite.locator('.musikknopf');
+  if (await knopf.getAttribute('aria-pressed') !== 'false') nicht('Musik ist beim Betreten nicht aus');
+  else ok('Musik ist beim Betreten aus');
+
+  await knopf.click();
+  await seite.waitForTimeout(700);
+  if (await knopf.getAttribute('aria-pressed') !== 'true') nicht('Musik lässt sich nicht einschalten');
+  else ok('Musik lässt sich einschalten');
+
+  const gemerkt = await seite.evaluate(() => localStorage.getItem('mer:musik'));
+  if (gemerkt !== 'true') nicht(`Einstellung wurde nicht gemerkt (${gemerkt})`);
+
+  const laeuft = await seite.evaluate(() => {
+    const k = window.AudioContext || window.webkitAudioContext;
+    return !!k;
+  });
+  if (!laeuft) nicht('Browser kennt keine Web-Audio-Schnittstelle');
+
+  // Raum verlassen und wieder betreten: Einstellung bleibt, Musik startet erneut
+  await seite.goto(`${BASIS}#/stufe/${raum.id.split('-')[0]}`);
+  await seite.waitForTimeout(300);
+  await seite.goto(`${BASIS}#/spiel/${raum.id}`);
+  await seite.waitForSelector('.musikknopf');
+  await seite.waitForTimeout(600);
+  if (await seite.locator('.musikknopf').getAttribute('aria-pressed') !== 'true') {
+    nicht('Musik bleibt beim erneuten Betreten nicht eingeschaltet');
+  } else ok('Einstellung bleibt beim Raumwechsel erhalten');
+
+  await seite.locator('.musikknopf').click();
+  await seite.waitForTimeout(400);
+  if (await seite.locator('.musikknopf').getAttribute('aria-pressed') !== 'false') nicht('Musik lässt sich nicht ausschalten');
+  else ok('Musik lässt sich ausschalten');
+
+  if (konsole.length) nicht('Fehler beim Abspielen: ' + konsole.slice(0, 2).join(' | '));
+  else ok('keine Fehler beim Abspielen');
+
+  await kontext.close();
+}
+
 async function pruefeFreigabeFehler(browser) {
   console.log('\n== Fehlerhafte Freigabe');
   const kontext = await browser.newContext();
@@ -394,9 +445,10 @@ const browser = await chromium.launch();
 
 try {
   for (const s of STUFEN.filter(x => x.fertig)) {
-    const daten = (await import(`./raeume-${s.stufe}.js`)).default;
+    const daten = await ladeStufe(s.stufe);
     await pruefeStartbildschirm(browser);
     await pruefeLehreransicht(browser, s.stufe);
+    await pruefeMusik(browser, daten.raeume[0]);
     await pruefeFreigabeFehler(browser);
     await pruefeSpeichern(browser, daten.raeume[0], s.stufe);
     for (const raum of daten.raeume) {

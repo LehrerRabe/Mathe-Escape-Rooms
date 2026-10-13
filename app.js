@@ -7,6 +7,7 @@ import { baueRaetsel } from './engine.js';
 import { qrSvg, qrModule } from './qr.js';
 import { freigabeAdresse, freigabeLesen, freigabeAufnehmen, freigegebene, istFreigegeben, freigabenZuruecksetzen } from './freigabe.js';
 import { urkundeLeinwand, urkundeHerunterladen } from './urkunde.js';
+import { stimmungZuMotiv, musikAn, setzeMusik, musikFortsetzen, musikAnhalten } from './musik.js';
 
 const kopf = document.getElementById('kopf');
 const inhalt = document.getElementById('inhalt');
@@ -169,27 +170,55 @@ async function ansichtStufe(ziel, stufe) {
     return;
   }
 
-  const raster = h('div', { class: 'raster' });
-  for (const r of sichtbar) {
-    const f = fortschritt(r.id);
-    const karte = h('article', { class: 'raumkarte' },
-      h('div', { class: 'kopfband', html: bandSvg(r.motiv, r.farbe) }),
-      h('div', { class: 'inhalt' },
-        h('h3', { text: r.titel }),
-        h('div', { class: 'thema', text: `${r.kapitel} · ${r.thema}` }),
-        h('p', { style: 'font-size:.9rem;color:var(--text-leise);margin:.3rem 0 0', text: r.kurz || '' }),
-        h('div', { class: 'fuss' },
-          h('span', { class: 'etikett', text: `${r.raetsel.length} Rätsel` }),
-          f?.fertig ? h('span', { class: 'etikett fertig', text: 'gelöst' })
-            : (f ? h('span', { class: 'etikett laeuft', text: `bei Rätsel ${Math.min(f.index + 1, r.raetsel.length)}` }) : null),
-          h('a', { class: 'knopf knopf-haupt klein', href: `#/raum/${r.id}`, style: 'margin-left:auto' },
-            f && !f.fertig ? 'fortsetzen' : 'starten'),
+  for (const gruppe of nachKapiteln(sichtbar)) {
+    ziel.append(h('h2', { class: 'kapitelzeile' },
+      h('span', { class: 'kapitelnummer', text: gruppe.kapitel }),
+      h('span', { text: gruppe.thema })));
+
+    const raster = h('div', { class: 'raster' });
+    for (const r of gruppe.raeume) {
+      const f = fortschritt(r.id);
+      raster.append(h('article', { class: 'raumkarte' },
+        h('div', { class: 'kopfband', html: bandSvg(r.motiv, r.farbe) }),
+        h('div', { class: 'inhalt' },
+          h('h3', { text: r.titel }),
+          h('div', { class: 'thema', text: `${r.kapitel} · ${r.thema}` }),
+          h('p', { style: 'font-size:.9rem;color:var(--text-leise);margin:.3rem 0 0', text: r.kurz || '' }),
+          h('div', { class: 'fuss' },
+            h('span', { class: 'etikett', text: `${r.raetsel.length} Rätsel` }),
+            f?.fertig ? h('span', { class: 'etikett fertig', text: 'gelöst' })
+              : (f ? h('span', { class: 'etikett laeuft', text: `bei Rätsel ${Math.min(f.index + 1, r.raetsel.length)}` }) : null),
+            h('a', { class: 'knopf knopf-haupt klein', href: `#/raum/${r.id}`, style: 'margin-left:auto' },
+              f && !f.fertig ? 'fortsetzen' : 'starten'),
+          ),
         ),
-      ),
-    );
-    raster.append(karte);
+      ));
+    }
+    ziel.append(raster);
   }
-  ziel.append(raster);
+}
+
+/* ---------- Räume nach Kapiteln gruppieren ---------- */
+
+const ROEMISCH = { I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6, VII: 7, VIII: 8, IX: 9, X: 10 };
+
+export function kapitelNummer(kapitel) {
+  const treffer = String(kapitel || '').match(/\b([IVX]+)\b/);
+  return (treffer && ROEMISCH[treffer[1]]) || 99;
+}
+
+/**
+ * Sortiert die Räume nach Kapitel und fasst Räume zum selben Kapitel zusammen.
+ * Zu mehreren Kapiteln gibt es zwei Räume – die stehen damit nebeneinander.
+ */
+function nachKapiteln(raeume) {
+  const gruppen = new Map();
+  for (const r of raeume) {
+    const nr = kapitelNummer(r.kapitel);
+    if (!gruppen.has(nr)) gruppen.set(nr, { nummer: nr, kapitel: r.kapitel, thema: r.thema, raeume: [] });
+    gruppen.get(nr).raeume.push(r);
+  }
+  return [...gruppen.values()].sort((a, b) => a.nummer - b.nummer);
 }
 
 /* =====================================================================
@@ -218,7 +247,7 @@ async function ansichtRaum(ziel, raumId) {
   const f = fortschritt(raum.id);
 
   ziel.append(h('div', { class: 'karte' },
-    h('div', { class: 'kopfband', style: 'height:110px;margin:-1.1rem -1.2rem 1rem;border-radius:14px 14px 0 0;overflow:hidden', html: bandSvg(raum.motiv, raum.farbe) }),
+    h('div', { class: 'kopfband', style: 'height:210px;margin:-1.1rem -1.2rem 1.1rem;border-radius:14px 14px 0 0;overflow:hidden', html: bandSvg(raum.motiv, raum.farbe) }),
     h('h1', { text: raum.titel }),
     h('p', { class: 'thema', style: 'color:var(--text-leise);margin-top:-.3rem', text: `${raum.kapitel} · ${raum.thema}` }),
     h('p', { html: raum.intro }),
@@ -312,9 +341,30 @@ async function ansichtSpiel(ziel, raumId) {
   const menueKnopf = h('button', { type: 'button' }, svgIcon(ICON.menu, 18), 'Menü');
   menueKnopf.addEventListener('click', () => spielMenue(raum, f, jetztVerstrichen, stufe));
 
+  /* Musik: standardmäßig aus, die Wahl merkt sich das Gerät. */
+  const stimmung = stimmungZuMotiv(raum.motiv);
+  const musikKnopf = h('button', { type: 'button', class: 'musikknopf' });
+  const zeichneMusikKnopf = () => {
+    const laeuft = musikAn();
+    leer(musikKnopf);
+    musikKnopf.append(svgIcon(laeuft ? ICON.ton : ICON.tonAus, 18));
+    musikKnopf.classList.toggle('aktiv', laeuft);
+    musikKnopf.setAttribute('aria-pressed', laeuft ? 'true' : 'false');
+    musikKnopf.setAttribute('aria-label', laeuft ? 'Musik ausschalten' : 'Musik einschalten');
+    musikKnopf.title = laeuft ? 'Musik ausschalten' : 'Musik einschalten';
+  };
+  musikKnopf.addEventListener('click', async () => {
+    musikKnopf.disabled = true;
+    await setzeMusik(stimmung, !musikAn());
+    musikKnopf.disabled = false;
+    zeichneMusikKnopf();
+  });
+  zeichneMusikKnopf();
+  musikFortsetzen(stimmung).then(zeichneMusikKnopf);
+
   ziel.append(h('div', { class: 'spielkopf' },
     h('strong', { text: raum.titel }),
-    timer, menueKnopf, punkte,
+    timer, menueKnopf, musikKnopf, punkte,
   ));
   zeichnePunkte();
 
@@ -547,7 +597,15 @@ async function ansichtLehrer(ziel) {
     }
 
     const kaestchen = [];
-    for (const r of daten.raeume) {
+    const nachKapitel = daten.raeume.slice()
+      .sort((a, b) => kapitelNummer(a.kapitel) - kapitelNummer(b.kapitel)
+        || a.id.localeCompare(b.id, 'de', { numeric: true }));
+    let letztesKapitel = null;
+    for (const r of nachKapitel) {
+      if (r.kapitel !== letztesKapitel) {
+        letztesKapitel = r.kapitel;
+        karte.append(h('div', { class: 'kapiteltrenner', text: `${r.kapitel} · ${r.thema}` }));
+      }
       const box = h('input', { type: 'checkbox', 'aria-label': `${r.titel} auswählen` });
       box.dataset.raum = r.id;
       kaestchen.push(box);
@@ -676,6 +734,7 @@ async function ansichtFreigabe(ziel, code) {
 
 async function route() {
   if (laufenderTimer) { clearInterval(laufenderTimer); laufenderTimer = null; }
+  musikAnhalten();   // beim Verlassen eines Raums verstummt die Musik
   const pfad = (location.hash || '#/').replace(/^#\/?/, '');
   const teile = pfad.split('/').filter(Boolean);
   zeichneKopf();

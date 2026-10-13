@@ -194,6 +194,37 @@ const ZEICHNUNGEN = {
     <ellipse cx="400" cy="216" rx="26" ry="18" fill="${f}" opacity=".5"/>
     <path d="M186 212 l28 8 M386 212 l28 8" stroke="#fff" stroke-width="3" opacity=".6"/>`,
 
+  schloss: (f) => `
+    <rect x="150" y="178" width="300" height="94" fill="${f}" opacity=".75"/>
+    ${[160, 196, 232, 268, 304, 340, 376, 412].map(x =>
+      `<rect x="${x}" y="160" width="22" height="20" fill="${f}" opacity=".75"/>`).join('')}
+    <rect x="112" y="128" width="74" height="144" fill="${f}" opacity=".9"/>
+    <rect x="414" y="128" width="74" height="144" fill="${f}" opacity=".9"/>
+    <path d="M104 128 L149 76 L194 128 Z" fill="${f}"/>
+    <path d="M406 128 L451 76 L496 128 Z" fill="${f}"/>
+    <rect x="258" y="92" width="84" height="88" fill="${f}" opacity=".95"/>
+    ${[262, 292, 322].map(x => `<rect x="${x}" y="76" width="18" height="18" fill="${f}"/>`).join('')}
+    <path d="M300 76 V48 h40 l-12 11 12 11 h-40" fill="${f}" opacity=".8"/>
+    <path d="M276 272 v-42 a24 24 0 0 1 48 0 v42 z" fill="#fff" opacity=".55"/>
+    ${[136, 170, 438, 472].map(x => `<rect x="${x}" y="162" width="14" height="22" rx="7" fill="#fff" opacity=".45"/>`).join('')}
+    <rect x="96" y="268" width="408" height="14" fill="${f}"/>`,
+
+  park: (f) => `
+    <rect x="70" y="256" width="460" height="14" rx="7" fill="${f}" opacity=".8"/>
+    <path d="M150 256 q60 -40 150 -40 q90 0 150 40" fill="none" stroke="${f}" stroke-width="12" opacity=".35"/>
+    <rect x="166" y="196" width="16" height="60" fill="${f}" opacity=".9"/>
+    <circle cx="174" cy="160" r="54" fill="${f}" opacity=".65"/>
+    <circle cx="142" cy="178" r="34" fill="${f}" opacity=".5"/>
+    <circle cx="208" cy="180" r="32" fill="${f}" opacity=".5"/>
+    <rect x="432" y="206" width="14" height="50" fill="${f}" opacity=".9"/>
+    <path d="M439 96 L482 168 h-86 Z" fill="${f}" opacity=".7"/>
+    <path d="M439 136 L492 210 h-106 Z" fill="${f}" opacity=".55"/>
+    <rect x="268" y="214" width="112" height="12" rx="5" fill="${f}" opacity=".85"/>
+    <rect x="268" y="188" width="112" height="10" rx="5" fill="${f}" opacity=".7"/>
+    <rect x="274" y="226" width="10" height="30" fill="${f}" opacity=".85"/>
+    <rect x="364" y="226" width="10" height="30" fill="${f}" opacity=".85"/>
+    <rect x="86" y="222" width="34" height="34" rx="4" fill="${f}" opacity=".45"/>`,
+
   standard: (f) => `
     <rect x="200" y="110" width="200" height="150" rx="16" fill="${f}" opacity=".8"/>
     <path d="M240 110 V80 a60 60 0 0 1 120 0 v30" fill="none" stroke="${f}" stroke-width="18" opacity=".85"/>
@@ -224,13 +255,11 @@ export function motivVorhanden(name) { return Object.hasOwn(ZEICHNUNGEN, name); 
 
 export function bandSvg(motiv, farbe) {
   const zeichnung = (ZEICHNUNGEN[motiv] || ZEICHNUNGEN.standard)('#ffffff');
-  const id = 'g' + Math.random().toString(36).slice(2, 8);
-  return `<svg viewBox="0 0 600 120" preserveAspectRatio="xMidYMid slice" role="img" aria-hidden="true">
-    <defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="${farbe}"/><stop offset="1" stop-color="${dunkler(farbe, .42)}"/>
-    </linearGradient></defs>
-    <rect width="600" height="120" fill="url(#${id})"/>
-    <g opacity=".28" transform="translate(0,-55)">${zeichnung}</g>
+  // Der Farbverlauf liegt als Hintergrund hinter der Zeichnung. Dadurch kann die
+  // Zeichnung mit "meet" vollständig hineinpassen, ohne dass Ränder leer bleiben.
+  return `<svg viewBox="0 0 600 300" preserveAspectRatio="xMidYMid meet" role="img" aria-hidden="true"
+      style="background: linear-gradient(135deg, ${farbe}, ${dunkler(farbe, .45)})">
+    <g opacity=".5">${zeichnung}</g>
   </svg>`;
 }
 

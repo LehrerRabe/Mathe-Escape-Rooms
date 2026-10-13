@@ -48,6 +48,8 @@ export const ICON = {
   zurueck: 'M15 18l-6-6 6-6',
   qr: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 14h2v2h-2zM16 16h2v2h-2zM14 18h2v2h-2zM18 18h2v2h-2z',
   haken: 'M4 12l5 5L20 6',
+  ton: 'M11 5L6 9H2v6h4l5 4V5zM15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13',
+  tonAus: 'M11 5L6 9H2v6h4l5 4V5zM22 9l-6 6M16 9l6 6',
   stern: 'M12 3l2.7 5.6 6.3.9-4.5 4.4 1 6.1L12 17.1 6.5 20l1-6.1L3 9.5l6.3-.9z',
 };
 
