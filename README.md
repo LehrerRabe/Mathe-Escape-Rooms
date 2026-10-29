@@ -3,14 +3,23 @@
 Interaktive Escape Rooms für den Mathematikunterricht am Gymnasium in NRW (G9),
 Jahrgangsstufe 5–10. Reine statische Webseite: kein Server, kein Konto, kein Build-Schritt.
 
-**Stand:** Klasse 5 und Klasse 6 vollständig – **19 Räume mit 115 Rätseln**. Klassen 7–10 folgen.
+**Stand:** Klasse 5 bis Klasse 10 vollständig – **74 Räume mit 445 Rätseln**.
 
 Jeder Raum enthält **sechs Rätsel** (Raum 5-7: sieben) und dauert damit etwa 50 bis 65 Minuten.
 In der Übersicht einer Jahrgangsstufe sind die Räume **nach Kapiteln** gruppiert.
 
-Zu jedem der sechs Kapitel der Klasse 5 gibt es **zwei** Escape Rooms mit unterschiedlichen
-Geschichten und Aufgaben (5-1 bis 5-6 sowie 5-7 bis 5-12). Das eignet sich für Parallelgruppen,
+Zu **jedem Kapitel jeder Jahrgangsstufe** gibt es **zwei** Escape Rooms mit unterschiedlichen
+Geschichten und Aufgaben (z. B. 5-1 bis 5-6 und 5-7 bis 5-12). Das eignet sich für Parallelgruppen,
 für eine zweite Runde oder zur Differenzierung.
+
+| Stufe | Räume | Kapitel |
+| --- | --- | --- |
+| 5 | 12 | I Zahlen und Größen · II Symmetrie · III Rechnen · IV Flächen · V Körper · VI Brüche |
+| 6 | 14 | I Brüche · II Dezimalzahlen · III Addieren/Subtrahieren · IV Muster und Figuren · V Multiplizieren/Dividieren · VI Daten · VII Beziehungen zwischen Zahlen |
+| 7 | 12 | I Rationale Zahlen · II Zuordnungen · III Prozent und Zinsen · IV Terme und Gleichungen · V Konstruieren und Argumentieren · VI Wahrscheinlichkeit |
+| 8 | 12 | I Wahrscheinlichkeit · II Lineare Funktionen · III Terme mit mehreren Variablen · IV Flächen · V Lineare Gleichungssysteme · VI Kreise und Dreiecke |
+| 9 | 12 | I Reelle Zahlen · II Quadratische Funktionen · III Kreise, Prismen und Zylinder · IV Potenzen · V Pythagoras und Körper · VI Daten und Wahrscheinlichkeit |
+| 10 | 12 | I Daten und Wahrscheinlichkeit · II Quadratische Gleichungen · III Ähnlichkeit · IV Exponentialfunktionen · V Trigonometrie · VI Trigonometrische Funktionen |
 
 ## Veröffentlichen auf GitHub Pages
 
@@ -101,14 +110,27 @@ es gibt keine Audiodateien, nichts wird nachgeladen, und es sind keine Rechte zu
   den folgenden Räumen – das Gerät merkt sich die Wahl.
 * Beim Verlassen des Raums und sobald der Tab in den Hintergrund rutscht, verstummt sie.
 
-Welche Stimmung ein Raum bekommt, ergibt sich aus seinem Motiv (`musik.js`, `NACH_MOTIV`):
-*feierlich* (Museum), *geheimnis* (Spiegelsaal, Tresor), *werkstatt* (Schmiede, Uhrmacher,
-Fabrik, Baustelle), *weit* (Sternwarte, Hafen, Wetterstation), *heiter* (Pizzeria, Markt,
-Bäckerei), *labor*, *ruhig*.
+**Jeder Raum klingt anders.** Die Stimmung legt den Charakter fest, dazu kommt eine Variante,
+die nur an der Raumkennung hängt: andere Tonart, andere Tonleiter, anderes Tempo, andere
+Klangfarbe (`klangFuerRaum()` in `musik.js`). Zwei Werkstatt-Räume klingen damit verwandt,
+aber nicht gleich – und derselbe Raum klingt bei jedem Besuch wieder gleich.
 
-Eine Hörprobe als WAV erzeugt `node hoerprobe.mjs` (braucht Playwright) – wahlweise für
-alle Stimmungen oder für eine einzelne, z. B. `node hoerprobe.mjs geheimnis`. Das Skript
-rendert die Musik offline und meldet nebenbei, ob sie überhaupt klingt.
+Welche Stimmung ein Raum bekommt, ergibt sich aus seinem Motiv (`musik.js`, `NACH_MOTIV`):
+*feierlich* (Museum, Thaleskreis), *geheimnis* (Spiegelsaal, Tresor, Waage, Würfel, Urne),
+*werkstatt* (Schmiede, Uhrmacher, Fabrik, Baustelle, Brücke, Mosaik, Bahnhof),
+*weit* (Sternwarte, Hafen, Tauchboot, Seilbahn, Kompass), *heiter* (Pizzeria, Markt, Bäckerei,
+Fahrrad, Glücksrad), *labor*, *ruhig*.
+
+Eine Hörprobe als WAV erzeugt `node hoerprobe.mjs` (braucht Playwright):
+
+```bash
+node hoerprobe.mjs                 # alle Stimmungen nacheinander
+node hoerprobe.mjs geheimnis       # eine einzelne Stimmung
+node hoerprobe.mjs 9-1 9-3 10-4    # einzelne Räume mit ihrer eigenen Variante
+node hoerprobe.mjs raeume 9        # alle Räume einer Jahrgangsstufe
+```
+
+Das Skript rendert die Musik offline und meldet nebenbei, ob sie überhaupt klingt.
 
 Lautstärke und Klangfarben stehen oben in `musik.js` (`LAUTSTAERKE`, `STIMMUNGEN`).
 
@@ -128,16 +150,22 @@ Lautstärke und Klangfarben stehen oben in `musik.js` (`LAUTSTAERKE`, `STIMMUNGE
 | `config.js` | Version, Passwort-Prüfsumme, Liste der Jahrgangsstufen |
 | `freigabe.js` | Freigabe-Links und gespeicherte Freigaben |
 | `qr.js`, `qrcode-lib.mjs` | QR-Codes (fest eingebaut, offlinefähig) |
-| `motive.js` | Alle Motive als Vektorgrafik |
+| `motive.js` | Alle 59 Motive als Vektorgrafik |
 | `urkunde.js`, `pdf.js` | Urkunde zeichnen und als PDF ausgeben |
 | `util.js` | kleine Helfer (Speicher, Zeit, Antwortvergleich) |
 | `raeume-5.js` | Inhalte der Klasse 5, erster Satz (6 Räume) |
 | `raeume-5-weitere.js` | Inhalte der Klasse 5, zweiter Satz (6 Räume) |
-| `raeume-6.js` | Inhalte der Klasse 6 (7 Räume) |
+| `raeume-6.js`, `raeume-6-weitere.js` | Inhalte der Klasse 6 (7 Räume je Datei) |
+| `raeume-7.js`, `raeume-7-weitere.js` | Inhalte der Klasse 7 (je 6 Räume) |
+| `raeume-8.js`, `raeume-8-weitere.js` | Inhalte der Klasse 8 (je 6 Räume) |
+| `raeume-9.js`, `raeume-9-weitere.js` | Inhalte der Klasse 9 (je 6 Räume) |
+| `raeume-10.js`, `raeume-10-weitere.js` | Inhalte der Klasse 10 (je 6 Räume) |
 | `raetsel-zusatz-5.js`, `raetsel-zusatz-6.js` | die später ergänzten Rätsel 5 und 6 je Raum |
+| `raetsel-zusatz-7.js` … `raetsel-zusatz-10.js` | leer – Platz für spätere Ergänzungen |
 | `check.mjs` | prüft alle Rätseldaten |
 | `test-browser.mjs` | spielt jeden Raum im Browser komplett durch |
 | `screenshots.mjs`, `screenshots6.mjs` | erzeugen Bildschirmfotos zur Sichtprüfung |
+| `motivprobe.mjs` | zeigt alle Motive als Kacheln (Sichtprüfung) |
 
 ## Rätseltypen
 
@@ -150,13 +178,18 @@ Lautstärke und Klangfarben stehen oben in `musik.js` (`LAUTSTAERKE`, `STIMMUNGE
 | `gitter` | Zellen markieren, die eine Bedingung erfüllen |
 | `gitter` mit `fest` | Mustergitter: vorgegebene Felder spiegeln (`achseNach`, `klein`) |
 
+**Wichtig bei `reihenfolge`:** Die Elemente stehen in der Datei **in der richtigen Lösungsreihenfolge**.
+Angezeigt werden sie gemischt – die Mischung steuert die Zahl bei `saat`. Wer neue Rätsel schreibt,
+muss die Liste also sortiert anlegen, sonst ist das Rätsel nicht lösbar.
+
 Jedes Rätsel deckt beim Lösen die Zeichen des Codes auf – entweder Schritt für
 Schritt (`zeichen` je Teilaufgabe) oder erst am Ende (`codeAmEnde: true`).
 
 ## Eine Jahrgangsstufe ergänzen
 
-1. Datei `raeume-7.js` nach dem Muster von `raeume-5.js` bzw. `raeume-6.js` anlegen.
-2. Datei `raetsel-zusatz-7.js` anlegen – auch eine leere Zuordnung (`export default {};`) genügt,
+1. Datei `raeume-9.js` nach dem Muster von `raeume-7.js` bzw. `raeume-8.js` anlegen
+   (zweiter Satz optional in `raeume-9-weitere.js`).
+2. Datei `raetsel-zusatz-9.js` anlegen – auch eine leere Zuordnung (`export default {};`) genügt,
    `ladeStufe()` in `config.js` erwartet die Datei.
 3. In `config.js` bei der Stufe `fertig: true` setzen.
 4. `node check.mjs` und `node test-browser.mjs` laufen lassen.

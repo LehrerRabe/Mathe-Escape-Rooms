@@ -2,7 +2,11 @@
    Themen nach dem schulinternen Curriculum (Lambacher Schweizer G9, Kernlehrplan NRW 23.06.2019):
    I Brüche · II Brüche in Dezimalschreibweise · III Addieren und Subtrahieren ·
    IV Muster und Figuren · V Multiplizieren und Dividieren · VI Daten ·
-   VII Beziehungen zwischen Zahlen                                                            */
+   VII Beziehungen zwischen Zahlen
+
+   Zu jedem Kapitel gibt es einen zweiten Raum in `raeume-6-weitere.js`.                       */
+
+import weitereRaeume from './raeume-6-weitere.js';
 
 /* ---------- Hilfszeichnungen ---------- */
 
@@ -75,9 +79,7 @@ const MESSREIHE = [3, 5, 5, 7, 8, 9, 13, 14, 15, 20, 21, 24];
 
 /* ---------- Räume ---------- */
 
-export default {
-  stufe: 6,
-  raeume: [
+const GRUNDRAEUME = [
 
     /* =============================================================
        Kapitel I – Brüche: das Ganze und seine Teile
@@ -882,5 +884,9 @@ export default {
       ],
     },
 
-  ],
+];
+
+export default {
+  stufe: 6,
+  raeume: [...GRUNDRAEUME, ...weitereRaeume],
 };

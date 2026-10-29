@@ -225,6 +225,459 @@ const ZEICHNUNGEN = {
     <rect x="364" y="226" width="10" height="30" fill="${f}" opacity=".85"/>
     <rect x="86" y="222" width="34" height="34" rx="4" fill="${f}" opacity=".45"/>`,
 
+  /* ---------- Motive für die Jahrgangsstufen 7 und 8 ---------- */
+
+  tauchboot: (f) => `
+    <path d="M60 148 q140 -20 280 0 q140 20 200 0" fill="none" stroke="${f}" stroke-width="6" opacity=".5"/>
+    <ellipse cx="300" cy="212" rx="150" ry="52" fill="${f}" opacity=".8"/>
+    <rect x="268" y="150" width="64" height="40" rx="10" fill="${f}" opacity=".9"/>
+    <path d="M300 150 V112" stroke="${f}" stroke-width="8" stroke-linecap="round"/>
+    <path d="M300 118 h34" stroke="${f}" stroke-width="8" stroke-linecap="round"/>
+    ${[250, 300, 350].map(x => `<circle cx="${x}" cy="212" r="16" fill="#fff" opacity=".6"/>`).join('')}
+    <path d="M450 186 l54 -26 v104 z" fill="${f}" opacity=".6"/>
+    <text x="66" y="112" font-family="serif" font-size="44" font-weight="700" fill="${f}" opacity=".6">0</text>
+    <text x="52" y="258" font-family="serif" font-size="44" font-weight="700" fill="${f}" opacity=".6">−8</text>
+    <path d="M86 126 V236" stroke="${f}" stroke-width="4" opacity=".45"/>`,
+
+  thermometer: (f) => `
+    <rect x="276" y="44" width="48" height="176" rx="24" fill="none" stroke="${f}" stroke-width="10"/>
+    <circle cx="300" cy="236" r="40" fill="${f}" opacity=".9"/>
+    <rect x="288" y="130" width="24" height="96" fill="${f}" opacity=".9"/>
+    ${[70, 100, 130, 160, 190].map((y, i) =>
+      `<path d="M330 ${y} h${i % 2 ? 20 : 34}" stroke="${f}" stroke-width="5" opacity=".6"/>`).join('')}
+    <text x="396" y="80" font-family="serif" font-size="34" font-weight="700" fill="${f}" opacity=".6">+10</text>
+    <text x="400" y="204" font-family="serif" font-size="34" font-weight="700" fill="${f}" opacity=".6">−10</text>
+    ${[[130, 92], [172, 150], [128, 212]].map(([x, y]) =>
+      `<path d="M${x} ${y - 26} V${y + 26} M${x - 23} ${y - 13} L${x + 23} ${y + 13} M${x - 23} ${y + 13} L${x + 23} ${y - 13}"
+        stroke="${f}" stroke-width="6" stroke-linecap="round" opacity=".5"/>`).join('')}`,
+
+  fahrrad: (f) => `
+    <circle cx="170" cy="200" r="72" fill="none" stroke="${f}" stroke-width="11" opacity=".9"/>
+    <circle cx="430" cy="200" r="72" fill="none" stroke="${f}" stroke-width="11" opacity=".9"/>
+    <path d="M170 200 L246 200 L300 118 L354 200 L430 200 M246 200 L300 200 L300 118"
+      fill="none" stroke="${f}" stroke-width="9" stroke-linejoin="round" opacity=".85"/>
+    <path d="M276 108 h54" stroke="${f}" stroke-width="9" stroke-linecap="round"/>
+    <path d="M344 112 l34 -8" stroke="${f}" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="300" cy="200" r="18" fill="${f}" opacity=".9"/>
+    ${[0, 60, 120].map(a => {
+      const r = a * Math.PI / 180;
+      return `<line x1="${(170 - Math.cos(r) * 66).toFixed(1)}" y1="${(200 - Math.sin(r) * 66).toFixed(1)}"
+        x2="${(170 + Math.cos(r) * 66).toFixed(1)}" y2="${(200 + Math.sin(r) * 66).toFixed(1)}"
+        stroke="${f}" stroke-width="4" opacity=".5"/>`;
+    }).join('')}`,
+
+  wasser: (f) => `
+    <rect x="300" y="86" width="190" height="120" rx="12" fill="${f}" opacity=".55"/>
+    <rect x="300" y="146" width="190" height="60" rx="8" fill="${f}" opacity=".85"/>
+    <path d="M300 126 h-86 v44" fill="none" stroke="${f}" stroke-width="16" stroke-linecap="round"/>
+    <rect x="186" y="96" width="56" height="18" rx="8" fill="${f}" opacity=".9"/>
+    ${[0, 1, 2].map(i => `<path d="M214 ${186 + i * 26} v16" stroke="${f}" stroke-width="7" stroke-linecap="round" opacity="${0.8 - i * 0.2}"/>`).join('')}
+    <path d="M118 266 q34 -18 68 0 q34 18 68 0 q34 -18 68 0 q34 18 68 0 q34 -18 68 0"
+      fill="none" stroke="${f}" stroke-width="8" opacity=".6"/>
+    <path d="M110 150 q26 -44 52 0 a26 26 0 0 1 -52 0z" fill="${f}" opacity=".6"/>`,
+
+  prozent: (f) => `
+    <rect x="130" y="76" width="340" height="150" rx="18" fill="${f}" opacity=".8"/>
+    <circle cx="222" cy="128" r="26" fill="none" stroke="#fff" stroke-width="12"/>
+    <circle cx="378" cy="178" r="26" fill="none" stroke="#fff" stroke-width="12"/>
+    <path d="M396 96 L204 210" stroke="#fff" stroke-width="13" stroke-linecap="round"/>
+    <path d="M130 226 l40 40 h260 l40 -40" fill="${f}" opacity=".5"/>
+    <circle cx="300" cy="62" r="14" fill="${f}" opacity=".7"/>
+    <path d="M86 240 h60 M86 206 h36" stroke="${f}" stroke-width="7" stroke-linecap="round" opacity=".5"/>
+    <path d="M454 240 h60 M478 206 h36" stroke="${f}" stroke-width="7" stroke-linecap="round" opacity=".5"/>`,
+
+  waage: (f) => `
+    <path d="M300 60 V236" stroke="${f}" stroke-width="12" stroke-linecap="round"/>
+    <path d="M140 96 H460" stroke="${f}" stroke-width="12" stroke-linecap="round"/>
+    <circle cx="300" cy="80" r="18" fill="${f}"/>
+    <path d="M140 96 V140 M460 96 V140" stroke="${f}" stroke-width="5" opacity=".7"/>
+    <path d="M78 140 h124 a62 62 0 0 1 -124 0z" fill="${f}" opacity=".8"/>
+    <path d="M398 140 h124 a62 62 0 0 1 -124 0z" fill="${f}" opacity=".8"/>
+    <path d="M226 236 h148 l22 36 h-192z" fill="${f}" opacity=".85"/>
+    <text x="140" y="124" font-family="serif" font-size="40" font-weight="700" text-anchor="middle" fill="${f}">x</text>
+    <text x="460" y="124" font-family="serif" font-size="40" font-weight="700" text-anchor="middle" fill="${f}">7</text>`,
+
+  winkel: (f) => `
+    <path d="M90 252 H520" stroke="${f}" stroke-width="10" stroke-linecap="round"/>
+    <path d="M110 252 L430 74" stroke="${f}" stroke-width="10" stroke-linecap="round"/>
+    <path d="M110 252 L470 160" stroke="${f}" stroke-width="8" stroke-linecap="round" opacity=".7"/>
+    <path d="M230 252 A120 120 0 0 0 200 178" fill="none" stroke="${f}" stroke-width="6" opacity=".8"/>
+    <path d="M276 252 A166 166 0 0 0 266 212" fill="none" stroke="${f}" stroke-width="6" opacity=".55"/>
+    <path d="M330 70 h180 l-90 110 z" fill="${f}" opacity=".3"/>
+    <text x="246" y="226" font-family="serif" font-size="34" font-weight="700" fill="${f}" opacity=".85">α</text>
+    <text x="316" y="240" font-family="serif" font-size="30" font-weight="700" fill="${f}" opacity=".6">β</text>`,
+
+  bruecke: (f) => `
+    <path d="M60 196 H540" stroke="${f}" stroke-width="12" stroke-linecap="round"/>
+    <path d="M60 196 L140 96 L220 196 L300 96 L380 196 L460 96 L540 196" fill="none" stroke="${f}" stroke-width="9" stroke-linejoin="round" opacity=".9"/>
+    <path d="M140 96 H460" stroke="${f}" stroke-width="9" stroke-linecap="round" opacity=".75"/>
+    <path d="M60 196 V262 M300 196 V262 M540 196 V262" stroke="${f}" stroke-width="10" stroke-linecap="round" opacity=".7"/>
+    <path d="M60 270 H540" stroke="${f}" stroke-width="8" opacity=".5"/>
+    ${[140, 300, 460].map(x => `<circle cx="${x}" cy="96" r="10" fill="${f}" opacity=".9"/>`).join('')}
+    ${[60, 220, 380, 540].map(x => `<circle cx="${x}" cy="196" r="9" fill="${f}" opacity=".8"/>`).join('')}`,
+
+  glueckrad: (f) => `
+    <circle cx="290" cy="166" r="110" fill="none" stroke="${f}" stroke-width="10"/>
+    ${Array.from({ length: 8 }, (_, i) => {
+      const a1 = i * Math.PI / 4, a2 = (i + 1) * Math.PI / 4;
+      const x1 = 290 + Math.cos(a1) * 104, y1 = 166 + Math.sin(a1) * 104;
+      const x2 = 290 + Math.cos(a2) * 104, y2 = 166 + Math.sin(a2) * 104;
+      return `<path d="M290 166 L${x1.toFixed(1)} ${y1.toFixed(1)} A104 104 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)} Z"
+        fill="${f}" opacity="${i % 2 ? 0.25 : 0.65}"/>`;
+    }).join('')}
+    <circle cx="290" cy="166" r="18" fill="${f}"/>
+    <path d="M290 36 l-18 30 h36z" fill="${f}" opacity=".9"/>
+    <path d="M290 276 V274 M256 276 h68" stroke="${f}" stroke-width="10" stroke-linecap="round"/>
+    <path d="M466 92 l14 34 36 4 -27 25 8 36 -31 -19 -31 19 8 -36 -27 -25 36 -4z" fill="${f}" opacity=".5"/>`,
+
+  wuerfel: (f) => `
+    <path d="M300 48 L448 118 L448 230 L300 300 L152 230 L152 118 Z" fill="${f}" opacity=".18"/>
+    <rect x="186" y="104" width="150" height="150" rx="18" fill="${f}" opacity=".8" transform="rotate(-8 261 179)"/>
+    ${[[218, 136], [304, 136], [218, 222], [304, 222], [261, 179]].map(([x, y]) =>
+      `<circle cx="${x}" cy="${y}" r="15" fill="#fff" opacity=".85" transform="rotate(-8 261 179)"/>`).join('')}
+    <rect x="348" y="156" width="106" height="106" rx="14" fill="${f}" opacity=".55" transform="rotate(10 401 209)"/>
+    ${[[376, 184], [426, 234], [401, 209]].map(([x, y]) =>
+      `<circle cx="${x}" cy="${y}" r="11" fill="#fff" opacity=".8" transform="rotate(10 401 209)"/>`).join('')}
+    <path d="M96 268 h408" stroke="${f}" stroke-width="8" opacity=".4"/>`,
+
+  urne: (f) => `
+    <path d="M196 96 h208 l-26 162 a30 30 0 0 1 -30 24 h-96 a30 30 0 0 1 -30 -24z" fill="${f}" opacity=".35"/>
+    <path d="M196 96 h208 l-26 162 a30 30 0 0 1 -30 24 h-96 a30 30 0 0 1 -30 -24z" fill="none" stroke="${f}" stroke-width="8"/>
+    <rect x="182" y="80" width="236" height="22" rx="11" fill="${f}" opacity=".9"/>
+    ${[[252, 228, 24], [312, 236, 22], [360, 216, 20], [284, 180, 19], [340, 166, 17], [238, 172, 16]]
+      .map(([x, y, r], i) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${f}" opacity="${i % 2 ? 0.9 : 0.6}"/>`).join('')}
+    <circle cx="470" cy="118" r="26" fill="${f}" opacity=".8"/>
+    <circle cx="500" cy="176" r="19" fill="${f}" opacity=".5"/>
+    <path d="M96 266 h408" stroke="${f}" stroke-width="7" opacity=".35"/>`,
+
+  baum: (f) => `
+    <circle cx="112" cy="150" r="20" fill="${f}" opacity=".9"/>
+    ${[[112, 150, 290, 84], [112, 150, 290, 220]].map(([x1, y1, x2, y2]) =>
+      `<path d="M${x1} ${y1} L${x2} ${y2}" stroke="${f}" stroke-width="7" opacity=".75"/>`).join('')}
+    ${[[290, 84, 470, 48], [290, 84, 470, 124], [290, 220, 470, 184], [290, 220, 470, 262]].map(([x1, y1, x2, y2]) =>
+      `<path d="M${x1} ${y1} L${x2} ${y2}" stroke="${f}" stroke-width="6" opacity=".55"/>`).join('')}
+    ${[[290, 84], [290, 220]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="24" fill="${f}" opacity=".8"/>`).join('')}
+    ${[[470, 48], [470, 124], [470, 184], [470, 262]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="20" fill="${f}" opacity=".6"/>`).join('')}
+    <text x="182" y="100" font-family="serif" font-size="30" font-weight="700" fill="${f}" opacity=".75">⅓</text>
+    <text x="182" y="216" font-family="serif" font-size="30" font-weight="700" fill="${f}" opacity=".75">⅔</text>`,
+
+  seilbahn: (f) => `
+    <path d="M60 262 H540" stroke="${f}" stroke-width="8" opacity=".45"/>
+    <path d="M90 246 L510 76" stroke="${f}" stroke-width="7" opacity=".9"/>
+    <path d="M90 246 V120 M510 76 V262" stroke="${f}" stroke-width="10" stroke-linecap="round" opacity=".7"/>
+    <path d="M90 246 H330 V158" fill="none" stroke="${f}" stroke-width="5" stroke-dasharray="12 9" opacity=".55"/>
+    <g transform="translate(286 150)">
+      <path d="M0 -14 V12" stroke="${f}" stroke-width="7"/>
+      <rect x="-34" y="12" width="68" height="52" rx="10" fill="${f}" opacity=".9"/>
+      <rect x="-22" y="24" width="44" height="22" rx="5" fill="#fff" opacity=".7"/>
+    </g>
+    <text x="352" y="222" font-family="serif" font-size="34" font-weight="700" fill="${f}" opacity=".7">m</text>
+    <circle cx="90" cy="246" r="11" fill="${f}"/>`,
+
+  mosaik: (f) => `
+    <rect x="196" y="36" width="228" height="228" fill="none" stroke="${f}" stroke-width="8"/>
+    <rect x="196" y="36" width="140" height="140" fill="${f}" opacity=".7"/>
+    <rect x="336" y="36" width="88" height="140" fill="${f}" opacity=".4"/>
+    <rect x="196" y="176" width="140" height="88" fill="${f}" opacity=".4"/>
+    <rect x="336" y="176" width="88" height="88" fill="${f}" opacity=".85"/>
+    <text x="266" y="122" font-family="serif" font-size="44" font-weight="700" text-anchor="middle" fill="#fff" opacity=".85">a²</text>
+    <text x="380" y="234" font-family="serif" font-size="34" font-weight="700" text-anchor="middle" fill="#fff" opacity=".85">b²</text>
+    <path d="M142 36 V264 M118 36 h24 M118 264 h24" stroke="${f}" stroke-width="6" opacity=".55"/>
+    <text x="104" y="158" font-family="serif" font-size="32" font-weight="700" text-anchor="middle" fill="${f}" opacity=".7">a+b</text>
+    <path d="M466 92 h64 M466 132 h64 M466 172 h40" stroke="${f}" stroke-width="7" stroke-linecap="round" opacity=".4"/>`,
+
+  bahnhof: (f) => `
+    <path d="M60 230 H540 M60 258 H540" stroke="${f}" stroke-width="7" opacity=".5"/>
+    ${[90, 160, 230, 300, 370, 440, 510].map(x => `<path d="M${x} 224 v40" stroke="${f}" stroke-width="6" opacity=".4"/>`).join('')}
+    <g>
+      <rect x="110" y="128" width="190" height="86" rx="14" fill="${f}" opacity=".85"/>
+      <rect x="130" y="146" width="56" height="38" rx="6" fill="#fff" opacity=".7"/>
+      <rect x="200" y="146" width="56" height="38" rx="6" fill="#fff" opacity=".7"/>
+      <circle cx="146" cy="222" r="14" fill="${f}"/><circle cx="268" cy="222" r="14" fill="${f}"/>
+    </g>
+    <g opacity=".55">
+      <rect x="352" y="146" width="158" height="68" rx="12" fill="${f}"/>
+      <rect x="370" y="160" width="46" height="30" rx="5" fill="#fff" opacity=".7"/>
+      <rect x="430" y="160" width="46" height="30" rx="5" fill="#fff" opacity=".7"/>
+      <circle cx="384" cy="222" r="12" fill="${f}"/><circle cx="478" cy="222" r="12" fill="${f}"/>
+    </g>
+    <path d="M300 96 h-60 l30 -40z" fill="${f}" opacity=".6"/>
+    <path d="M352 96 h60 l-30 -40z" fill="${f}" opacity=".45"/>`,
+
+  thales: (f) => `
+    <path d="M160 214 A140 140 0 0 1 440 214" fill="none" stroke="${f}" stroke-width="9"/>
+    <path d="M140 214 H460" stroke="${f}" stroke-width="7" opacity=".7"/>
+    <path d="M160 214 L352 108 L440 214" fill="${f}" opacity=".28"/>
+    <path d="M160 214 L352 108 L440 214 Z" fill="none" stroke="${f}" stroke-width="7" stroke-linejoin="round"/>
+    <path d="M338 122 l14 -14 14 14" fill="none" stroke="${f}" stroke-width="5" opacity=".9"/>
+    <rect x="336" y="108" width="22" height="22" fill="none" stroke="${f}" stroke-width="4" opacity=".8" transform="rotate(29 352 108)"/>
+    <circle cx="300" cy="214" r="9" fill="${f}"/>
+    <circle cx="160" cy="214" r="9" fill="${f}"/><circle cx="440" cy="214" r="9" fill="${f}"/>
+    <circle cx="352" cy="108" r="9" fill="${f}"/>
+    <path d="M300 214 V70" stroke="${f}" stroke-width="4" stroke-dasharray="10 8" opacity=".5"/>`,
+
+  kompass: (f) => `
+    <circle cx="300" cy="162" r="118" fill="none" stroke="${f}" stroke-width="10"/>
+    <circle cx="300" cy="162" r="96" fill="${f}" opacity=".18"/>
+    ${Array.from({ length: 8 }, (_, i) => {
+      const a = i * Math.PI / 4;
+      return `<line x1="${(300 + Math.sin(a) * 86).toFixed(1)}" y1="${(162 - Math.cos(a) * 86).toFixed(1)}"
+        x2="${(300 + Math.sin(a) * 110).toFixed(1)}" y2="${(162 - Math.cos(a) * 110).toFixed(1)}"
+        stroke="${f}" stroke-width="${i % 2 ? 4 : 7}" opacity=".7"/>`;
+    }).join('')}
+    <path d="M300 74 L326 162 L300 250 L274 162 Z" fill="${f}" opacity=".85"/>
+    <path d="M300 74 L326 162 L274 162 Z" fill="#fff" opacity=".6"/>
+    <circle cx="300" cy="162" r="13" fill="${f}"/>
+    <path d="M470 100 l-30 150" stroke="${f}" stroke-width="8" stroke-linecap="round" opacity=".55"/>
+    <path d="M470 100 a26 26 0 0 1 22 44" fill="none" stroke="${f}" stroke-width="7" opacity=".5"/>`,
+
+  /* ---------- Motive für die Jahrgangsstufen 9 und 10 ---------- */
+
+  wurzel: (f) => `
+    <path d="M120 164 L164 164 L214 252 L300 60 H520" fill="none" stroke="${f}" stroke-width="13"
+      stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="372" y="190" font-family="serif" font-size="78" font-weight="700" text-anchor="middle" fill="${f}" opacity=".85">2</text>
+    <rect x="86" y="196" width="76" height="76" fill="none" stroke="${f}" stroke-width="6" opacity=".5"/>
+    <path d="M86 272 L162 196" stroke="${f}" stroke-width="5" opacity=".5"/>`,
+
+  pentagramm: (f) => `
+    ${[0, 1, 2, 3, 4].map(i => {
+      const a = -Math.PI / 2 + i * 2 * Math.PI / 5;
+      const b = -Math.PI / 2 + ((i + 2) % 5) * 2 * Math.PI / 5;
+      return `<line x1="${(300 + Math.cos(a) * 110).toFixed(1)}" y1="${(158 + Math.sin(a) * 110).toFixed(1)}"
+        x2="${(300 + Math.cos(b) * 110).toFixed(1)}" y2="${(158 + Math.sin(b) * 110).toFixed(1)}"
+        stroke="${f}" stroke-width="7" stroke-linecap="round" opacity=".9"/>`;
+    }).join('')}
+    <circle cx="300" cy="158" r="118" fill="none" stroke="${f}" stroke-width="6" opacity=".5"/>
+    ${[0, 1, 2, 3, 4].map(i => {
+      const a = -Math.PI / 2 + i * 2 * Math.PI / 5;
+      return `<circle cx="${(300 + Math.cos(a) * 110).toFixed(1)}" cy="${(158 + Math.sin(a) * 110).toFixed(1)}" r="9" fill="${f}"/>`;
+    }).join('')}`,
+
+  parabel: (f) => `
+    <path d="M90 268 H520 M300 40 V284" stroke="${f}" stroke-width="5" opacity=".45"/>
+    <path d="M150 60 Q300 330 450 60" fill="none" stroke="${f}" stroke-width="12" stroke-linecap="round"/>
+    <circle cx="300" cy="215" r="12" fill="${f}"/>
+    <path d="M300 215 h70" stroke="${f}" stroke-width="4" stroke-dasharray="8 7" opacity=".6"/>
+    <text x="392" y="224" font-family="serif" font-size="30" font-weight="700" fill="${f}" opacity=".75">S</text>
+    ${[204, 396].map(x => `<circle cx="${x}" cy="130" r="9" fill="${f}" opacity=".75"/>`).join('')}`,
+
+  fontaene: (f) => `
+    <path d="M60 266 H540" stroke="${f}" stroke-width="10" opacity=".6"/>
+    <path d="M120 266 Q300 20 480 266" fill="none" stroke="${f}" stroke-width="11" stroke-linecap="round"/>
+    <path d="M170 266 Q300 90 430 266" fill="none" stroke="${f}" stroke-width="7" stroke-linecap="round" opacity=".6"/>
+    <path d="M220 266 Q300 160 380 266" fill="none" stroke="${f}" stroke-width="5" stroke-linecap="round" opacity=".4"/>
+    <rect x="276" y="236" width="48" height="30" rx="6" fill="${f}" opacity=".9"/>
+    ${[[150, 240], [450, 236], [300, 120]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="8" fill="${f}" opacity=".5"/>`).join('')}`,
+
+  riesenrad: (f) => `
+    <circle cx="300" cy="140" r="112" fill="none" stroke="${f}" stroke-width="8"/>
+    <circle cx="300" cy="140" r="18" fill="${f}"/>
+    ${Array.from({ length: 8 }, (_, i) => {
+      const a = i * Math.PI / 4;
+      const x = 300 + Math.cos(a) * 112, y = 140 + Math.sin(a) * 112;
+      return `<line x1="300" y1="140" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="${f}" stroke-width="5" opacity=".6"/>`
+        + `<rect x="${(x - 13).toFixed(1)}" y="${(y - 6).toFixed(1)}" width="26" height="20" rx="5" fill="${f}" opacity=".85"/>`;
+    }).join('')}
+    <path d="M240 266 L300 140 L360 266" fill="none" stroke="${f}" stroke-width="9" stroke-linecap="round"/>
+    <path d="M200 268 H400" stroke="${f}" stroke-width="9" stroke-linecap="round"/>`,
+
+  zylinder: (f) => `
+    <ellipse cx="226" cy="90" rx="92" ry="28" fill="${f}" opacity=".9"/>
+    <path d="M134 90 V218 a92 28 0 0 0 184 0 V90" fill="${f}" opacity=".55"/>
+    <path d="M134 90 V218 a92 28 0 0 0 184 0 V90" fill="none" stroke="${f}" stroke-width="6"/>
+    <path d="M226 90 h92" stroke="#fff" stroke-width="4" stroke-dasharray="7 6" opacity=".7"/>
+    <ellipse cx="434" cy="150" rx="58" ry="18" fill="${f}" opacity=".5"/>
+    <path d="M376 150 V236 a58 18 0 0 0 116 0 V150" fill="${f}" opacity=".35"/>
+    <path d="M376 150 V236 a58 18 0 0 0 116 0 V150" fill="none" stroke="${f}" stroke-width="5" opacity=".8"/>
+    <path d="M70 262 H540" stroke="${f}" stroke-width="7" opacity=".4"/>`,
+
+  potenz: (f) => `
+    <text x="212" y="212" font-family="serif" font-size="150" font-weight="700" text-anchor="middle" fill="${f}" opacity=".9">10</text>
+    <text x="330" y="124" font-family="serif" font-size="78" font-weight="700" fill="${f}" opacity=".85">n</text>
+    <path d="M404 180 h96" stroke="${f}" stroke-width="7" stroke-linecap="round" opacity=".5"/>
+    <path d="M404 220 h60" stroke="${f}" stroke-width="7" stroke-linecap="round" opacity=".4"/>
+    <path d="M404 140 h130" stroke="${f}" stroke-width="7" stroke-linecap="round" opacity=".6"/>
+    <path d="M70 254 H530" stroke="${f}" stroke-width="5" opacity=".35"/>`,
+
+  pythagoras: (f) => `
+    <path d="M200 210 L310 210 L310 130 Z" fill="${f}" opacity=".85"/>
+    <rect x="298" y="198" width="12" height="12" fill="#fff" opacity=".9"/>
+    <rect x="200" y="210" width="110" height="110" fill="${f}" opacity=".35"/>
+    <rect x="310" y="50" width="80" height="80" fill="${f}" opacity=".5"/>
+    <path d="M200 210 L310 130 L376 220 L266 300 Z" fill="${f}" opacity=".25"/>
+    <text x="256" y="278" font-family="serif" font-size="34" font-weight="700" text-anchor="middle" fill="#fff" opacity=".8">a²</text>
+    <text x="350" y="100" font-family="serif" font-size="30" font-weight="700" text-anchor="middle" fill="#fff" opacity=".8">b²</text>`,
+
+  koerper: (f) => `
+    <path d="M150 240 L220 110 L290 240 Z" fill="${f}" opacity=".75"/>
+    <path d="M150 240 L220 190 L290 240" fill="none" stroke="#fff" stroke-width="4" opacity=".6"/>
+    <circle cx="390" cy="190" r="62" fill="${f}" opacity=".6"/>
+    <ellipse cx="390" cy="190" rx="62" ry="20" fill="none" stroke="#fff" stroke-width="4" opacity=".55"/>
+    <path d="M470 244 L512 150 L554 244 Z" fill="${f}" opacity=".45"/>
+    <ellipse cx="512" cy="244" rx="42" ry="14" fill="${f}" opacity=".45"/>
+    <path d="M90 254 H540" stroke="${f}" stroke-width="7" opacity=".4"/>
+    <path d="M90 180 h38 M90 214 h22" stroke="${f}" stroke-width="6" stroke-linecap="round" opacity=".4"/>`,
+
+  vierfelder: (f) => `
+    <rect x="160" y="60" width="300" height="200" rx="8" fill="none" stroke="${f}" stroke-width="7"/>
+    <path d="M310 60 V260 M160 160 H460" stroke="${f}" stroke-width="7"/>
+    <rect x="160" y="60" width="150" height="100" fill="${f}" opacity=".55"/>
+    <rect x="310" y="160" width="150" height="100" fill="${f}" opacity=".3"/>
+    ${[[235, 125], [385, 125], [235, 225], [385, 225]].map(([x, y], i) =>
+      `<circle cx="${x}" cy="${y}" r="${18 - i * 2}" fill="#fff" opacity=".6"/>`).join('')}
+    <path d="M160 40 H460 M140 60 V260" stroke="${f}" stroke-width="5" opacity=".45"/>
+    <text x="110" y="166" font-family="serif" font-size="34" font-weight="700" text-anchor="middle" fill="${f}" opacity=".7">A</text>
+    <text x="508" y="166" font-family="serif" font-size="34" font-weight="700" text-anchor="middle" fill="${f}" opacity=".7">B</text>`,
+
+  strahlen: (f) => `
+    <circle cx="90" cy="228" r="13" fill="${f}"/>
+    ${[[520, 60], [520, 150], [520, 262]].map(([x, y]) =>
+      `<line x1="90" y1="228" x2="${x}" y2="${y}" stroke="${f}" stroke-width="5" opacity=".5"/>`).join('')}
+    <path d="M232 194 L232 246 M232 194 L318 160" fill="none" stroke="${f}" stroke-width="7" opacity=".9"/>
+    <path d="M232 194 L318 160 L318 232 L232 246 Z" fill="${f}" opacity=".55"/>
+    <path d="M384 148 L384 262 L540 200 L540 68 Z" fill="${f}" opacity=".3"/>
+    <path d="M384 148 L384 262 L540 200 L540 68 Z" fill="none" stroke="${f}" stroke-width="6" opacity=".8"/>
+    <text x="150" y="214" font-family="serif" font-size="30" font-weight="700" fill="${f}" opacity=".7">Z</text>`,
+
+  schatten: (f) => `
+    <path d="M60 254 H540" stroke="${f}" stroke-width="8" opacity=".6"/>
+    <rect x="168" y="150" width="14" height="104" fill="${f}" opacity=".9"/>
+    <path d="M182 254 L268 254 L182 206 Z" fill="${f}" opacity=".35"/>
+    <rect x="404" y="76" width="18" height="178" fill="${f}" opacity=".85"/>
+    <circle cx="413" cy="66" r="34" fill="${f}" opacity=".6"/>
+    <path d="M422 254 L540 254 L422 190 Z" fill="${f}" opacity=".3"/>
+    <circle cx="98" cy="72" r="30" fill="${f}" opacity=".75"/>
+    ${[0, 45, 90, 135, 180, 225, 270, 315].map(a => {
+      const r = a * Math.PI / 180;
+      return `<line x1="${(98 + Math.cos(r) * 38).toFixed(1)}" y1="${(72 + Math.sin(r) * 38).toFixed(1)}"
+        x2="${(98 + Math.cos(r) * 52).toFixed(1)}" y2="${(72 + Math.sin(r) * 52).toFixed(1)}"
+        stroke="${f}" stroke-width="5" opacity=".55"/>`;
+    }).join('')}`,
+
+  wachstum: (f) => `
+    <path d="M90 266 H520 M110 40 V266" stroke="${f}" stroke-width="6" opacity=".5"/>
+    <path d="M110 258 Q300 250 400 150 Q460 88 500 50" fill="none" stroke="${f}" stroke-width="12" stroke-linecap="round"/>
+    ${[[160, 256], [240, 246], [320, 214], [390, 158], [450, 96]].map(([x, y]) =>
+      `<circle cx="${x}" cy="${y}" r="9" fill="${f}" opacity=".8"/>`).join('')}
+    ${[[150, 240, 14], [196, 230, 20], [252, 214, 28], [320, 184, 38]].map(([x, y, r]) =>
+      `<circle cx="${x}" cy="${y}" r="${r}" fill="${f}" opacity=".18"/>`).join('')}`,
+
+  trigo: (f) => `
+    <path d="M140 250 L460 250 L460 90 Z" fill="${f}" opacity=".35"/>
+    <path d="M140 250 L460 250 L460 90 Z" fill="none" stroke="${f}" stroke-width="8" stroke-linejoin="round"/>
+    <rect x="434" y="224" width="26" height="26" fill="none" stroke="${f}" stroke-width="5"/>
+    <path d="M198 250 A58 58 0 0 0 186 216" fill="none" stroke="${f}" stroke-width="6"/>
+    <text x="212" y="236" font-family="serif" font-size="32" font-weight="700" fill="${f}">α</text>
+    <text x="300" y="286" font-family="serif" font-size="28" font-weight="700" text-anchor="middle" fill="${f}" opacity=".75">an</text>
+    <text x="492" y="176" font-family="serif" font-size="28" font-weight="700" text-anchor="middle" fill="${f}" opacity=".75">geg</text>
+    <text x="268" y="150" font-family="serif" font-size="28" font-weight="700" text-anchor="middle" fill="${f}" opacity=".75">hyp</text>`,
+
+  welle: (f) => `
+    <path d="M60 158 H545" stroke="${f}" stroke-width="5" opacity=".45"/>
+    <path d="M60 158 q60 -98 120 0 q60 98 120 0 q60 -98 120 0 q60 98 120 0"
+      fill="none" stroke="${f}" stroke-width="12" stroke-linecap="round"/>
+    <path d="M120 60 V256" stroke="${f}" stroke-width="4" stroke-dasharray="9 8" opacity=".5"/>
+    <path d="M360 60 V256" stroke="${f}" stroke-width="4" stroke-dasharray="9 8" opacity=".5"/>
+    <path d="M120 266 H360" stroke="${f}" stroke-width="6" opacity=".7"/>
+    <text x="240" y="294" font-family="serif" font-size="30" font-weight="700" text-anchor="middle" fill="${f}" opacity=".8">T</text>
+    <path d="M78 158 V98" stroke="${f}" stroke-width="6" opacity=".7"/>
+    <text x="52" y="124" font-family="serif" font-size="28" font-weight="700" fill="${f}" opacity=".8">a</text>`,
+
+  einheitskreis: (f) => `
+    <circle cx="280" cy="158" r="110" fill="none" stroke="${f}" stroke-width="8"/>
+    <path d="M150 158 H440 M280 32 V284" stroke="${f}" stroke-width="5" opacity=".5"/>
+    <path d="M280 158 L358 80" stroke="${f}" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="358" cy="80" r="12" fill="${f}"/>
+    <path d="M358 80 V158" stroke="${f}" stroke-width="6" stroke-dasharray="8 7" opacity=".8"/>
+    <path d="M358 158 H280" stroke="${f}" stroke-width="6" opacity=".55"/>
+    <path d="M318 158 A55 55 0 0 0 302 120" fill="none" stroke="${f}" stroke-width="5"/>
+    <text x="316" y="140" font-family="serif" font-size="26" font-weight="700" fill="${f}" opacity=".9">α</text>
+    <text x="392" y="126" font-family="serif" font-size="26" font-weight="700" fill="${f}" opacity=".7">sin</text>
+    <text x="300" y="196" font-family="serif" font-size="26" font-weight="700" fill="${f}" opacity=".7">cos</text>`,
+
+  /* ---------- Klasse 6, zweiter Satz ---------- */
+
+  krug: (f) => `
+    <path d="M222 80 L382 80 L366 258 q-64 12 -128 0 Z" fill="${f}" opacity=".2"/>
+    <path d="M238 168 L368 168 L366 258 q-64 12 -128 0 Z" fill="${f}" opacity=".6"/>
+    <path d="M222 80 L382 80 L366 258 q-64 12 -128 0 Z" fill="none" stroke="${f}" stroke-width="9" stroke-linejoin="round"/>
+    <path d="M382 106 q56 14 54 60 q-2 44 -54 54" fill="none" stroke="${f}" stroke-width="12" stroke-linecap="round"/>
+    <path d="M222 80 L184 64" stroke="${f}" stroke-width="10" stroke-linecap="round"/>
+    <path d="M230 124 H276 M234 168 H286 M240 212 H292" stroke="${f}" stroke-width="5" opacity=".85"/>
+    <text x="196" y="133" font-size="26" font-weight="700" text-anchor="end" fill="${f}" opacity=".85">¾</text>
+    <text x="196" y="177" font-size="26" font-weight="700" text-anchor="end" fill="${f}" opacity=".85">½</text>
+    <text x="196" y="221" font-size="26" font-weight="700" text-anchor="end" fill="${f}" opacity=".85">¼</text>`,
+
+  zapfsaeule: (f) => `
+    <rect x="196" y="48" width="170" height="224" rx="18" fill="${f}" opacity=".75"/>
+    <rect x="214" y="72" width="134" height="80" rx="10" fill="none" stroke="${f}" stroke-width="7"/>
+    <text x="281" y="131" font-family="monospace" font-size="42" font-weight="700" text-anchor="middle" fill="${f}">4,85</text>
+    <rect x="218" y="168" width="126" height="16" rx="8" fill="#fff" opacity=".55"/>
+    <rect x="218" y="196" width="86" height="12" rx="6" fill="#fff" opacity=".4"/>
+    <path d="M366 110 h44 a22 22 0 0 1 22 22 v92" fill="none" stroke="${f}" stroke-width="11" stroke-linecap="round" opacity=".8"/>
+    <rect x="408" y="220" width="48" height="52" rx="10" fill="${f}" opacity=".85"/>
+    <rect x="172" y="272" width="312" height="16" rx="8" fill="${f}"/>`,
+
+  schleuse: (f) => `
+    <rect x="60" y="112" width="210" height="150" fill="${f}" opacity=".6"/>
+    <rect x="330" y="186" width="210" height="76" fill="${f}" opacity=".35"/>
+    <rect x="270" y="72" width="60" height="200" rx="6" fill="${f}" opacity=".9"/>
+    <path d="M60 112 H270 M330 186 H540" stroke="${f}" stroke-width="7"/>
+    <text x="150" y="94" font-size="38" font-weight="700" text-anchor="middle" fill="${f}" opacity=".9">+</text>
+    <text x="442" y="166" font-size="38" font-weight="700" text-anchor="middle" fill="${f}" opacity=".9">−</text>
+    <path d="M40 262 H560" stroke="${f}" stroke-width="10"/>
+    <path d="M300 58 V34 M276 46 h48" stroke="${f}" stroke-width="8" stroke-linecap="round" opacity=".8"/>`,
+
+  teppich: (f) => `
+    <rect x="150" y="42" width="300" height="216" rx="10" fill="none" stroke="${f}" stroke-width="10"/>
+    <rect x="174" y="66" width="252" height="168" rx="6" fill="${f}" opacity=".14"/>
+    <path d="M300 42 V258 M150 150 H450" stroke="${f}" stroke-width="4" stroke-dasharray="12 9" opacity=".65"/>
+    ${[[240, 112], [360, 112], [240, 188], [360, 188]].map(([x, y]) =>
+      `<path d="M${x} ${y - 30} L${x + 30} ${y} L${x} ${y + 30} L${x - 30} ${y} Z" fill="${f}" opacity=".7"/>`).join('')}
+    <circle cx="300" cy="150" r="26" fill="none" stroke="${f}" stroke-width="9"/>
+    <path d="M170 72 V228 M430 72 V228" stroke="${f}" stroke-width="6" opacity=".5"/>
+    <path d="M150 268 H450" stroke="${f}" stroke-width="6" stroke-dasharray="6 10" opacity=".7"/>`,
+
+  muehle: (f) => `
+    <path d="M330 262 V152 L430 96 L530 152 V262 Z" fill="${f}" opacity=".55"/>
+    <path d="M316 156 L430 90 L544 156" fill="none" stroke="${f}" stroke-width="10" stroke-linecap="round"/>
+    <rect x="404" y="198" width="52" height="64" rx="5" fill="#fff" opacity=".6"/>
+    <circle cx="170" cy="166" r="94" fill="none" stroke="${f}" stroke-width="12"/>
+    <circle cx="170" cy="166" r="20" fill="${f}"/>
+    ${[0, 45, 90, 135, 180, 225, 270, 315].map((a) => {
+      const r = a * Math.PI / 180;
+      const x1 = (170 + Math.cos(r) * 22).toFixed(1), y1 = (166 + Math.sin(r) * 22).toFixed(1);
+      const x2 = (170 + Math.cos(r) * 92).toFixed(1), y2 = (166 + Math.sin(r) * 92).toFixed(1);
+      return `<path d="M${x1} ${y1} L${x2} ${y2}" stroke="${f}" stroke-width="9" opacity=".8"/>`;
+    }).join('')}
+    <path d="M40 272 H560" stroke="${f}" stroke-width="9" opacity=".55"/>`,
+
+  strichliste: (f) => `
+    ${[0, 1, 2].map((i) => {
+      const x = 110 + i * 150;
+      return [0, 1, 2, 3].map((k) => `<path d="M${x + k * 18} 60 V122" stroke="${f}" stroke-width="9" stroke-linecap="round"/>`).join('')
+        + `<path d="M${x - 8} 122 L${x + 62} 60" stroke="${f}" stroke-width="9" stroke-linecap="round"/>`;
+    }).join('')}
+    <path d="M80 184 H520" stroke="${f}" stroke-width="5" opacity=".45"/>
+    <path d="M120 184 H200 M400 184 H470" stroke="${f}" stroke-width="7"/>
+    <rect x="200" y="154" width="200" height="60" rx="8" fill="${f}" opacity=".4"/>
+    <rect x="200" y="154" width="200" height="60" rx="8" fill="none" stroke="${f}" stroke-width="8"/>
+    <path d="M290 154 V214" stroke="${f}" stroke-width="10"/>
+    <path d="M120 160 V208 M470 160 V208" stroke="${f}" stroke-width="8"/>
+    <path d="M80 256 H520" stroke="${f}" stroke-width="6" opacity=".45"/>
+    ${[120, 200, 290, 400, 470].map((x) => `<path d="M${x} 246 V266" stroke="${f}" stroke-width="5" opacity=".6"/>`).join('')}`,
+
+  aufzug: (f) => `
+    <rect x="212" y="36" width="176" height="234" rx="10" fill="none" stroke="${f}" stroke-width="9"/>
+    <rect x="236" y="118" width="128" height="104" rx="8" fill="${f}" opacity=".7"/>
+    <path d="M300 118 V222" stroke="#fff" stroke-width="6" opacity=".7"/>
+    <path d="M300 118 V40" stroke="${f}" stroke-width="7" opacity=".8"/>
+    ${[['60', '+2'], ['98', '+1'], ['136', '0'], ['174', '−1'], ['212', '−2'], ['250', '−3']].map(([y, t]) =>
+      `<path d="M396 ${y} H438" stroke="${f}" stroke-width="5" opacity=".7"/>`
+      + `<text x="450" y="${Number(y) + 9}" font-size="24" font-weight="700" fill="${f}" opacity=".85">${t}</text>`).join('')}
+    <path d="M150 36 H438" stroke="${f}" stroke-width="8" opacity=".6"/>`,
+
   standard: (f) => `
     <rect x="200" y="110" width="200" height="150" rx="16" fill="${f}" opacity=".8"/>
     <path d="M240 110 V80 a60 60 0 0 1 120 0 v30" fill="none" stroke="${f}" stroke-width="18" opacity=".85"/>

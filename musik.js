@@ -19,8 +19,12 @@ const AUSBLENDEN = 1.2;
 /* ---------- Stimmungen ---------- */
 
 const DUR = [0, 2, 4, 7, 9];                 // Dur-Pentatonik
+const DUR_VOLL = [0, 2, 4, 5, 7, 9, 11];     // Dur
 const MOLL = [0, 2, 3, 5, 7, 8, 10];         // natürliches Moll
 const MOLL_PENTA = [0, 3, 5, 7, 10];
+const DORISCH = [0, 2, 3, 5, 7, 9, 10];
+const LYDISCH = [0, 2, 4, 6, 7, 9, 11];
+const MIXO = [0, 2, 4, 5, 7, 9, 10];
 
 export const STIMMUNGEN = {
   feierlich: {
@@ -75,11 +79,88 @@ const NACH_MOTIV = {
   sternwarte: 'weit', hafen: 'weit', diagramm: 'weit',
   pizzeria: 'heiter', markt: 'heiter', torte: 'heiter', baeckerei: 'heiter',
   labor: 'labor',
+  // Jahrgangsstufen 7 und 8
+  tauchboot: 'weit', thermometer: 'labor', fahrrad: 'heiter', wasser: 'ruhig',
+  prozent: 'heiter', waage: 'geheimnis', winkel: 'werkstatt', bruecke: 'werkstatt',
+  glueckrad: 'heiter', wuerfel: 'geheimnis', urne: 'geheimnis', baum: 'ruhig',
+  seilbahn: 'weit', mosaik: 'werkstatt', bahnhof: 'werkstatt', thales: 'feierlich',
+  kompass: 'weit',
+  // Jahrgangsstufen 9 und 10
+  wurzel: 'labor', pentagramm: 'geheimnis', parabel: 'weit', fontaene: 'heiter',
+  riesenrad: 'heiter', zylinder: 'werkstatt', potenz: 'labor', pythagoras: 'feierlich',
+  koerper: 'feierlich', vierfelder: 'labor', strahlen: 'geheimnis', schatten: 'ruhig',
+  wachstum: 'weit', trigo: 'werkstatt', welle: 'ruhig', einheitskreis: 'feierlich',
+  // Klasse 6, zweiter Satz
+  krug: 'ruhig', zapfsaeule: 'werkstatt', schleuse: 'weit', teppich: 'geheimnis',
+  muehle: 'werkstatt', strichliste: 'labor', aufzug: 'geheimnis',
   standard: 'ruhig',
 };
 
 export function stimmungZuMotiv(motiv) {
   return NACH_MOTIV[motiv] || 'ruhig';
+}
+
+/* ---------- Variation je Raum ----------
+   Die Stimmung legt den Charakter fest (feierlich, geheimnis, …). Damit aber nicht
+   alle Werkstatt-Räume gleich klingen, bekommt jeder Raum zusätzlich eine eigene
+   Variante: andere Tonart, andere Tonleiter, anderes Tempo, andere Klangfarbe.
+   Alles hängt nur an der Raumkennung – derselbe Raum klingt also immer gleich.      */
+
+const VARIANTEN = {
+  feierlich: { skalen: [DUR, DUR_VOLL, LYDISCH], akkorde: [[0, 4, 7, 12], [0, 7, 12, 16], [0, 4, 9, 12]], toene: ['triangle', 'sine'] },
+  geheimnis: { skalen: [MOLL, MOLL_PENTA, DORISCH], akkorde: [[0, 3, 7, 10], [0, 7, 10, 15], [0, 3, 10]], toene: ['sine', 'triangle'] },
+  werkstatt: { skalen: [MOLL_PENTA, DORISCH, MOLL], akkorde: [[0, 7, 12], [0, 5, 12], [0, 3, 7]], toene: ['square', 'triangle', 'sawtooth'] },
+  weit: { skalen: [DUR, LYDISCH, MIXO], akkorde: [[0, 7, 12, 19], [0, 5, 12, 17], [0, 7, 14]], toene: ['sine', 'triangle'] },
+  heiter: { skalen: [DUR, DUR_VOLL, MIXO], akkorde: [[0, 4, 7], [0, 5, 9], [0, 4, 7, 14]], toene: ['triangle', 'sine', 'square'] },
+  labor: { skalen: [MOLL_PENTA, DORISCH], akkorde: [[0, 5, 10], [0, 3, 7, 10]], toene: ['sine', 'triangle'] },
+  ruhig: { skalen: [DUR, MOLL_PENTA, DUR_VOLL], akkorde: [[0, 7, 12], [0, 4, 9]], toene: ['sine', 'triangle'] },
+};
+
+/** Tonarten, um die ein Raum gegenüber der Grundstimmung verschoben wird (Halbtöne). */
+const VERSCHIEBUNG = [0, 2, 3, 5, 7, -2, -4, -5, 4, -7, 9, -9];
+
+function streuwert(text) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i);
+    h = (h * 16777619) >>> 0;
+  }
+  return h;
+}
+
+/**
+ * Klangprofil eines einzelnen Raums: Stimmung plus eigene Variante.
+ * @param {{id?:string, motiv?:string}} raum
+ */
+export function klangFuerRaum(raum) {
+  const motiv = raum?.motiv || 'standard';
+  const name = stimmungZuMotiv(motiv);
+  const s = STIMMUNGEN[name] || STIMMUNGEN.ruhig;
+  const v = VARIANTEN[name] || VARIANTEN.ruhig;
+  const kennung = raum?.id || motiv;
+  // Für jede Eigenschaft eine eigene Streuung, damit benachbarte Raumkennungen
+  // nicht zufällig dieselbe Tonart und dieselbe Klangfarbe bekommen.
+  const teil = (n, max) => streuwert(kennung + '#' + n) % max;
+
+  const verschiebung = VERSCHIEBUNG[teil(0, VERSCHIEBUNG.length)];
+  const tempo = 0.75 + teil(1, 7) * 0.1;              // 0,75 bis 1,35
+  const klangfarbe = 0.8 + teil(2, 5) * 0.12;         // Filter heller oder dunkler
+
+  return {
+    ...s,
+    schluessel: kennung,
+    stimmung: name,
+    grund: halbton(s.grund, verschiebung),
+    skala: v.skalen[teil(3, v.skalen.length)],
+    akkord: v.akkorde[teil(4, v.akkorde.length)],
+    tonTyp: v.toene[teil(5, v.toene.length)],
+    lage: s.lage + (teil(6, 4) === 0 ? 1 : 0),
+    filter: Math.round(s.filter * klangfarbe),
+    abstand: [s.abstand[0] * tempo, s.abstand[1] * tempo],
+    tonLaenge: s.tonLaenge ? s.tonLaenge * tempo : undefined,
+    rauschen: s.rauschen ? s.rauschen * (0.7 + teil(7, 4) * 0.25) : 0,
+    halbtonVerschiebung: verschiebung,
+  };
 }
 
 /* ---------- Klangbausteine ---------- */
@@ -192,13 +273,17 @@ function spieleTon(ctx, s, zeit, ziel) {
 /**
  * Baut die komplette Klangerzeugung in einen beliebigen AudioContext.
  * @param {BaseAudioContext} ctx
- * @param {string} stimmungName
+ * @param {string|object} stimmung  Name einer Stimmung oder Klangprofil aus klangFuerRaum()
  * @param {{start?:number, dauer?:number|null, lautstaerke?:number}} opt
  *        dauer gesetzt → alle Töne werden im Voraus geplant (für die Hörprobe);
  *        dauer null    → es wird fortlaufend nachgeplant (im Browser).
  */
-export function baueMusik(ctx, stimmungName, opt = {}) {
-  const s = STIMMUNGEN[stimmungName] || STIMMUNGEN.ruhig;
+export function baueMusik(ctx, stimmung, opt = {}) {
+  // `stimmung` ist entweder der Name einer Stimmung oder ein fertiges Klangprofil
+  // aus `klangFuerRaum()` – dann klingt jeder Raum etwas anders.
+  const s = (stimmung && typeof stimmung === 'object')
+    ? stimmung
+    : (STIMMUNGEN[stimmung] || STIMMUNGEN.ruhig);
   const start = opt.start ?? ctx.currentTime;
   const laut = opt.lautstaerke ?? LAUTSTAERKE;
   const knoten = [];
@@ -251,12 +336,19 @@ let ctx = null;
 let summe = null;
 let knoten = [];
 let planer = null;
-let laufendeStimmung = null;
+let laufenderKlang = null;      // Schlüssel des gerade laufenden Klangs (Raumkennung)
 let an = lade('musik', false) === true;
+
+let letzterKlang = null;        // zuletzt gestartetes Klangprofil (für den Tabwechsel)
 
 export function musikAn() { return an; }
 
-async function starteKlang(stimmungName) {
+/** Vergleichsschlüssel: Raumkennung beim Klangprofil, sonst der Stimmungsname. */
+function schluessel(klang) {
+  return (klang && typeof klang === 'object') ? (klang.schluessel || klang.stimmung) : klang;
+}
+
+async function starteKlang(klang) {
   if (!ctx) {
     const Klasse = window.AudioContext || window.webkitAudioContext;
     if (!Klasse) return false;
@@ -266,7 +358,7 @@ async function starteKlang(stimmungName) {
     try { await ctx.resume(); } catch { return false; }
   }
 
-  const teile = baueMusik(ctx, stimmungName);
+  const teile = baueMusik(ctx, klang);
   summe = teile.summe;
   knoten = teile.knoten;
   teile.ausgang.connect(ctx.destination);
@@ -275,17 +367,18 @@ async function starteKlang(stimmungName) {
     if (ctx) teile.planeBis(ctx.currentTime + 1.0);
   }, 220);
 
-  laufendeStimmung = stimmungName;
+  laufenderKlang = schluessel(klang);
+  letzterKlang = klang;
   return true;
 }
 
 function stoppeKlang() {
   if (planer) { clearInterval(planer); planer = null; }
-  if (!ctx || !summe) { laufendeStimmung = null; return; }
+  if (!ctx || !summe) { laufenderKlang = null; return; }
 
   const jetzt = ctx.currentTime;
   const alteSumme = summe, alteKnoten = knoten;
-  summe = null; knoten = []; laufendeStimmung = null;
+  summe = null; knoten = []; laufenderKlang = null;
 
   try {
     alteSumme.gain.cancelScheduledValues(jetzt);
@@ -303,13 +396,13 @@ function stoppeKlang() {
  * Schaltet die Musik für einen Raum an oder aus und merkt sich die Wahl.
  * @returns {Promise<boolean>} ob die Musik jetzt läuft
  */
-export async function setzeMusik(stimmung, sollAn) {
+export async function setzeMusik(klang, sollAn) {
   an = !!sollAn;
   speichere('musik', an);
   if (an) {
-    if (laufendeStimmung === stimmung) return true;
+    if (laufenderKlang === schluessel(klang)) return true;
     stoppeKlang();
-    const geklappt = await starteKlang(stimmung);
+    const geklappt = await starteKlang(klang);
     if (!geklappt) { an = false; speichere('musik', false); }
     return an;
   }
@@ -318,9 +411,9 @@ export async function setzeMusik(stimmung, sollAn) {
 }
 
 /** Startet die Musik nur, wenn sie zuvor eingeschaltet war. */
-export async function musikFortsetzen(stimmung) {
-  if (!an || laufendeStimmung === stimmung) return an;
-  const geklappt = await starteKlang(stimmung);
+export async function musikFortsetzen(klang) {
+  if (!an || laufenderKlang === schluessel(klang)) return an;
+  const geklappt = await starteKlang(klang);
   if (!geklappt) an = false;
   return an;
 }
@@ -336,7 +429,7 @@ let zuletztGespielt = null;
 if (typeof document !== 'undefined') {
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
-      zuletztGespielt = laufendeStimmung;
+      zuletztGespielt = letzterKlang;
       stoppeKlang();
     } else if (an && zuletztGespielt) {
       starteKlang(zuletztGespielt);

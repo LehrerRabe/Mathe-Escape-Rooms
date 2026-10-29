@@ -7,7 +7,7 @@ import { baueRaetsel } from './engine.js';
 import { qrSvg, qrModule } from './qr.js';
 import { freigabeAdresse, freigabeLesen, freigabeAufnehmen, freigegebene, istFreigegeben, freigabenZuruecksetzen } from './freigabe.js';
 import { urkundeLeinwand, urkundeHerunterladen } from './urkunde.js';
-import { stimmungZuMotiv, musikAn, setzeMusik, musikFortsetzen, musikAnhalten } from './musik.js';
+import { klangFuerRaum, musikAn, setzeMusik, musikFortsetzen, musikAnhalten } from './musik.js';
 
 const kopf = document.getElementById('kopf');
 const inhalt = document.getElementById('inhalt');
@@ -341,8 +341,9 @@ async function ansichtSpiel(ziel, raumId) {
   const menueKnopf = h('button', { type: 'button' }, svgIcon(ICON.menu, 18), 'Menü');
   menueKnopf.addEventListener('click', () => spielMenue(raum, f, jetztVerstrichen, stufe));
 
-  /* Musik: standardmäßig aus, die Wahl merkt sich das Gerät. */
-  const stimmung = stimmungZuMotiv(raum.motiv);
+  /* Musik: standardmäßig aus, die Wahl merkt sich das Gerät.
+     Jeder Raum hat seine eigene Variante der Stimmung (Tonart, Tempo, Klangfarbe). */
+  const klang = klangFuerRaum(raum);
   const musikKnopf = h('button', { type: 'button', class: 'musikknopf' });
   const zeichneMusikKnopf = () => {
     const laeuft = musikAn();
@@ -355,12 +356,12 @@ async function ansichtSpiel(ziel, raumId) {
   };
   musikKnopf.addEventListener('click', async () => {
     musikKnopf.disabled = true;
-    await setzeMusik(stimmung, !musikAn());
+    await setzeMusik(klang, !musikAn());
     musikKnopf.disabled = false;
     zeichneMusikKnopf();
   });
   zeichneMusikKnopf();
-  musikFortsetzen(stimmung).then(zeichneMusikKnopf);
+  musikFortsetzen(klang).then(zeichneMusikKnopf);
 
   ziel.append(h('div', { class: 'spielkopf' },
     h('strong', { text: raum.titel }),

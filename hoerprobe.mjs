@@ -1,13 +1,16 @@
 /* Rendert die Raummusik offline und schreibt eine Hörprobe als WAV-Datei.
-   Aufruf:  node hoerprobe.mjs            – alle Stimmungen nacheinander in eine Datei
-            node hoerprobe.mjs geheimnis  – nur eine Stimmung
+   Aufruf:  node hoerprobe.mjs                – alle Stimmungen nacheinander in eine Datei
+            node hoerprobe.mjs geheimnis      – nur eine Stimmung
+            node hoerprobe.mjs 9-1 9-2 10-5   – einzelne Räume (mit ihrer eigenen Variante)
+            node hoerprobe.mjs raeume 9       – alle Räume einer Jahrgangsstufe
    Braucht Playwright (die Klangerzeugung läuft im Browser). */
 
 import { chromium } from 'playwright';
 import { createServer } from 'node:http';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { extname, join } from 'node:path';
-import { STIMMUNGEN } from './musik.js';
+import { STIMMUNGEN, klangFuerRaum } from './musik.js';
+import { ladeStufe } from './config.js';
 
 const WURZEL = import.meta.dirname;
 const PORT = 8133;
@@ -68,25 +71,46 @@ const browser = await chromium.launch();
 const seite = await browser.newPage();
 await seite.goto(`http://127.0.0.1:${PORT}/index.html`);
 
-const gewuenscht = process.argv[2];
-const namen = gewuenscht ? [gewuenscht] : Object.keys(STIMMUNGEN);
+/* Was soll gerendert werden? Stimmungen, einzelne Räume oder eine ganze Stufe. */
+const argumente = process.argv.slice(2);
+let auftraege;                               // [{ name, klang }]
+
+if (argumente[0] === 'raeume') {
+  const stufe = Number(argumente[1] || 5);
+  const daten = await ladeStufe(stufe);
+  if (!daten) { console.error(`Klasse ${stufe} ist nicht fertig.`); process.exit(1); }
+  auftraege = daten.raeume.map(r => ({ name: `${r.id} ${r.titel}`, klang: klangFuerRaum(r) }));
+} else if (argumente.length && argumente.every(a => /^\d+-\d+$/.test(a))) {
+  auftraege = [];
+  for (const id of argumente) {
+    const daten = await ladeStufe(Number(id.split('-')[0]));
+    const raum = daten?.raeume.find(r => r.id === id);
+    if (!raum) { console.error(`Raum ${id} nicht gefunden.`); process.exit(1); }
+    auftraege.push({ name: `${raum.id} ${raum.titel}`, klang: klangFuerRaum(raum) });
+  }
+} else {
+  const namen = argumente.length ? argumente : Object.keys(STIMMUNGEN);
+  auftraege = namen.map(n => ({ name: n, klang: n }));
+}
+
 const stuecke = [];
 
-for (const name of namen) {
-  const roh = await seite.evaluate(async ({ name, sekunden, rate }) => {
+for (const { name, klang } of auftraege) {
+  const roh = await seite.evaluate(async ({ klang, sekunden, rate }) => {
     const { baueMusik } = await import('./musik.js');
     const ctx = new OfflineAudioContext(1, rate * sekunden, rate);
-    const { ausgang } = baueMusik(ctx, name, { start: 0, dauer: sekunden });
+    const { ausgang } = baueMusik(ctx, klang, { start: 0, dauer: sekunden });
     ausgang.connect(ctx.destination);
     const puffer = await ctx.startRendering();
     return Array.from(puffer.getChannelData(0));
-  }, { name, sekunden: SEKUNDEN, rate: RATE });
+  }, { klang, sekunden: SEKUNDEN, rate: RATE });
 
   const proben = Float32Array.from(roh);
   let summe = 0, spitze = 0;
   for (const v of proben) { summe += v * v; spitze = Math.max(spitze, Math.abs(v)); }
   const effektivwert = Math.sqrt(summe / proben.length);
-  console.log(`${name.padEnd(11)} Lautstärke ${effektivwert.toFixed(4)} · Spitze ${spitze.toFixed(3)}` +
+  const art = typeof klang === 'object' ? `${klang.stimmung} ${klang.grund.toFixed(0)} Hz ${klang.tonTyp}` : '';
+  console.log(`${name.padEnd(32)} ${art.padEnd(26)} Lautstärke ${effektivwert.toFixed(4)} · Spitze ${spitze.toFixed(3)}` +
     (effektivwert < 0.002 ? '   ← FAST STUMM!' : ''));
   stuecke.push({ name, proben });
 }
@@ -96,8 +120,10 @@ server.close();
 
 await mkdir(join(WURZEL, 'testausgabe'), { recursive: true });
 
+const dateiname = (t) => t.replace(/[^0-9A-Za-zÄÖÜäöüß-]+/g, '-').replace(/^-|-$/g, '');
+
 if (stuecke.length === 1) {
-  const ziel = join(WURZEL, 'testausgabe', `musik-${stuecke[0].name}.wav`);
+  const ziel = join(WURZEL, 'testausgabe', `musik-${dateiname(stuecke[0].name)}.wav`);
   await writeFile(ziel, wav(anheben(stuecke[0].proben), RATE));
   console.log('→ ' + ziel);
 } else {
@@ -107,5 +133,5 @@ if (stuecke.length === 1) {
   for (const s of stuecke) { gesamt.set(s.proben, pos); pos += s.proben.length + pause.length; }
   const ziel = join(WURZEL, 'testausgabe', 'musik-hoerprobe.wav');
   await writeFile(ziel, wav(anheben(gesamt), RATE));
-  console.log(`→ ${ziel} (${namen.join(' · ')})`);
+  console.log(`→ ${ziel} (${stuecke.map(s => s.name).join(' · ')})`);
 }

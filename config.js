@@ -19,10 +19,10 @@ export const PASSWORT_PRUEFSUMME_KLEIN = '1i3w2xj-86fbsd-6';
 export const STUFEN = [
   { stufe: 5,  titel: 'Klasse 5',  zusatz: 'Zahlen, Symmetrie, Flächen, Körper', fertig: true },
   { stufe: 6,  titel: 'Klasse 6',  zusatz: 'Brüche, Dezimalzahlen, Daten',       fertig: true },
-  { stufe: 7,  titel: 'Klasse 7',  zusatz: 'Rationale Zahlen, Prozente, Terme',  fertig: false },
-  { stufe: 8,  titel: 'Klasse 8',  zusatz: 'Lineare Funktionen, Gleichungen',    fertig: false },
-  { stufe: 9,  titel: 'Klasse 9',  zusatz: 'Wurzeln, Parabeln, Pythagoras',      fertig: false },
-  { stufe: 10, titel: 'Klasse 10', zusatz: 'Ähnlichkeit, Exponential, Trigo',    fertig: false },
+  { stufe: 7,  titel: 'Klasse 7',  zusatz: 'Rationale Zahlen, Prozente, Terme',  fertig: true },
+  { stufe: 8,  titel: 'Klasse 8',  zusatz: 'Wahrscheinlichkeit, Funktionen, LGS',  fertig: true },
+  { stufe: 9,  titel: 'Klasse 9',  zusatz: 'Wurzeln, Parabeln, Pythagoras',      fertig: true },
+  { stufe: 10, titel: 'Klasse 10', zusatz: 'Ähnlichkeit, Exponential, Trigo',    fertig: true },
 ];
 
 /**
