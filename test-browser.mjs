@@ -7,11 +7,14 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { writeFile, mkdir } from 'node:fs/promises';
 import { extname, join } from 'node:path';
-import { STUFEN, ladeStufe } from './config.js';
+import { STUFEN, ladeStufe, istGruppenraum, gruppenRaetsel } from './config.js';
 import { freigabeCode } from './freigabe.js';
+import { baueZufall } from './zufall.js';
 
 const WURZEL = import.meta.dirname;
 const PORT = 8123;
+const ohneNummer = (t) => String(t || '').replace(/^Rätsel\s*\d+\s*:\s*/, '').trim();
+
 const BASIS = `http://127.0.0.1:${PORT}/index.html`;
 const AUSGABE = join(WURZEL, 'testausgabe');
 
@@ -109,9 +112,86 @@ async function loeseGitter(seite, raetsel) {
   if (fertig !== erwartet) nicht(`Gitter: ${fertig} gelöste Zellen statt ${erwartet}`);
 }
 
+/* Ablesen: das Diagramm steht nur darüber – gefüllt wird wie beim Rechnen. */
+async function loeseAblesen(seite, raetsel) {
+  if (!await seite.locator('.diagramm svg').count()) nicht('Diagramm fehlt');
+  await loeseRechnen(seite, raetsel);
+}
+
+async function loeseTermbauen(seite, raetsel) {
+  for (const [i, a] of raetsel.aufgaben.entries()) {
+    const block = seite.locator('.termaufgabe').nth(i);
+    const knoepfe = block.locator('.baustein');
+    // Die Musterlösung steht in den Daten; ihre Zeichen werden der Reihe nach
+    // auf noch freie Bausteine abgebildet.
+    const folge = String(a.musterloesung || '').match(/\(|\)|[^\s()]+/g) || [];
+    const frei = a.bausteine.map(() => true);
+    for (const zeichen of folge) {
+      const k = a.bausteine.findIndex((b, j) => frei[j] && String(b) === zeichen);
+      if (k < 0) { nicht(`Term-Aufgabe ${i + 1}: Baustein "${zeichen}" fehlt`); break; }
+      frei[k] = false;
+      await knoepfe.nth(k).click();
+    }
+  }
+  const fertig = await seite.locator('.termaufgabe.richtig').count();
+  if (fertig !== raetsel.aufgaben.length) nicht(`nur ${fertig}/${raetsel.aufgaben.length} Terme getroffen`);
+}
+
+async function loeseFehlerfinden(seite, raetsel) {
+  for (const [i, f] of raetsel.faelle.entries()) {
+    await seite.locator('.fehlerfall').nth(i).locator('.wegzeile').nth(f.falsch).click();
+  }
+  const fertig = await seite.locator('.fehlerfall.richtig').count();
+  if (fertig !== raetsel.faelle.length) nicht(`nur ${fertig}/${raetsel.faelle.length} Fehler gefunden`);
+}
+
+async function loeseLegen(seite, raetsel) {
+  const links = seite.locator('.legen .zuordnen .spalte').nth(0).locator('.karteelem');
+  const rechts = seite.locator('.legen .zuordnen .spalte').nth(1).locator('.karteelem');
+  const rechtsTexte = await rechts.evaluateAll(els => els.map(e => e.textContent.trim()));
+  for (const [i, k] of raetsel.karten.entries()) {
+    const ziel = rechtsTexte.indexOf(String(k.ergebnis));
+    if (ziel < 0) { nicht(`Ergebniskarte "${k.ergebnis}" nicht gefunden`); continue; }
+    await links.nth(i).click();
+    await rechts.nth(ziel).click();
+  }
+  const auf = await seite.locator('.kachel.auf').count();
+  if (auf !== raetsel.karten.length) nicht(`${auf} aufgedeckte Kacheln statt ${raetsel.karten.length}`);
+}
+
+async function loeseSchieben(seite, raetsel) {
+  const regler = seite.locator('.reglerliste .regler');
+  for (const [i, a] of raetsel.aufgaben.entries()) {
+    const wert = String(Array.isArray(a.antwort) ? a.antwort[0] : a.antwort).replace('−', '-').replace(',', '.');
+    await regler.nth(i).fill(wert);
+  }
+  const fertig = await seite.locator('.reglerzeile.richtig').count();
+  if (fertig !== raetsel.aufgaben.length) nicht(`nur ${fertig}/${raetsel.aufgaben.length} Regler richtig eingestellt`);
+}
+
+async function loeseProbieren(seite, raetsel) {
+  for (const [i, a] of raetsel.aufgaben.entries()) {
+    const fall = seite.locator('.probierfall').nth(i);
+    // Erst ein bewusst falscher Versuch: die Rückmeldung „zu klein/zu groß" muss stehen.
+    const ziel = Number(String(Array.isArray(a.antwort) ? a.antwort[0] : a.antwort).replace('−', '-').replace(',', '.'));
+    await fall.locator('input').fill(String(ziel - 1).replace('.', ','));
+    await fall.locator('button').click();
+    const urteil = (await fall.locator('.versuch .versuchurteil').first().textContent() || '').trim();
+    if (urteil !== 'zu klein') nicht(`Probier-Aufgabe ${i + 1}: Rückmeldung "${urteil}" statt "zu klein"`);
+    const wert = String(Array.isArray(a.antwort) ? a.antwort[0] : a.antwort);
+    await fall.locator('input').fill(wert);
+    await fall.locator('button').click();
+  }
+  const fertig = await seite.locator('.probierfall.richtig').count();
+  if (fertig !== raetsel.aufgaben.length) nicht(`nur ${fertig}/${raetsel.aufgaben.length} Werte gefunden`);
+}
+
 const LOESER = {
   rechnen: loeseRechnen, knobeln: loeseRechnen, auswahl: loeseAuswahl,
   zuordnen: loeseZuordnen, reihenfolge: loeseReihenfolge, gitter: loeseGitter,
+  ablesen: loeseAblesen, termbauen: loeseTermbauen,
+  fehlerfinden: loeseFehlerfinden, legen: loeseLegen,
+  schieben: loeseSchieben, probieren: loeseProbieren,
 };
 
 /* ---------- Code prüfen und Schloss bedienen ---------- */
@@ -148,7 +228,7 @@ async function spieleRaum(browser, raum, stufe) {
   seite.on('pageerror', e => konsole.push('pageerror: ' + e.message));
 
   // Freigabe über die Adresse einlösen (wie beim QR-Code)
-  await seite.goto(`${BASIS}#/f/${freigabeCode([raum.id])}`);
+  await seite.goto(`${BASIS}#/f/${freigabeCode([raum.basisId || raum.id])}`);
   await seite.waitForSelector('h1');
   if (!/Freigeschaltet/.test(await seite.locator('h1').first().textContent())) nicht('Freigabe wurde nicht angenommen');
   else ok('Freigabe über Adresse eingelöst');
@@ -157,13 +237,29 @@ async function spieleRaum(browser, raum, stufe) {
   await seite.goto(`${BASIS}#/stufe/${stufe}`);
   await seite.waitForSelector('.raumkarte, .hinweisbox');
   const karten = await seite.locator('.raumkarte h3').allTextContents();
-  if (karten.length !== 1 || karten[0] !== raum.titel) nicht(`Schüleransicht zeigt ${karten.length} Räume: ${karten.join(', ')}`);
+  // Beim Gruppenraum steht in der Liste der Raum selbst, nicht die Gruppe.
+  const erwartet = raum.basisId ? raum.titel.replace(/ – Gruppe .$/, '') : raum.titel;
+  if (karten.length !== 1 || karten[0] !== erwartet) nicht(`Schüleransicht zeigt ${karten.length} Räume: ${karten.join(', ')}`);
   else ok('Schüleransicht zeigt nur den freigegebenen Raum');
 
   await seite.goto(`${BASIS}#/spiel/${raum.id}`);
+  await seite.waitForSelector('.aufgabe h2');
 
-  for (let i = 0; i < raum.raetsel.length; i++) {
-    const r = raum.raetsel[i];
+  // Räume mit Rätselpool ziehen beim Start eine Auswahl; sie steht im Spielstand –
+  // ebenso der Zahlensatz für Rätsel mit gewürfelten Zahlen.
+  const stand = await seite.evaluate((id) => {
+    try { return JSON.parse(localStorage.getItem('mer:fortschritt:' + id)) || {}; }
+    catch { return {}; }
+  }, raum.id);
+  const auswahl = stand?.auswahl ?? null;
+  const gespielt = (Array.isArray(auswahl) ? auswahl : raum.raetsel.map((_, i) => i))
+    .map(i => baueZufall(raum.raetsel[i], stand?.satz, i));
+  const sollAnzahl = Math.max(1, Math.min(Number(raum.zeige) || raum.raetsel.length, raum.raetsel.length));
+  if (gespielt.length !== sollAnzahl) nicht(`${gespielt.length} gezogene Rätsel statt ${sollAnzahl}`);
+  else if (sollAnzahl < raum.raetsel.length) ok(`Pool: ${sollAnzahl} von ${raum.raetsel.length} Rätseln gezogen`);
+
+  for (let i = 0; i < gespielt.length; i++) {
+    const r = gespielt[i];
     await seite.waitForSelector('.aufgabe h2');
     const titel = await seite.locator('.aufgabe h2').textContent();
     if (!titel.includes(r.titel.replace(/^Rätsel \d+: /, ''))) nicht(`Rätsel ${i + 1}: falscher Titel angezeigt ("${titel}")`);
@@ -185,10 +281,11 @@ async function spieleRaum(browser, raum, stufe) {
     await pruefeCodeAnzeige(seite, r);
     await oeffneSchloss(seite, r.code, i === 0);
 
-    if (i < raum.raetsel.length - 1) {
+    if (i < gespielt.length - 1) {
       await seite.waitForFunction(
-        (erwartet) => document.querySelector('.aufgabe h2')?.textContent.trim() === erwartet,
-        r.nachfolgerTitel ?? raum.raetsel[i + 1].titel,
+        (erwartet) => (document.querySelector('.aufgabe h2')?.textContent || '')
+          .replace(/^Rätsel\s*\d+\s*:\s*/, '').trim() === erwartet,
+        r.nachfolgerTitel ?? ohneNummer(gespielt[i + 1].titel),
         { timeout: 5000 },
       ).catch(() => nicht(`Rätsel ${i + 1}: Übergang zum nächsten Rätsel fehlgeschlagen`));
     } else {
@@ -286,16 +383,25 @@ async function pruefeSpeichern(browser, raum, stufe) {
   console.log('\n== Speichern und Fortsetzen');
   const kontext = await browser.newContext();
   const seite = await kontext.newPage();
-  await seite.goto(`${BASIS}#/f/${freigabeCode([raum.id])}`);
+  await seite.goto(`${BASIS}#/f/${freigabeCode([raum.basisId || raum.id])}`);
   await seite.goto(`${BASIS}#/spiel/${raum.id}`);
   await seite.waitForSelector('.aufgabe h2');
 
-  const r0 = raum.raetsel[0];
+  // Auch hier kann der Raum einen Pool haben – die Ziehung steht im Spielstand.
+  const stand2 = await seite.evaluate((id) => {
+    try { return JSON.parse(localStorage.getItem('mer:fortschritt:' + id)) || {}; }
+    catch { return {}; }
+  }, raum.id);
+  const gespielt = (Array.isArray(stand2?.auswahl) ? stand2.auswahl : raum.raetsel.map((_, i) => i))
+    .map(i => baueZufall(raum.raetsel[i], stand2?.satz, i));
+
+  const r0 = gespielt[0];
   await LOESER[r0.typ](seite, r0);
   await oeffneSchloss(seite, r0.code);
   await seite.waitForFunction(
-    (t) => document.querySelector('.aufgabe h2')?.textContent.trim() === t,
-    raum.raetsel[1].titel, { timeout: 5000 });
+    (t) => (document.querySelector('.aufgabe h2')?.textContent || '')
+      .replace(/^Rätsel\s*\d+\s*:\s*/, '').trim() === t,
+    ohneNummer(gespielt[1].titel), { timeout: 5000 });
 
   await seite.waitForTimeout(2200);                      // Timer soll laufen
   await seite.getByRole('button', { name: /Menü/ }).click();
@@ -313,7 +419,7 @@ async function pruefeSpeichern(browser, raum, stufe) {
   await seite.getByRole('link', { name: /Fortsetzen/ }).click();
   await seite.waitForSelector('.aufgabe h2');
   const titel = await seite.locator('.aufgabe h2').textContent();
-  if (titel.trim() !== raum.raetsel[1].titel) nicht(`Fortsetzen landet bei "${titel}" statt bei Rätsel 2`);
+  if (ohneNummer(titel) !== ohneNummer(gespielt[1].titel)) nicht(`Fortsetzen landet bei "${titel}" statt bei Rätsel 2`);
   else ok('Fortsetzen springt zum richtigen Rätsel');
 
   // Beenden ohne Speichern
@@ -381,7 +487,7 @@ async function pruefeMusik(browser, raum) {
   seite.on('pageerror', e => konsole.push(e.message));
   seite.on('console', m => { if (m.type() === 'error') konsole.push(m.text()); });
 
-  await seite.goto(`${BASIS}#/f/${freigabeCode([raum.id])}`);
+  await seite.goto(`${BASIS}#/f/${freigabeCode([raum.basisId || raum.id])}`);
   await seite.goto(`${BASIS}#/spiel/${raum.id}`);
   await seite.waitForSelector('.musikknopf');
 
@@ -453,6 +559,21 @@ try {
     await pruefeSpeichern(browser, daten.raeume[0], s.stufe);
     for (const raum of daten.raeume) {
       if (nurRaum && raum.id !== nurRaum) continue;
+      if (istGruppenraum(raum)) {
+        // Ein Gruppenraum wird gruppenweise gespielt: jede Gruppe ist für die
+        // App ein eigener Raum mit der Kennung „5-19@A".
+        for (const g of raum.gruppen) {
+          await spieleRaum(browser, {
+            ...raum,
+            id: `${raum.id}@${g.kennung}`,
+            basisId: raum.id,
+            titel: `${raum.titel} – Gruppe ${g.kennung}`,
+            raetsel: gruppenRaetsel(raum, g),
+            zeige: undefined,
+          }, s.stufe);
+        }
+        continue;
+      }
       await spieleRaum(browser, raum, s.stufe);
     }
   }

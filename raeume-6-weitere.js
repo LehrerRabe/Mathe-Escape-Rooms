@@ -2,6 +2,35 @@
    Dieselben Kapitel wie in `raeume-6.js`, aber andere Geschichten und andere Aufgaben –
    für Parallelgruppen, eine zweite Runde oder zur Differenzierung.                        */
 
+import { fmt, antw, einerziffer } from './zufall.js';
+
+/* ---------- Helfer für die Zufallsaufgaben ---------- */
+
+/** Größter gemeinsamer Teiler. */
+const ggt = (a, b) => (b ? ggt(b, a % b) : a);
+
+/** Bruch für den Aufgabentext: <sup>3</sup>⁄<sub>8</sub>. */
+const bruch = (oben, unten) => `<sup>${oben}</sup>⁄<sub>${unten}</sub>`;
+
+/** Bruch vollständig kürzen – liefert [Zähler, Nenner]. */
+const kuerze = (oben, unten) => { const t = ggt(oben, unten); return [oben / t, unten / t]; };
+
+/** Zahl aus Hundertsteln, immer mit zwei Nachkommastellen: 25 → „0,25", 738 → „7,38". */
+const komma2 = (hundertstel) =>
+  `${fmt(Math.trunc(hundertstel / 100))},${String(hundertstel % 100).padStart(2, '0')}`;
+
+/** Geldbetrag aus Cent – Geld steht immer mit zwei Nachkommastellen da. */
+const euro = komma2;
+
+/** Die Einerziffern der Ergebnisse als Aufzählung für Tipp und Lösung. */
+const einerListe = (...werte) => werte.map(einerziffer).join(', ');
+
+/** Auf zwei Nachkommastellen runden – gegen Rechenreste in `anzeige` und `pruefe`. */
+const rund = (n, stellen = 2) => Math.round(n * 10 ** stellen) / 10 ** stellen;
+
+/** Echte Teiler eines Nenners – für Stammbrüche, die ohne Rest aufgehen. */
+const TEILER = { 6: [2, 3], 8: [2, 4], 9: [3], 10: [2, 5], 12: [2, 3, 4, 6] };
+
 const ORANGE = '#c2410c';
 const GRUEN = '#15803d';
 const BLAU = '#1d4ed8';
@@ -87,72 +116,122 @@ export default [
           + 'Der Besitzer schreibt jede Menge als Anteil auf und rechnet erst beim Einschenken um.',
         auftrag: 'Rechne die vier Aufgaben. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Von 42 Flaschen sind <sup>5</sup>⁄<sub>6</sub> schon gefüllt. Wie viele Flaschen sind das?', antwort: '35', einheit: 'Flaschen', zeichen: '5' },
-          { frage: 'Ein Rezept braucht <sup>3</sup>⁄<sub>4</sub> Liter Saft. Wie viele Milliliter sind das?', antwort: '750', einheit: 'ml', zeichen: '0' },
-          { frage: '<sup>7</sup>⁄<sub>8</sub> eines Kanisters sind 42 Liter. Wie viele Liter fasst der ganze Kanister?', antwort: '48', einheit: 'l', zeichen: '8' },
-          { frage: 'Wie viel Prozent sind <sup>9</sup>⁄<sub>20</sub>?', antwort: '45', einheit: '%', zeichen: '5' },
-        ],
-        code: '5085',
         codeRegel: 'Die <strong>Einerziffern</strong> der vier Ergebnisse – von oben nach unten.',
         tipps: [
           'Einen Bruchteil einer Größe bestimmst du so: erst durch den Nenner teilen, dann mit dem Zähler malnehmen.',
-          'Bei Aufgabe 3 gehst du rückwärts: 42 Liter sind 7 Achtel, ein Achtel ist also 42 : 7 = 6 Liter. Bei Aufgabe 4 erweiterst du auf den Nenner 100.',
-          '42 : 6 · 5 = 35. 1000 ml : 4 · 3 = 750 ml. 42 : 7 · 8 = 48 l. 9/20 = 45/100 = 45 %. Einerziffern: 5, 0, 8, 5.',
+          'Bei Aufgabe 3 gehst du rückwärts: Teile die gegebene Literzahl durch den Zähler – so viel ist ein Teil – und nimm das Ergebnis mal den Nenner. Bei Aufgabe 4 erweiterst du den Bruch auf den Nenner 100.',
         ],
-        loesung: '35 Flaschen · 750 ml · 48 l · 45 % → Einerziffern 5, 0, 8, 5.',
+        zufall: (z) => {
+          // 1) Bruchteil einer Anzahl – die Anzahl ist ein Vielfaches des Nenners.
+          const [z1, n1] = z.aus([[5, 6], [3, 4], [2, 3], [5, 8], [3, 5], [7, 8], [4, 5], [7, 10]]);
+          const t1 = z.ganz(Math.ceil(24 / n1), Math.floor(60 / n1));
+          const flaschen = n1 * t1, gefuellt = z1 * t1;
+          // 2) Bruchteil von 1 Liter in Milliliter – geht immer ohne Rest auf.
+          const [z2, n2] = z.aus([[1, 2], [3, 4], [1, 4], [2, 5], [3, 5], [4, 5], [3, 8], [5, 8], [7, 8], [3, 10], [7, 10], [9, 10]]);
+          const schritt2 = 1000 / n2, ml = z2 * schritt2;
+          // 3) Rückwärts: der bekannte Anteil ist gegeben, das Ganze gesucht.
+          const [z3, n3] = z.aus([[7, 8], [5, 6], [3, 4], [2, 3], [3, 5], [4, 5], [5, 8]]);
+          const t3 = z.ganz(Math.ceil(24 / n3), Math.floor(80 / n3));
+          const teilLiter = z3 * t3, kanister = n3 * t3;
+          // 4) Bruch in Prozent – nur Nenner, bei denen es ohne Rest aufgeht.
+          const n4 = z.aus([4, 5, 10, 20, 25]);
+          const z4 = z.aus([1, 3, 7, 9, 11, 13, 17, 19, 21, 23].filter(w => w < n4));
+          const proz = (100 * z4) / n4;
+          const ziffern = einerListe(gefuellt, ml, kanister, proz);
+          return {
+            regel: 'einer',
+            aufgaben: [
+              { frage: `Von ${flaschen} Flaschen sind ${bruch(z1, n1)} schon gefüllt. Wie viele Flaschen sind das?`, antwort: antw(gefuellt), einheit: 'Flaschen' },
+              { frage: `Ein Rezept braucht ${bruch(z2, n2)} Liter Saft. Wie viele Milliliter sind das?`, antwort: antw(ml), einheit: 'ml' },
+              { frage: `${bruch(z3, n3)} eines Kanisters sind ${teilLiter} Liter. Wie viele Liter fasst der ganze Kanister?`, antwort: antw(kanister), einheit: 'l' },
+              { frage: `Wie viel Prozent sind ${bruch(z4, n4)}?`, antwort: antw(proz), einheit: '%' },
+            ],
+            tipp: `${flaschen} : ${n1} = ${t1}, davon ${z1} Teile: ${t1} · ${z1} = ${gefuellt} Flaschen; `
+              + `1 l = 1 000 ml, 1 000 : ${n2} = ${fmt(schritt2)}, ${fmt(schritt2)} · ${z2} = ${fmt(ml)} ml; `
+              + `${teilLiter} : ${z3} = ${t3} l je Teil, ${t3} · ${n3} = ${kanister} l; `
+              + `${z4}/${n4} = ${proz}/100 = ${proz} %. Einerziffern: ${ziffern}.`,
+            loesung: `${gefuellt} Flaschen; ${fmt(ml)} ml; ${kanister} l; ${proz} % → Einerziffern ${ziffern}.`,
+          };
+        },
       },
       {
-        titel: 'Rätsel 2: Die Zettelwand',
-        text: 'An der Kühlschranktür hängen zwölf Notizzettel: sechs mit Brüchen, wie sie beim Abzählen entstanden sind, '
-          + 'und sechs mit denselben Brüchen in kürzester Form. Der Besitzer duldet keinen Bruch, der sich noch kürzen lässt.',
-        auftrag: 'Verbinde jeden Bruch mit seiner <strong>vollständig gekürzten</strong> Form.',
-        typ: 'zuordnen',
-        titelLinks: 'Bruch',
-        titelRechts: 'vollständig gekürzt',
-        codeAmEnde: true,
-        saat: 311,
-        paare: [
-          { links: '<sup>24</sup>⁄<sub>36</sub>', rechts: '<sup>2</sup>⁄<sub>3</sub>' },
-          { links: '<sup>30</sup>⁄<sub>48</sub>', rechts: '<sup>5</sup>⁄<sub>8</sub>' },
-          { links: '<sup>42</sup>⁄<sub>56</sub>', rechts: '<sup>3</sup>⁄<sub>4</sub>' },
-          { links: '<sup>35</sup>⁄<sub>63</sub>', rechts: '<sup>5</sup>⁄<sub>9</sub>' },
-          { links: '<sup>44</sup>⁄<sub>55</sub>', rechts: '<sup>4</sup>⁄<sub>5</sub>' },
-          { links: '<sup>27</sup>⁄<sub>72</sub>', rechts: '<sup>3</sup>⁄<sub>8</sub>' },
-        ],
+        titel: 'Rätsel 2: Die Kartenkiste hinter dem Tresen',
+        text: 'In einer flachen Holzkiste hinter dem Tresen liegen acht Rechenkarten und acht Ergebniskarten '
+          + 'durcheinander. Sonst sortiert sie der Besitzer jeden Abend, heute Nacht ist er nicht dazu gekommen. '
+          + 'Auf die Rückseiten hat er eine Zahl gemalt – zu sehen ist sie erst, wenn alle Karten richtig '
+          + 'beieinanderliegen.',
+        auftrag: 'Lege zu jeder Rechenkarte die passende Ergebniskarte. Das fertige Bild zeigt den Code.',
+        typ: 'legen',
         code: '4538',
-        codeRegel: 'Wenn alle Paare stimmen, erscheint der Code: der <strong>größte</strong> und der <strong>kleinste</strong> der gekürzten Brüche, jeweils Zähler und Nenner hintereinander.',
-        tipps: [
-          'Suche zu jedem Bruch die größte Zahl, durch die Zähler und Nenner beide teilbar sind.',
-          'Die Kürzungszahlen lauten der Reihe nach 12, 6, 14, 7, 11 und 9.',
-          '24/36 = 2/3, 30/48 = 5/8, 42/56 = 3/4, 35/63 = 5/9, 44/55 = 4/5, 27/72 = 3/8. Der größte ist 4/5 (0,8), der kleinste 3/8 (0,375).',
+        zahlbild: '4538',
+        spalten: 4,
+        saat: 311,
+        titelLinks: 'Rechenkarten',
+        titelRechts: 'Ergebniskarten',
+        codeRegel: 'Die Zahl, die das fertige Bild zeigt.',
+        karten: [
+          { rechnung: '<sup>3</sup>⁄<sub>4</sub> von 60 l', ergebnis: '45 l' },
+          { rechnung: '<sup>2</sup>⁄<sub>5</sub> von 60 l', ergebnis: '24 l' },
+          { rechnung: '<sup>5</sup>⁄<sub>8</sub> von 48 l', ergebnis: '30 l' },
+          { rechnung: '<sup>7</sup>⁄<sub>10</sub> von 90 l', ergebnis: '63 l' },
+          { rechnung: '<sup>1</sup>⁄<sub>6</sub> von 54 l', ergebnis: '9 l' },
+          { rechnung: '<sup>3</sup>⁄<sub>8</sub> von 32 l', ergebnis: '12 l' },
+          { rechnung: '<sup>4</sup>⁄<sub>9</sub> von 36 l', ergebnis: '16 l' },
+          { rechnung: '<sup>5</sup>⁄<sub>6</sub> von 42 l', ergebnis: '35 l' },
         ],
-        loesung: '24/36 = 2/3; 30/48 = 5/8; 42/56 = 3/4; 35/63 = 5/9; 44/55 = 4/5; 27/72 = 3/8 → größter 4/5, kleinster 3/8.',
+        tipps: [
+          'Fangt mit den Karten an, bei denen der Nenner glatt in die Literzahl passt – zum Beispiel beim Sechstel von 54 Litern.',
+          'Einen Bruchteil einer Größe bestimmt ihr in zwei Schritten: erst durch den Nenner teilen, dann mit dem Zähler malnehmen.',
+          '3/4 von 60 l = 45 l; 2/5 von 60 l = 24 l; 5/8 von 48 l = 30 l; 7/10 von 90 l = 63 l; '
+            + '1/6 von 54 l = 9 l; 3/8 von 32 l = 12 l; 4/9 von 36 l = 16 l; 5/6 von 42 l = 35 l. Das Bild zeigt 4538.',
+        ],
+        loesung: '45 l; 24 l; 30 l; 63 l; 9 l; 12 l; 16 l; 35 l – das fertige Bild zeigt 4538.',
       },
       {
-        titel: 'Rätsel 3: Die Messlatte',
-        text: 'Hinter der Theke lehnt eine Messlatte von 0 bis 1, an der der Besitzer seine Portionsgrößen markiert. '
-          + 'Sechs Angaben warten darauf, eingetragen zu werden – mal als Bruch, mal in Prozent.',
-        auftrag: 'Ordne die Angaben von der <strong>kleinsten</strong> zur <strong>größten</strong>.',
-        typ: 'reihenfolge',
-        codeAmEnde: true,
-        saat: 73,
-        elemente: [
-          { text: '<sup>3</sup>⁄<sub>8</sub>' },
-          { text: '<sup>2</sup>⁄<sub>5</sub>' },
-          { text: '<sup>4</sup>⁄<sub>9</sub>' },
-          { text: '45 %' },
-          { text: '<sup>1</sup>⁄<sub>2</sub>' },
-          { text: '<sup>5</sup>⁄<sub>9</sub>' },
-        ],
+        titel: 'Rätsel 3: Die vier Schieber an der Saftpresse',
+        text: 'An der Saftpresse sitzen vier Schieber, mit denen der Besitzer seine Portionen einstellt. Unter '
+          + 'jedem Schieber steht, was der eingestellte Wert bewirkt – ob er richtig steht, stand dort nie. '
+          + 'Das musste der Besitzer selbst wissen, und jetzt müsst ihr es wissen.',
+        auftrag: 'Stelle jeden Schieber auf den gesuchten Wert ein. Die Zeile darunter zeigt dir nur die '
+          + 'Wirkung – entscheiden musst du selbst.',
+        typ: 'schieben',
         code: '3859',
-        codeRegel: 'Der Code sind Zähler und Nenner des <strong>kleinsten</strong> und des <strong>größten</strong> Bruchs – in dieser Reihenfolge.',
-        tipps: [
-          'Rechne alles in dieselbe Schreibweise um – zum Beispiel in Prozent.',
-          '3/8 = 37,5 %, 2/5 = 40 %, 4/9 ≈ 44,4 %, 1/2 = 50 %, 5/9 ≈ 55,6 %. Achte auf 4/9 und 45 % – die liegen dicht beieinander.',
-          'Reihenfolge: 3/8, 2/5, 4/9, 45 %, 1/2, 5/9. Kleinster Bruch ist 3/8, größter 5/9.',
+        codeRegel: 'Die vier eingestellten Werte – von oben nach unten.',
+        aufgaben: [
+          {
+            frage: 'Das Fass fasst 24 Liter. Stelle die Füllmenge so ein, dass das Fass genau zu '
+              + '<sup>1</sup>⁄<sub>8</sub> gefüllt ist.',
+            von: 0, bis: 24, schritt: 1, antwort: 3, einheit: 'l',
+            anzeige: (w) => `Im Fass: ${fmt(w)} l von 24 l – bis oben fehlen ${fmt(24 - w)} l.`,
+            zeichen: '3',
+          },
+          {
+            frage: 'Der Kanister fasst 20 Liter. Stelle so viele Liter ein, wie <sup>2</sup>⁄<sub>5</sub> des '
+              + 'Kanisters sind.',
+            von: 0, bis: 20, schritt: 1, antwort: 8, einheit: 'l',
+            anzeige: (w) => `Ausgeschenkt: ${fmt(w)} l – im Kanister bleiben ${fmt(20 - w)} l.`,
+            zeichen: '8',
+          },
+          {
+            frage: 'Eine Kiste hat 30 Flaschen. Stelle die Zahl der verkauften Flaschen so ein, dass genau '
+              + '<sup>1</sup>⁄<sub>6</sub> der Kiste verkauft ist.',
+            von: 0, bis: 30, schritt: 1, antwort: 5, einheit: 'Flaschen',
+            anzeige: (w) => `Verkauft: ${fmt(w)} von 30 Flaschen – übrig: ${fmt(30 - w)}.`,
+            zeichen: '5',
+          },
+          {
+            frage: 'Stelle eine Literzahl so ein, dass die <strong>Hälfte</strong> davon genau 4,5 Liter ist.',
+            von: 0, bis: 20, schritt: 1, antwort: 9, einheit: 'l',
+            anzeige: (w) => `Die Hälfte davon: ${fmt(rund(w / 2))} l.`,
+            zeichen: '9',
+          },
         ],
-        loesung: '3/8 (37,5 %) < 2/5 (40 %) < 4/9 (44,4 %) < 45 % < 1/2 (50 %) < 5/9 (55,6 %).',
+        tipps: [
+          'Schiebt zuerst einmal hin und her und lest mit, was in der Zeile darunter passiert – daran erkennt ihr, worauf es ankommt.',
+          'Ein Achtel, zwei Fünftel, ein Sechstel: erst durch den Nenner teilen, dann mit dem Zähler malnehmen. Beim letzten Schieber geht es umgekehrt – gesucht ist die Zahl, deren Hälfte bekannt ist.',
+          '24 : 8 = 3 l; 20 : 5 · 2 = 8 l; 30 : 6 = 5 Flaschen; 2 · 4,5 l = 9 l. Der Code lautet 3859.',
+        ],
+        loesung: '3 l; 8 l; 5 Flaschen; 9 l → Code 3859.',
       },
       {
         titel: 'Rätsel 4: Die Gläserwand',
@@ -197,7 +276,7 @@ export default [
           'Bei Frage 4 rechnest du beide Brüche in Achtel um: 1/4 = 2/8 und 1/2 = 4/8. Was liegt dazwischen?',
           '3/4 = 15/20. 45 : 5 · 2 = 18 l. 7/10 = 70/100 = 70 %. Zwischen 2/8 und 4/8 liegt 3/8.',
         ],
-        loesung: '15/20 · 18 l · 70 % · 3/8 → S, A, F, T.',
+        loesung: '15/20; 18 l; 70 %; 3/8 → S, A, F, T.',
       },
       {
         titel: 'Rätsel 6: Die Abrechnung',
@@ -205,20 +284,44 @@ export default [
           + 'stimmen, gibt der Kasten den letzten Schlüssel frei.',
         auftrag: 'Rechne die vier Aufgaben. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: '5 kg Äpfel werden gleichmäßig auf 8 Gläser verteilt. Wie viele Gramm kommen in jedes Glas?', antwort: '625', einheit: 'g', zeichen: '5' },
-          { frage: '3 Liter Saft werden gleichmäßig auf 4 Flaschen verteilt. Wie viele Milliliter sind in jeder Flasche?', antwort: '750', einheit: 'ml', zeichen: '0' },
-          { frage: 'Ein Kasten hat 12 Flaschen. <sup>5</sup>⁄<sub>6</sub> davon sind verkauft. Wie viele Flaschen stehen noch darin?', antwort: '2', einheit: 'Flaschen', zeichen: '2' },
-          { frage: 'Wie viel Prozent sind <sup>17</sup>⁄<sub>20</sub>?', antwort: '85', einheit: '%', zeichen: '5' },
-        ],
-        code: '5025',
         codeRegel: 'Die <strong>Einerziffern</strong> der vier Ergebnisse – von oben nach unten.',
         tipps: [
-          'Ein Bruch bedeutet auch: Zähler geteilt durch Nenner. 5 kg auf 8 Gläser sind 5/8 kg je Glas.',
-          'Rechne zuerst in die kleinere Einheit um: 5 kg sind 5000 g, 3 l sind 3000 ml. Bei Aufgabe 3 fragst du nach dem Rest, also nach 1/6 von 12.',
-          '5000 : 8 = 625 g. 3000 : 4 = 750 ml. 12 : 6 = 2 Flaschen übrig. 17/20 = 85/100 = 85 %. Einerziffern: 5, 0, 2, 5.',
+          'Ein Bruch bedeutet auch: Zähler geteilt durch Nenner. Eine Menge gleichmäßig auf mehrere Gefäße zu verteilen heißt also teilen.',
+          'Rechne zuerst in die kleinere Einheit um – Kilogramm in Gramm, Liter in Milliliter. Bei Aufgabe 3 fragst du nach dem Rest: Zieh den verkauften Anteil vom ganzen Kasten ab.',
         ],
-        loesung: '625 g · 750 ml · 2 Flaschen · 85 % → Einerziffern 5, 0, 2, 5.',
+        zufall: (z) => {
+          // 1) Kilogramm gleichmäßig auf Gläser – 1000 g gehen durch jede Glaszahl auf.
+          const glaeser = z.aus([4, 5, 8, 10, 20, 25]);
+          const kg = z.ganz(Math.max(2, Math.ceil((150 * glaeser) / 1000)), Math.min(9, Math.floor((900 * glaeser) / 1000)));
+          const proGlas = (kg * 1000) / glaeser;
+          // 2) Liter gleichmäßig auf Flaschen.
+          const flaschen = z.aus([4, 5, 8, 10, 20]);
+          const liter = z.ganz(Math.max(2, Math.ceil(flaschen / 5)), Math.min(12, flaschen));
+          const proFlasche = (liter * 1000) / flaschen;
+          // 3) Restanteil eines Kastens – die Kastengröße ist ein Vielfaches des Nenners.
+          const [z3, n3] = z.aus([[5, 6], [3, 4], [2, 3], [5, 8], [3, 5], [7, 8], [4, 5]]);
+          const t3 = z.ganz(Math.ceil(12 / n3), Math.floor(30 / n3));
+          const kasten = n3 * t3, uebrig = (n3 - z3) * t3;
+          // 4) Bruch in Prozent – nur Nenner, bei denen es ohne Rest aufgeht.
+          const n4 = z.aus([20, 25, 50]);
+          const z4 = z.ganz(Math.ceil(n4 * 0.15), n4 - 1);
+          const proz = (100 * z4) / n4;
+          const ziffern = einerListe(proGlas, proFlasche, uebrig, proz);
+          return {
+            regel: 'einer',
+            aufgaben: [
+              { frage: `${kg} kg Äpfel werden gleichmäßig auf ${glaeser} Gläser verteilt. Wie viele Gramm kommen in jedes Glas?`, antwort: antw(proGlas), einheit: 'g' },
+              { frage: `${liter} Liter Saft werden gleichmäßig auf ${flaschen} Flaschen verteilt. Wie viele Milliliter sind in jeder Flasche?`, antwort: antw(proFlasche), einheit: 'ml' },
+              { frage: `Ein Kasten hat ${kasten} Flaschen. ${bruch(z3, n3)} davon sind verkauft. Wie viele Flaschen stehen noch darin?`, antwort: antw(uebrig), einheit: 'Flaschen' },
+              { frage: `Wie viel Prozent sind ${bruch(z4, n4)}?`, antwort: antw(proz), einheit: '%' },
+            ],
+            tipp: `${kg} kg = ${fmt(kg * 1000)} g, ${fmt(kg * 1000)} : ${glaeser} = ${fmt(proGlas)} g; `
+              + `${liter} l = ${fmt(liter * 1000)} ml, ${fmt(liter * 1000)} : ${flaschen} = ${fmt(proFlasche)} ml; `
+              + `${kasten} : ${n3} = ${t3}, übrig bleiben ${n3 - z3} von ${n3} Teilen: ${t3} · ${n3 - z3} = ${uebrig} Flaschen; `
+              + `${z4}/${n4} = ${proz}/100 = ${proz} %. Einerziffern: ${ziffern}.`,
+            loesung: `${fmt(proGlas)} g; ${fmt(proFlasche)} ml; ${uebrig} Flaschen; ${proz} % → Einerziffern ${ziffern}.`,
+          };
+        },
       },
     ],
   },
@@ -247,20 +350,54 @@ export default [
           + 'doppelt notiert: einmal als Bruch, einmal mit Komma. Das erste Schloss versteht nur die Schreibweise mit Komma.',
         auftrag: 'Rechne bzw. wandle um. Jede richtige Antwort deckt einen Buchstaben auf.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Schreibe <sup>7</sup>⁄<sub>8</sub> als Dezimalzahl.', antwort: ['0,875'], zeichen: 'T' },
-          { frage: 'Runde 12,3849 auf Hundertstel.', antwort: ['12,38'], zeichen: 'A' },
-          { frage: 'Wandle um: 3,4 kg = ? g', antwort: '3400', einheit: 'g', zeichen: 'N' },
-          { frage: 'Welche Zahl ist größer? Schreibe sie auf: 7,0899 oder 7,09', antwort: ['7,09'], zeichen: 'K' },
-        ],
         code: 'TANK',
         codeRegel: 'Die vier Buchstaben von oben nach unten.',
         tipps: [
-          'Ein Bruch wird zur Dezimalzahl, indem man den Zähler durch den Nenner teilt.',
-          'Beim Runden auf Hundertstel entscheidet die Tausendstelstelle. Beim Vergleichen füllst du mit Nullen auf: 7,0900 und 7,0899.',
-          '7 : 8 = 0,875. 12,3849 → die Tausendstelziffer 4 rundet ab: 12,38. 3,4 kg = 3400 g. 7,0900 > 7,0899, also ist 7,09 größer.',
+          'Ein Bruch wird zur Dezimalzahl, indem man den Zähler durch den Nenner teilt – notfalls schriftlich.',
+          'Beim Runden auf Hundertstel entscheidet die Tausendstelstelle. Beim Vergleichen füllst du beide Zahlen mit Nullen auf dieselbe Stellenzahl auf und gehst dann Stelle für Stelle durch.',
         ],
-        loesung: '0,875 · 12,38 · 3400 g · 7,09 → T, A, N, K.',
+        zufall: (z) => {
+          const wort = 'TANK';   // Buchstabencode bleibt fest, nur die Zahlen würfeln
+          // 1) Bruch als Dezimalzahl – diese Nenner ergeben höchstens zwei Nachkommastellen.
+          const n1 = z.aus([4, 5, 20, 25, 50]);
+          const z1 = z.aus([1, 3, 7, 9, 11, 13, 17, 19, 21, 23].filter(w => w < n1));
+          const hundertstel = (z1 * 100) / n1;
+          const dez = fmt(hundertstel / 100);        // „0,6" statt „0,60"
+          // 2) Auf Hundertstel runden – intern in Zehntausendsteln, damit nichts rundet.
+          const vorn = z.ganz(3, 48), hund = z.ganz(1, 98);
+          const taus = z.aus([1, 2, 3, 4, 6, 7, 8, 9]), zehnt = z.ganz(0, 9);
+          const roh = `${fmt(vorn)},${String(hund).padStart(2, '0')}${taus}${zehnt}`;
+          const gerundet = vorn * 100 + hund + (taus > 4 ? 1 : 0);
+          // 3) Kilogramm in Gramm.
+          const kgZehntel = z.ganz(11, 98);
+          // 4) Zwei Dezimalzahlen vergleichen. In etwa der Hälfte der Würfe ist die
+          //    längere Zahl die größere – sonst wäre die Antwort vorhersagbar.
+          const g4 = z.ganz(2, 9), zt = z.ganz(0, 8), ht = z.ganz(1, 9);
+          const kurzZahl = `${g4},${zt}${ht}`;                 // zwei Nachkommastellen
+          const langGroesser = z.mal(0.5);
+          const langZahl = langGroesser
+            ? `${g4},${zt}${ht}${z.ganz(1, 9)}${z.ganz(1, 9)}`        // gleiche Hundertstel, dann noch mehr
+            : `${g4},${zt}${ht - 1}${z.ganz(1, 9)}${z.ganz(1, 9)}`;   // ein Hundertstel weniger
+          const groesser = langGroesser ? langZahl : kurzZahl;
+          const kleiner = langGroesser ? kurzZahl : langZahl;
+          const paar = z.mal(0.5) ? `${kleiner} oder ${groesser}` : `${groesser} oder ${kleiner}`;
+          return {
+            regel: 'buchstaben',
+            code: wort,
+            aufgaben: [
+              { frage: `Schreibe ${bruch(z1, n1)} als Dezimalzahl.`, antwort: [...new Set([dez, komma2(hundertstel)])] },
+              { frage: `Runde ${roh} auf Hundertstel.`, antwort: [...new Set([komma2(gerundet), antw(gerundet / 100)])] },
+              { frage: `Wandle um: ${fmt(kgZehntel / 10)} kg = ? g`, antwort: antw(kgZehntel * 100), einheit: 'g' },
+              { frage: `Welche Zahl ist größer? Schreibe sie auf: ${paar}`, antwort: [groesser] },
+            ],
+            tipp: `${z1} : ${n1} = ${dez}; `
+              + `bei ${roh} entscheidet die Tausendstelziffer ${taus}, also ${komma2(gerundet)}; `
+              + `${fmt(kgZehntel / 10)} kg = ${fmt(kgZehntel * 100)} g; `
+              + `auf vier Nachkommastellen aufgefüllt sind das ${kurzZahl}00 und ${langZahl}, also ist ${groesser} größer. `
+              + `Die vier Buchstaben lauten ${wort.split('').join(', ')}.`,
+            loesung: `${dez}; ${komma2(gerundet)}; ${fmt(kgZehntel * 100)} g; ${groesser} → ${wort.split('').join(', ')}.`,
+          };
+        },
       },
       {
         titel: 'Rätsel 2: Die Preisanzeige',
@@ -281,34 +418,68 @@ export default [
           'Abbrechend wird ein Bruch genau dann, wenn im gekürzten Nenner nur die Primfaktoren 2 und 5 stecken: 16 = 2·2·2·2 und 20 = 2·2·5 gehen auf, 6 = 2·3 nicht.',
           '5 : 6 = 0,8333… ist periodisch. 0,36 = 36/100 = 9/25. 0,410 > 0,409 > 0,400. 1 : 7 = 0,142857142857… mit der Periode 142857.',
         ],
-        loesung: '5/6 · 9/25 · 0,41 · 0,142857… → Z, A, P, F.',
+        loesung: '5/6; 9/25; 0,41; 0,142857… → Z, A, P, F.',
       },
       {
-        titel: 'Rätsel 3: Die Umrechnungstafel',
-        text: 'An der Innenseite der Kassenklappe klebt eine Umrechnungstafel, an einer Seite abgerissen. Links stehen '
-          + 'die Angaben mit Komma, rechts dieselben Größen in kleineren Einheiten – nur sind die Zeilen durcheinandergeraten.',
-        auftrag: 'Verbinde jeweils die beiden gleich großen Angaben.',
-        typ: 'zuordnen',
-        titelLinks: 'Angabe',
-        titelRechts: 'genauso groß wie',
-        codeAmEnde: true,
-        saat: 419,
-        paare: [
-          { links: '0,25 h', rechts: '15 min' },
-          { links: '1,75 km', rechts: '1750 m' },
-          { links: '0,08 kg', rechts: '80 g' },
-          { links: '2,4 l', rechts: '2400 ml' },
-          { links: '0,6 m', rechts: '60 cm' },
-          { links: '4,05 €', rechts: '405 ct' },
-        ],
+        titel: 'Rätsel 3: Der Block des Pächters',
+        text: 'In der Kassenschublade liegt ein Rechenblock. Der Pächter hat darin vier Umrechnungen notiert, und '
+          + 'in jeder steckt genau ein Fehler: Mal rutscht ein Komma, mal nimmt er die falsche Umrechnungszahl. '
+          + 'Die Lade gibt erst nach, wenn in jeder Rechnung die Zeile gefunden ist, in der es zum ersten Mal '
+          + 'schiefgeht.',
+        auftrag: 'Tippe in jedem Rechenweg die Zeile an, in der <strong>zum ersten Mal</strong> etwas falsch ist.',
+        typ: 'fehlerfinden',
         code: '8015',
-        codeRegel: 'Wenn alle Paare stimmen, erscheint der Code: die <strong>Grammzahl</strong> aus dem Kilogramm-Paar, danach die <strong>Minutenzahl</strong> aus dem Stunden-Paar.',
-        tipps: [
-          'Beim Umrechnen in die kleinere Einheit wandert das Komma nach rechts.',
-          '1 km = 1000 m · 1 kg = 1000 g · 1 l = 1000 ml · 1 m = 100 cm · 1 € = 100 ct. Achtung bei der Zeit: 1 h = 60 min, deshalb sind 0,25 h nur 15 min.',
-          '0,25 h = 15 min · 1,75 km = 1750 m · 0,08 kg = 80 g · 2,4 l = 2400 ml · 0,6 m = 60 cm · 4,05 € = 405 ct. Gesucht sind 80 und 15.',
+        codeRegel: 'Jede gefundene Zeile deckt eine Ziffer auf – von oben nach unten.',
+        faelle: [
+          {
+            titel: 'Wie viele Gramm sind 0,08 kg?',
+            zeilen: [
+              '0,08 kg sollen in Gramm umgerechnet werden.',
+              '1 kg sind 1000 g, also wird mit 1000 malgenommen.',
+              '0,08 · 1000 = 8',
+              'Antwort: 0,08 kg sind 8 g.',
+            ],
+            falsch: 2, zeichen: '8',
+          },
+          {
+            titel: 'Wie viele Minuten sind 0,25 h?',
+            zeilen: [
+              'Gesucht sind die Minuten zu 0,25 h.',
+              'Eine Stunde hat 100 Minuten, also wird mit 100 malgenommen.',
+              '0,25 · 100 = 25',
+              'Antwort: 0,25 h sind 25 Minuten.',
+            ],
+            falsch: 1, zeichen: '0',
+          },
+          {
+            titel: 'Runde 7,384 auf Hundertstel.',
+            zeilen: [
+              'Gerundet wird auf zwei Stellen hinter dem Komma.',
+              'Entscheidend ist die Ziffer an der Hundertstelstelle, und das ist die 8.',
+              '8 ist größer als 4, deshalb wird aufgerundet.',
+              'Antwort: 7,384 ≈ 7,39.',
+            ],
+            falsch: 1, zeichen: '1',
+          },
+          {
+            titel: 'Was kosten sechs Flaschen zu 1,45 €?',
+            zeilen: [
+              'Eine Flasche kostet 1,45 €.',
+              'Sechs Flaschen kosten 6 · 1,45 €.',
+              'Ohne Komma gerechnet: 6 · 145 = 870',
+              'Das Komma kommt eine Stelle von rechts: 87,0 €',
+              'Antwort: Sechs Flaschen kosten 87 €.',
+            ],
+            falsch: 3, zeichen: '5',
+          },
         ],
-        loesung: 'Sechs Paare wie angegeben; 0,25 h = 15 min ist die Stolperstelle (nicht 25 min).',
+        tipps: [
+          'Lest jede Zeile einzeln und fragt euch: Stimmt genau dieser Schritt? Der Fehler steckt nicht immer in der letzten Zeile.',
+          'Beim Umrechnen in die kleinere Einheit wandert das Komma nach rechts – um eine Stelle je Null in der Umrechnungszahl. Nur die Zeit ist anders: 1 h = 60 min. Und beim Runden entscheidet immer die Ziffer <strong>eine Stelle rechts</strong> von der Rundungsstelle.',
+          'Zeile 3 (0,08 · 1000 = 80, also 80 g); Zeile 2 (1 h = 60 min, also 0,25 · 60 = 15 min); '
+            + 'Zeile 2 (entscheidend ist die Tausendstelziffer 4, also 7,38); Zeile 4 (1,45 hat zwei Nachkommastellen, also 8,70 €).',
+        ],
+        loesung: 'Zeile 3; Zeile 2; Zeile 2; Zeile 4 → 8, 0, 1, 5. Richtig wären 80 g; 15 min; 7,38; 8,70 €.',
       },
       {
         titel: 'Rätsel 4: Das Zahlenfeld der Säule',
@@ -335,29 +506,37 @@ export default [
         loesung: 'Treffer: 3/8, 7/20, 9/40, 13/25, 11/16, 21/50 (6 Stück) – Summe der Zähler 64.',
       },
       {
-        titel: 'Rätsel 5: Die Literpreise',
-        text: 'In der Schublade liegt eine Liste alter Literpreise, teils als Bruch, teils mit Komma notiert. Der Pächter '
-          + 'hat sie nie sortiert – das Schloss darunter verlangt aber genau das.',
-        auftrag: 'Ordne die Zahlen von der <strong>kleinsten</strong> zur <strong>größten</strong>.',
-        typ: 'reihenfolge',
-        codeAmEnde: true,
-        saat: 127,
-        elemente: [
-          { text: '<sup>3</sup>⁄<sub>8</sub>' },
-          { text: '0,38' },
-          { text: '<sup>2</sup>⁄<sub>5</sub>' },
-          { text: '0,409' },
-          { text: '0,41' },
-          { text: '<sup>5</sup>⁄<sub>12</sub>' },
-        ],
+        titel: 'Rätsel 5: Die Tagestafel an der Zapfsäule',
+        text: 'An der Zapfsäule hängt noch die Tagestafel der letzten Woche: für jeden Werktag eine Säule mit den '
+          + 'verkauften Litern. Der Pächter hat jede Säule genau auf einer Gitterlinie enden lassen – ablesen '
+          + 'lässt sich also alles, ohne zu schätzen. Zwischen zwei Gitterlinien liegen zweieinhalb Liter.',
+        auftrag: 'Lies die vier Werte aus dem Diagramm ab. Jede richtige Antwort deckt eine Ziffer auf.',
+        typ: 'ablesen',
         code: '3841',
-        codeRegel: 'Der Code sind die <strong>zweite</strong> und die <strong>fünfte</strong> Zahl der sortierten Reihe – jeweils die beiden Ziffern hinter dem Komma.',
-        tipps: [
-          'Schreibe alle Brüche als Dezimalzahl, dann kannst du sie Stelle für Stelle vergleichen.',
-          '3 : 8 = 0,375 · 2 : 5 = 0,4 · 5 : 12 = 0,41666… Fülle beim Vergleichen mit Nullen auf: 0,400 und 0,409.',
-          'Reihenfolge: 3/8 (0,375), 0,38, 2/5 (0,4), 0,409, 0,41, 5/12 (0,4166…). An zweiter Stelle steht 0,38, an fünfter 0,41.',
+        codeRegel: 'Jede richtige Antwort deckt eine Ziffer auf – von oben nach unten.',
+        diagramm: {
+          art: 'saeulen',
+          yName: 'verkaufte Liter',
+          ySchritt: 2.5,
+          yBis: 25,
+          werte: [
+            { name: 'Mo', wert: 12.5 }, { name: 'Di', wert: 15 }, { name: 'Mi', wert: 22.5 },
+            { name: 'Do', wert: 17.5 }, { name: 'Fr', wert: 10 },
+          ],
+          beschreibung: 'Säulendiagramm der verkauften Liter von Montag bis Freitag',
+        },
+        aufgaben: [
+          { frage: 'Wie viele Liter wurden am Mittwoch verkauft?', antwort: '22,5', einheit: 'l', zeichen: '3' },
+          { frage: 'Wie viele Liter wurden am schwächsten Tag verkauft?', antwort: '10', einheit: 'l', zeichen: '8' },
+          { frage: 'Wie viele Liter wurden von Montag bis Freitag zusammen verkauft?', antwort: '77,5', einheit: 'l', zeichen: '4' },
+          { frage: 'Um wie viele Liter liegt der stärkste Tag über dem schwächsten?', antwort: '12,5', einheit: 'l', zeichen: '1' },
         ],
-        loesung: '0,375 < 0,38 < 0,4 < 0,409 < 0,41 < 0,4166… → zweite Zahl 0,38, fünfte Zahl 0,41.',
+        tipps: [
+          'Lies zuerst ab, wie viele Liter der Abstand zwischen zwei Gitterlinien wert ist – danach geht alles Weitere schnell.',
+          'Für die Woche schreibst du die fünf Werte untereinander und addierst stellengerecht; die halben Liter fallen dabei paarweise zu ganzen zusammen.',
+          'Mittwoch 22,5 l; schwächster Tag Freitag mit 10 l; 12,5 + 15 + 22,5 + 17,5 + 10 = 77,5 l; 22,5 − 10 = 12,5 l.',
+        ],
+        loesung: '22,5 l; 10 l; 77,5 l; 12,5 l → 3, 8, 4, 1.',
       },
       {
         titel: 'Rätsel 6: Die letzte Abrechnung',
@@ -365,20 +544,36 @@ export default [
           + 'nicht mehr ausgefüllt – und genau die verlangt das letzte Schloss.',
         auftrag: 'Rechne die vier Aufgaben. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Wie viele Cent sind 7,38 €?', antwort: '738', einheit: 'ct', zeichen: '8' },
-          { frage: 'Wie viele Gramm sind 0,125 kg?', antwort: '125', einheit: 'g', zeichen: '5' },
-          { frage: 'Wie viele Minuten sind 1,4 h?', antwort: '84', einheit: 'min', zeichen: '4' },
-          { frage: 'Wie viele Milliliter sind 0,047 l?', antwort: '47', einheit: 'ml', zeichen: '7' },
-        ],
-        code: '8547',
         codeRegel: 'Die <strong>Einerziffern</strong> der vier Ergebnisse – von oben nach unten.',
         tipps: [
-          'Bei €, kg und l verschiebst du das Komma: um zwei Stellen zu Cent, um drei Stellen zu Gramm und Milliliter.',
-          'Die Zeit ist der Sonderfall: 1,4 h sind 1 Stunde und 0,4 Stunden, und 0,4 · 60 min = 24 min.',
-          '7,38 € = 738 ct. 0,125 kg = 125 g. 1,4 h = 60 + 24 = 84 min. 0,047 l = 47 ml. Einerziffern: 8, 5, 4, 7.',
+          'Beim Umrechnen in die kleinere Einheit wandert das Komma nach rechts – um eine Stelle je Null in der Umrechnungszahl. Fehlende Stellen füllst du mit Nullen auf.',
+          'Die Zeit ist der Sonderfall: Eine Stunde hat 60 Minuten, nicht 100. Rechne die ganzen Stunden und den Rest hinter dem Komma getrennt um. Addieren darfst du erst, wenn beide Angaben in derselben Einheit stehen.',
         ],
-        loesung: '738 ct · 125 g · 84 min · 47 ml → Einerziffern 8, 5, 4, 7.',
+        zufall: (z) => {
+          const cent = z.ganz(11, 99) * 10 + z.ganz(1, 9);          // 111 … 999 ct
+          const cm = z.ganz(11, 98) * 10 + z.ganz(1, 9);            // 111 … 989 cm
+          const zehntelH = z.ganz(1, 3) * 10 + z.ganz(1, 9);        // 1,1 … 3,9 h
+          const minuten = zehntelH * 6;
+          const kgH = z.ganz(15, 85);                               // 0,15 … 0,85 kg
+          const restG = z.ganz(11, 89);
+          const gesamtG = kgH * 10 + restG;
+          const ziffern = einerListe(cent, cm, minuten, gesamtG);
+          return {
+            regel: 'einer',
+            aufgaben: [
+              { frage: `Wie viele Cent sind ${euro(cent)} €?`, antwort: antw(cent), einheit: 'ct' },
+              { frage: `Wie viele Zentimeter sind ${fmt(cm / 100)} m?`, antwort: antw(cm), einheit: 'cm' },
+              { frage: `Wie viele Minuten sind ${fmt(zehntelH / 10)} h?`, antwort: antw(minuten), einheit: 'min' },
+              { frage: `Wie viele Gramm sind ${fmt(kgH / 100)} kg und ${restG} g zusammen?`, antwort: antw(gesamtG), einheit: 'g' },
+            ],
+            tipp: `${euro(cent)} € = ${fmt(cent)} ct; `
+              + `${fmt(cm / 100)} m = ${fmt(cm)} cm; `
+              + `${fmt(zehntelH / 10)} h = ${Math.floor(zehntelH / 10)} · 60 min + ${(zehntelH % 10) * 6} min = ${minuten} min; `
+              + `${fmt(kgH / 100)} kg = ${fmt(kgH * 10)} g, ${fmt(kgH * 10)} + ${restG} = ${fmt(gesamtG)} g. `
+              + `Einerziffern: ${ziffern}.`,
+            loesung: `${fmt(cent)} ct; ${fmt(cm)} cm; ${minuten} min; ${fmt(gesamtG)} g → Einerziffern ${ziffern}.`,
+          };
+        },
       },
     ],
   },
@@ -408,72 +603,132 @@ export default [
           + 'Schleusenwärter begonnen und nicht zu Ende gerechnet – die Spalte mit den Ergebnissen ist leer geblieben.',
         auftrag: 'Rechne die vier Aufgaben. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Der Pegel steht bei 2,37 m und fällt um 0,58 m. Wie hoch steht er dann, in Zentimetern?', antwort: '179', einheit: 'cm', zeichen: '9' },
-          { frage: 'Das Wasser steigt erst um 0,8 m, dann um 0,45 m. Um wie viele Zentimeter ist es insgesamt gestiegen?', antwort: '125', einheit: 'cm', zeichen: '5' },
-          { frage: 'Ein Eimer fasst 36 Liter und ist <sup>5</sup>⁄<sub>6</sub> voll. Es wird <sup>1</sup>⁄<sub>3</sub> des Fassungsvermögens abgeschöpft. Wie viele Liter bleiben?', antwort: '18', einheit: 'l', zeichen: '8' },
-          { frage: 'Ein Fass fasst 48 Liter und ist zu <sup>3</sup>⁄<sub>8</sub> gefüllt. Es kommt <sup>1</sup>⁄<sub>4</sub> des Fassungsvermögens dazu. Wie viele Liter sind dann darin?', antwort: '30', einheit: 'l', zeichen: '0' },
-        ],
-        code: '9580',
         codeRegel: 'Die <strong>Einerziffern</strong> der vier Ergebnisse – von oben nach unten.',
         tipps: [
           'Schreibe bei Dezimalzahlen die Kommas untereinander und fülle fehlende Stellen mit Nullen auf.',
-          'Bei den Brüchen rechnest du erst die Literzahl aus: 5/6 von 36 l und 1/3 von 36 l, dann 3/8 von 48 l und 1/4 von 48 l.',
-          '2,37 − 0,58 = 1,79 m = 179 cm. 0,80 + 0,45 = 1,25 m = 125 cm. 30 − 12 = 18 l. 18 + 12 = 30 l. Einerziffern: 9, 5, 8, 0.',
+          'Bei den Brüchen rechnest du erst beide Bruchteile in Liter um: einmal den Anteil, der schon im Gefäß ist, und einmal den Anteil, der dazukommt oder weggeht. Erst danach addierst oder subtrahierst du.',
         ],
-        loesung: '179 cm · 125 cm · 18 l · 30 l → Einerziffern 9, 5, 8, 0.',
+        zufall: (z) => {
+          // 1) und 2) werden in Zentimetern gerechnet – so kann nichts runden.
+          const pegel = z.ganz(18, 32) * 10 + z.ganz(1, 9);        // 181 … 329 cm
+          const fall = z.ganz(2, 9) * 10 + z.ganz(1, 9);           // 21 … 99 cm
+          const stand = pegel - fall;
+          const auf1 = z.vielfach(40, 90, 10);
+          const auf2 = z.ganz(2, 8) * 10 + z.ganz(1, 9);
+          const summe = auf1 + auf2;
+          // 3) Eimer: ein Anteil ist drin, ein Stammbruch wird abgeschöpft.
+          const n3 = z.aus([6, 8, 9, 10, 12]);
+          const t3 = z.ganz(Math.ceil(18 / n3), Math.floor(60 / n3));
+          const eimer = n3 * t3;
+          const a3 = z.ganz(Math.floor(n3 / 2) + 2, n3 - 1);
+          const m3 = z.aus(TEILER[n3]), k3 = n3 / m3;
+          const bleibt = (a3 - k3) * t3;
+          const [a3k, n3k] = kuerze(a3, n3);          // gekürzt angeschrieben
+          // 4) Fass: ein Anteil ist drin, ein Stammbruch kommt dazu – es läuft nie über.
+          const n4 = z.aus([6, 8, 9, 10, 12]);
+          const t4 = z.ganz(Math.ceil(18 / n4), Math.floor(60 / n4));
+          const fass = n4 * t4;
+          const m4 = z.aus(TEILER[n4]), k4 = n4 / m4;
+          const a4 = z.ganz(Math.max(2, Math.floor((n4 - k4) / 2)), n4 - k4);
+          const drin = (a4 + k4) * t4;
+          const [a4k, n4k] = kuerze(a4, n4);
+          const ziffern = einerListe(stand, summe, bleibt, drin);
+          return {
+            regel: 'einer',
+            aufgaben: [
+              { frage: `Der Pegel steht bei ${fmt(pegel / 100)} m und fällt um ${fmt(fall / 100)} m. Wie hoch steht er dann, in Zentimetern?`, antwort: antw(stand), einheit: 'cm' },
+              { frage: `Das Wasser steigt erst um ${fmt(auf1 / 100)} m, dann um ${fmt(auf2 / 100)} m. Um wie viele Zentimeter ist es insgesamt gestiegen?`, antwort: antw(summe), einheit: 'cm' },
+              { frage: `Ein Eimer fasst ${eimer} Liter und ist ${bruch(a3k, n3k)} voll. Es wird ${bruch(1, m3)} des Fassungsvermögens abgeschöpft. Wie viele Liter bleiben?`, antwort: antw(bleibt), einheit: 'l' },
+              { frage: `Ein Fass fasst ${fass} Liter und ist zu ${bruch(a4k, n4k)} gefüllt. Es kommt ${bruch(1, m4)} des Fassungsvermögens dazu. Wie viele Liter sind dann darin?`, antwort: antw(drin), einheit: 'l' },
+            ],
+            tipp: `${fmt(pegel / 100)} − ${fmt(fall / 100)} = ${fmt(stand / 100)} m = ${fmt(stand)} cm; `
+              + `${fmt(auf1 / 100)} + ${fmt(auf2 / 100)} = ${fmt(summe / 100)} m = ${fmt(summe)} cm; `
+              + `${eimer} : ${n3k} · ${a3k} = ${a3 * t3} l sind drin, ${eimer} : ${m3} = ${k3 * t3} l gehen weg, ${a3 * t3} − ${k3 * t3} = ${bleibt} l; `
+              + `${fass} : ${n4k} · ${a4k} = ${a4 * t4} l sind drin, ${fass} : ${m4} = ${k4 * t4} l kommen dazu, ${a4 * t4} + ${k4 * t4} = ${drin} l. `
+              + `Einerziffern: ${ziffern}.`,
+            loesung: `${fmt(stand)} cm; ${fmt(summe)} cm; ${bleibt} l; ${drin} l → Einerziffern ${ziffern}.`,
+          };
+        },
       },
       {
-        titel: 'Rätsel 2: Die Rechentafel',
-        text: 'An der Wand hängt eine abwischbare Tafel, auf der der Wärter seine Übungsaufgaben notiert hat. Die '
-          + 'Ergebnisse stehen daneben, aber jemand hat den Mittelstreifen weggewischt – die Zuordnung ist dahin.',
-        auftrag: 'Verbinde jede Aufgabe mit ihrem Ergebnis.',
-        typ: 'zuordnen',
-        titelLinks: 'Aufgabe',
-        titelRechts: 'Ergebnis',
-        codeAmEnde: true,
-        saat: 211,
-        paare: [
-          { links: '<sup>1</sup>⁄<sub>2</sub> + <sup>1</sup>⁄<sub>3</sub>', rechts: '<sup>5</sup>⁄<sub>6</sub>' },
-          { links: '<sup>3</sup>⁄<sub>4</sub> − <sup>2</sup>⁄<sub>5</sub>', rechts: '<sup>7</sup>⁄<sub>20</sub>' },
-          { links: '<sup>2</sup>⁄<sub>5</sub> + <sup>3</sup>⁄<sub>10</sub>', rechts: '<sup>7</sup>⁄<sub>10</sub>' },
-          { links: '<sup>5</sup>⁄<sub>6</sub> − <sup>1</sup>⁄<sub>4</sub>', rechts: '<sup>7</sup>⁄<sub>12</sub>' },
-          { links: '<sup>3</sup>⁄<sub>8</sub> + <sup>1</sup>⁄<sub>6</sub>', rechts: '<sup>13</sup>⁄<sub>24</sub>' },
-          { links: '<sup>7</sup>⁄<sub>9</sub> − <sup>1</sup>⁄<sub>3</sub>', rechts: '<sup>4</sup>⁄<sub>9</sub>' },
-        ],
+        titel: 'Rätsel 2: Die Zahlenplättchen am Schaltschrank',
+        text: 'Neben dem Schaltschrank hängt ein Kasten mit Zahlenplättchen, Klammern und Rechenzeichen. Auf dem '
+          + 'Deckel stehen vier Zielwerte, und zu jedem soll ein Rechenausdruck gelegt werden, der genau diesen '
+          + 'Wert ergibt. Jedes Plättchen lässt sich nur einmal einhängen, und ihr müsst nicht alle benutzen.',
+        auftrag: 'Baue zu jedem Zielwert einen passenden Term. Jeder getroffene Zielwert deckt eine Ziffer auf.',
+        typ: 'termbauen',
         code: '0620',
-        codeRegel: 'Wenn alle Paare stimmen, erscheint der Code: der <strong>Nenner des größten</strong> Ergebnisses (zweistellig, mit führender Null), danach der <strong>Nenner des kleinsten</strong> Ergebnisses.',
-        tipps: [
-          'Bringe beide Brüche auf denselben Nenner – den Hauptnenner – und rechne dann nur mit den Zählern weiter.',
-          'Die Hauptnenner lauten der Reihe nach 6, 20, 10, 12, 24 und 9.',
-          '5/6 ≈ 0,83 ist das größte, 7/20 = 0,35 das kleinste Ergebnis. Die Nenner sind also 6 und 20.',
+        codeRegel: 'Jeder getroffene Zielwert deckt eine Ziffer auf – von oben nach unten.',
+        aufgaben: [
+          {
+            frage: 'So hoch steht das Wasser nach dem Füllen, in Metern: Baue einen Term mit dem Wert <strong>7,5</strong>.',
+            ziel: 7.5, bausteine: ['2,5', '5', '1,5', '10', '+', '−'], zeichen: '0', musterloesung: '2,5 + 5',
+          },
+          {
+            frage: 'So viele Meter liegt der Pegel über der Marke: Baue einen Term mit dem Wert <strong>0,75</strong>.',
+            ziel: 0.75, bausteine: ['0,5', '0,25', '0,1', '2', '+', '−'], zeichen: '6', musterloesung: '0,5 + 0,25',
+          },
+          {
+            frage: 'So viele Meter Wasser bleiben in der Kammer: Baue einen Term mit dem Wert <strong>3,2</strong>.',
+            ziel: 3.2, bausteine: ['4,5', '1,3', '0,8', '2', '−', '+'], zeichen: '2', musterloesung: '4,5 − 1,3',
+          },
+          {
+            frage: 'Der Pegel steht bei 10 m, und zwei Kammern lassen zusammen Wasser ab. So viel bleibt stehen: '
+              + 'Baue einen Term mit dem Wert <strong>6</strong>. Hier brauchst du die Klammer.',
+            ziel: 6, bausteine: ['10', '2,5', '1,5', '0,5', '3', '(', ')', '−', '+'], zeichen: '0',
+            musterloesung: '10 − (2,5 + 1,5)',
+          },
         ],
-        loesung: '5/6 · 7/20 · 7/10 · 7/12 · 13/24 · 4/9 → größtes 5/6, kleinstes 7/20.',
+        tipps: [
+          'Ihr müsst nicht alle Plättchen benutzen – für die ersten drei Zielwerte reichen zwei Zahlen und ein Rechenzeichen.',
+          'Schreibt die Dezimalzahlen stellengerecht untereinander, bevor ihr legt. Beim letzten Zielwert hilft die Klammer: erst die beiden abgelassenen Mengen zusammenzählen, dann vom Pegel abziehen.',
+          '2,5 + 5 = 7,5; 0,5 + 0,25 = 0,75; 4,5 − 1,3 = 3,2; 10 − (2,5 + 1,5) = 6.',
+        ],
+        loesung: '2,5 + 5 = 7,5; 0,5 + 0,25 = 0,75; 4,5 − 1,3 = 3,2; 10 − (2,5 + 1,5) = 6 → 0, 6, 2, 0.',
       },
       {
-        titel: 'Rätsel 3: Die Steigleiter',
-        text: 'In der Kammer unter dem Schaltpult führt eine Leiter nach unten, auf jeder Sprosse steht eine Rechnung. '
-          + 'Der Wärter ist sie immer von unten nach oben durchgegangen – vom kleinsten Ergebnis zum größten.',
-        auftrag: 'Ordne die Aufgaben nach ihrem Ergebnis vom <strong>kleinsten</strong> zum <strong>größten</strong>.',
-        typ: 'reihenfolge',
-        codeAmEnde: true,
-        saat: 89,
-        elemente: [
-          { text: '<sup>1</sup>⁄<sub>2</sub> − <sup>1</sup>⁄<sub>3</sub>' },
-          { text: '<sup>3</sup>⁄<sub>4</sub> − <sup>1</sup>⁄<sub>2</sub>' },
-          { text: '<sup>2</sup>⁄<sub>5</sub> − <sup>1</sup>⁄<sub>10</sub>' },
-          { text: '<sup>1</sup>⁄<sub>6</sub> + <sup>1</sup>⁄<sub>4</sub>' },
-          { text: '<sup>1</sup>⁄<sub>3</sub> + <sup>1</sup>⁄<sub>6</sub>' },
-          { text: '<sup>3</sup>⁄<sub>8</sub> + <sup>1</sup>⁄<sub>4</sub>' },
-        ],
+        titel: 'Rätsel 3: Die Zahlenrätsel des Wärters',
+        text: 'An der Innenseite der Kammertür hat der Schleusenwärter vier Zahlenrätsel notiert, mit denen er sich '
+          + 'die Nachtschichten vertrieben hat. Jedes beschreibt eine Zahl, ohne sie zu nennen. Ausgerechnet hat '
+          + 'er sie nie – er hat so lange probiert, bis es passte.',
+        auftrag: 'Tippe einen Versuch ein und drücke auf „Probieren". Jede Zeile sagt dir, ob du zu klein oder zu '
+          + 'groß liegst – so kreist du die Zahl ein. Gesucht sind ganze Zahlen.',
+        typ: 'probieren',
         code: '1658',
-        codeRegel: 'Der Code sind Zähler und Nenner des <strong>kleinsten</strong> und des <strong>größten</strong> Ergebnisses – jeweils vollständig gekürzt.',
-        tipps: [
-          'Rechne jede Aufgabe einzeln aus und schreibe das Ergebnis vollständig gekürzt auf.',
-          'Zum Vergleichen hilft die Dezimalschreibweise: 1/6 ≈ 0,17 · 1/4 = 0,25 · 3/10 = 0,3 · 5/12 ≈ 0,42 · 1/2 = 0,5 · 5/8 = 0,625.',
-          'Ergebnisse: 1/6, 1/4, 3/10, 5/12, 1/2, 5/8. Das kleinste ist 1/6, das größte 5/8.',
+        codeRegel: 'Die <strong>Einerziffern</strong> der vier gefundenen Zahlen – von oben nach unten.',
+        aufgaben: [
+          {
+            frage: 'Addiert man zu einer Zahl 0,6 und verdoppelt das Ergebnis, erhält man 63,2. Welche Zahl ist es?',
+            antwort: '31', von: 1, bis: 60,
+            pruefe: (x) => `2 · (${fmt(x)} + 0,6) = ${fmt(rund(2 * (x + 0.6)))}`,
+            zeichen: '1',
+          },
+          {
+            frage: 'Vermindert man eine Zahl um 1,25 und nimmt das Ergebnis mal 3, erhält man 74,25. Welche Zahl ist es?',
+            antwort: '26', von: 2, bis: 60,
+            pruefe: (x) => `3 · (${fmt(x)} − 1,25) = ${fmt(rund(3 * (x - 1.25)))}`,
+            zeichen: '6',
+          },
+          {
+            frage: 'Addiert man zu einer Zahl ihre Hälfte, erhält man 37,5. Welche Zahl ist es?',
+            antwort: '25', von: 1, bis: 60,
+            pruefe: (x) => `${fmt(x)} + ${fmt(rund(x / 2))} = ${fmt(rund(1.5 * x))}`,
+            zeichen: '5',
+          },
+          {
+            frage: 'Eine Zahl und die um 4,5 größere Zahl ergeben zusammen 40,5. Welche Zahl ist es?',
+            antwort: '18', von: 1, bis: 50,
+            pruefe: (x) => `${fmt(x)} + ${fmt(rund(x + 4.5))} = ${fmt(rund(2 * x + 4.5))}`,
+            zeichen: '8',
+          },
         ],
-        loesung: '1/6 < 1/4 < 3/10 < 5/12 < 1/2 < 5/8 → kleinstes 1/6, größtes 5/8.',
+        tipps: [
+          'Fangt mit einer runden Zahl aus der Mitte des Bereichs an. Ist sie zu klein, nehmt als Nächstes die Mitte der oberen Hälfte – so halbiert sich der Bereich mit jedem Versuch.',
+          'Nachprüfen könnt ihr auch rückwärts: Beim ersten Rätsel teilt man 63,2 zuerst durch 2. Beim dritten sind eine Zahl und ihre Hälfte zusammen anderthalb Zahlen.',
+          '63,2 : 2 = 31,6 und 31,6 − 0,6 = 31; 74,25 : 3 = 24,75 und 24,75 + 1,25 = 26; 37,5 : 1,5 = 25; '
+            + '40,5 − 4,5 = 36 und 36 : 2 = 18. Einerziffern: 1, 6, 5, 8.',
+        ],
+        loesung: '31; 26; 25; 18 → Einerziffern 1, 6, 5, 8.',
       },
       {
         titel: 'Rätsel 4: Die Ventilschalttafel',
@@ -518,7 +773,7 @@ export default [
           'Bei Dezimalzahlen hilft es, mit Nullen aufzufüllen: 3,00 − 0,85 und 1,20 − 0,85.',
           '2/3 + 1/5 = 10/15 + 3/15. 3,00 − 0,85 = 2,15. 3/8 + 5/8 = 8/8 = 1. 1,20 − 0,85 = 0,35 m.',
         ],
-        loesung: 'Nenner 15 · 2,15 · 3/8 + 5/8 · 0,35 m → T, O, R, E.',
+        loesung: 'Nenner 15; 2,15; 3/8 + 5/8; 0,35 m → T, O, R, E.',
       },
       {
         titel: 'Rätsel 6: Die Schleusentreppe',
@@ -526,20 +781,52 @@ export default [
           + 'eines Fahrplans gekritzelt, vier Zeilen, mit Bleistift und ohne Ergebnisse.',
         auftrag: 'Rechne die vier Aufgaben. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Drei Stufen heben das Schiff um 2,45 m, 1,8 m und 3,72 m. Um wie viele Zentimeter steigt es insgesamt?', antwort: '797', einheit: 'cm', zeichen: '7' },
-          { frage: 'Ein 500-Liter-Tank ist <sup>3</sup>⁄<sub>5</sub> voll. Es werden 86 Liter abgelassen. Wie viele Liter bleiben?', antwort: '214', einheit: 'l', zeichen: '4' },
-          { frage: 'Von 2,5 kg Schmierfett werden 0,375 kg verbraucht. Wie viele Gramm bleiben übrig?', antwort: '2125', einheit: 'g', zeichen: '5' },
-          { frage: 'Zwei Eimer fassen je 24 Liter. Der eine ist <sup>3</sup>⁄<sub>4</sub> voll, der andere <sup>5</sup>⁄<sub>6</sub>. Wie viele Liter sind zusammen darin?', antwort: '38', einheit: 'l', zeichen: '8' },
-        ],
-        code: '7458',
         codeRegel: 'Die <strong>Einerziffern</strong> der vier Ergebnisse – von oben nach unten.',
         tipps: [
           'Rechne bei Dezimalzahlen stellengerecht und wandle erst am Ende in die kleinere Einheit um.',
-          'Bei Aufgabe 2 bestimmst du zuerst 3/5 von 500 l, bei Aufgabe 4 jeweils den Bruchteil von 24 l.',
-          '2,45 + 1,80 + 3,72 = 7,97 m = 797 cm. 300 − 86 = 214 l. 2500 − 375 = 2125 g. 18 + 20 = 38 l. Einerziffern: 7, 4, 5, 8.',
+          'Bei Aufgabe 2 bestimmst du zuerst den Bruchteil des Tanks in Litern und ziehst erst dann ab. Bei Aufgabe 4 rechnest du für jeden Eimer den Bruchteil einzeln aus und addierst die beiden Literzahlen.',
         ],
-        loesung: '797 cm · 214 l · 2125 g · 38 l → Einerziffern 7, 4, 5, 8.',
+        zufall: (z) => {
+          // 1) Drei Stufen – in Zentimetern gerechnet.
+          const s1 = z.ganz(12, 28) * 10 + z.ganz(1, 9);
+          const s2 = z.vielfach(100, 250, 10);
+          const s3 = z.ganz(15, 38) * 10 + z.ganz(1, 9);
+          const hub = s1 + s2 + s3;
+          // 2) Tank: Bruchteil voll, dann wird eine Literzahl abgelassen.
+          const n2 = z.aus([4, 5, 8, 10]);
+          const t2 = z.vielfach(40, 100, 10);
+          const tank = n2 * t2;
+          const a2 = z.ganz(Math.ceil(n2 / 2) + 1, n2 - 1);
+          const inhalt = a2 * t2;
+          const ab = z.ganz(30, Math.min(140, inhalt - 60));
+          const restLiter = inhalt - ab;
+          const [a2k, n2k] = kuerze(a2, n2);          // gekürzt angeschrieben
+          // 3) Schmierfett: Kilogramm mit Komma minus Gramm – intern in Gramm.
+          const fettH = z.ganz(18, 48) * 10 + z.ganz(1, 9);        // 1,81 … 4,89 kg
+          const verbraucht = z.ganz(150, 900);
+          const restG = fettH * 10 - verbraucht;
+          // 4) Zwei Eimer mit verschiedenen Anteilen – alle Nenner teilen die Eimergröße.
+          const eimer = z.vielfach(24, 60, 12);
+          const [[oz, on], [uz, un]] = z.mische([[3, 4], [5, 6], [2, 3], [1, 2], [7, 12], [5, 12], [11, 12], [1, 4], [1, 3], [1, 6]]);
+          const links = (eimer / on) * oz, rechts = (eimer / un) * uz;
+          const zusammen = links + rechts;
+          const ziffern = einerListe(hub, restLiter, restG, zusammen);
+          return {
+            regel: 'einer',
+            aufgaben: [
+              { frage: `Drei Stufen heben das Schiff um ${fmt(s1 / 100)} m, ${fmt(s2 / 100)} m und ${fmt(s3 / 100)} m. Um wie viele Zentimeter steigt es insgesamt?`, antwort: antw(hub), einheit: 'cm' },
+              { frage: `Ein ${fmt(tank)}-Liter-Tank ist ${bruch(a2k, n2k)} voll. Es werden ${ab} Liter abgelassen. Wie viele Liter bleiben?`, antwort: antw(restLiter), einheit: 'l' },
+              { frage: `Von ${fmt(fettH / 100)} kg Schmierfett werden ${fmt(verbraucht)} g verbraucht. Wie viele Gramm bleiben übrig?`, antwort: antw(restG), einheit: 'g' },
+              { frage: `Zwei Eimer fassen je ${eimer} Liter. Der eine ist ${bruch(oz, on)} voll, der andere ${bruch(uz, un)}. Wie viele Liter sind zusammen darin?`, antwort: antw(zusammen), einheit: 'l' },
+            ],
+            tipp: `${fmt(s1 / 100)} + ${fmt(s2 / 100)} + ${fmt(s3 / 100)} = ${fmt(hub / 100)} m = ${fmt(hub)} cm; `
+              + `${fmt(tank)} : ${n2k} · ${a2k} = ${fmt(inhalt)} l im Tank, ${fmt(inhalt)} − ${ab} = ${fmt(restLiter)} l; `
+              + `${fmt(fettH / 100)} kg = ${fmt(fettH * 10)} g, ${fmt(fettH * 10)} − ${fmt(verbraucht)} = ${fmt(restG)} g; `
+              + `${eimer} : ${on} · ${oz} = ${links} l und ${eimer} : ${un} · ${uz} = ${rechts} l, zusammen ${links} + ${rechts} = ${zusammen} l. `
+              + `Einerziffern: ${ziffern}.`,
+            loesung: `${fmt(hub)} cm; ${fmt(restLiter)} l; ${fmt(restG)} g; ${zusammen} l → Einerziffern ${ziffern}.`,
+          };
+        },
       },
     ],
   },
@@ -569,48 +856,72 @@ export default [
           + 'Vier Zahlen hat sie an den Rand geschrieben und nie zu Ende gerechnet.',
         auftrag: 'Rechne die vier Aufgaben. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Ein Vollkreis wird in 8 gleich große Sektoren geteilt. Wie groß ist ein Sektorwinkel?', antwort: '45', einheit: '°', zeichen: '5' },
-          { frage: 'Zwei Winkel ergänzen sich zu 180°. Der eine misst 63°. Wie groß ist der andere?', antwort: '117', einheit: '°', zeichen: '7' },
-          { frage: 'Ein Winkel von 54° wird verdoppelt und das Ergebnis danach um 18° verkleinert. Wie groß ist er dann?', antwort: '90', einheit: '°', zeichen: '0' },
-          { frage: 'Fünf Speichen sind gleichmäßig über den Vollkreis verteilt. Wie groß ist der Winkel zwischen zwei benachbarten Speichen?', antwort: '72', einheit: '°', zeichen: '2' },
-        ],
-        code: '5702',
         codeRegel: 'Die <strong>Einerziffern</strong> der vier Ergebnisse – von oben nach unten.',
         tipps: [
-          'Ein Vollkreis misst 360°, ein gestreckter Winkel 180°, ein rechter Winkel 90°.',
-          'Bei gleichmäßiger Einteilung teilst du 360° durch die Anzahl der Teile. Bei Aufgabe 2 ziehst du von 180° ab.',
-          '360° : 8 = 45°. 180° − 63° = 117°. 2 · 54° = 108°, 108° − 18° = 90°. 360° : 5 = 72°. Einerziffern: 5, 7, 0, 2.',
+          'Ein Vollkreis misst 360°, ein gestreckter Winkel 180°, ein rechter Winkel 90° – und die drei Winkel eines Dreiecks ergeben zusammen 180°.',
+          'Bei gleichmäßiger Einteilung teilst du 360° durch die Anzahl der Teile. Ergänzen sich zwei Winkel zu einem gestreckten Winkel, ziehst du den einen von 180° ab. Bei Aufgabe 3 rechnest du Schritt für Schritt: erst verdoppeln, dann abziehen. Beim Dreieck addierst du zuerst die beiden bekannten Winkel.',
         ],
-        loesung: '45° · 117° · 90° · 72° → Einerziffern 5, 7, 0, 2.',
+        zufall: (z) => {
+          // Nur Teiler von 360 – so geht jede Einteilung ohne Rest auf.
+          const nSektor = z.aus([4, 5, 6, 8, 9, 10, 12, 15, 18, 20, 24]);
+          const sektor = 360 / nSektor;
+          const w1 = z.ganz(23, 88);
+          const w2 = 180 - w1;
+          const start = z.ganz(35, 80), weg = z.ganz(8, 40);
+          const rest = 2 * start - weg;
+          // Vierte Aufgabe: Winkelsumme im Dreieck. Vorher stand hier noch einmal
+          // 360° : n wie in Aufgabe 1 – zweimal dieselbe Aufgabe im Rätsel.
+          const dritter = z.ganz(22, 98), restW = 180 - dritter;
+          const wA = z.ganz(30, restW - 30), wB = restW - wA;
+          const ziffern = einerListe(sektor, w2, rest, dritter);
+          return {
+            regel: 'einer',
+            aufgaben: [
+              { frage: `Ein Vollkreis wird in ${nSektor} gleich große Sektoren geteilt. Wie groß ist ein Sektorwinkel?`, antwort: antw(sektor), einheit: '°' },
+              { frage: `Zwei Winkel ergänzen sich zu 180°. Der eine misst ${w1}°. Wie groß ist der andere?`, antwort: antw(w2), einheit: '°' },
+              { frage: `Ein Winkel von ${start}° wird verdoppelt und das Ergebnis danach um ${weg}° verkleinert. Wie groß ist er dann?`, antwort: antw(rest), einheit: '°' },
+              { frage: `In einem dreieckigen Musterfeld sind zwei Winkel ${wA}° und ${wB}° groß. Wie groß ist der dritte Winkel?`, antwort: antw(dritter), einheit: '°' },
+            ],
+            tipp: `360° : ${nSektor} = ${sektor}°; `
+              + `180° − ${w1}° = ${w2}°; `
+              + `2 · ${start}° = ${2 * start}°, ${2 * start}° − ${weg}° = ${rest}°; `
+              + `${wA}° + ${wB}° = ${restW}°, und 180° − ${restW}° = ${dritter}°. Einerziffern: ${ziffern}.`,
+            loesung: `${sektor}°; ${w2}°; ${rest}°; ${dritter}° → Einerziffern ${ziffern}.`,
+          };
+        },
       },
       {
         titel: 'Rätsel 2: Der Entwurfsbogen',
-        text: 'Auf dem Entwurfsbogen ist ein Koordinatensystem gezeichnet, und immer wieder taucht derselbe Punkt auf: '
-          + 'A(3|2). Daneben hat die Knüpferin notiert, was sie mit ihm gemacht hat – aber die Bildpunkte stehen '
-          + 'durcheinander am Rand.',
-        auftrag: 'Verbinde jede Abbildung mit dem richtigen Bildpunkt von <strong>A(3|2)</strong>.',
-        typ: 'zuordnen',
-        titelLinks: 'Abbildung von A(3|2)',
-        titelRechts: 'Bildpunkt',
-        codeAmEnde: true,
-        saat: 157,
-        paare: [
-          { links: 'Spiegelung an der x-Achse', rechts: '(3|−2)' },
-          { links: 'Spiegelung an der y-Achse', rechts: '(−3|2)' },
-          { links: 'Punktspiegelung am Ursprung', rechts: '(−3|−2)' },
-          { links: 'Verschiebung um 4 nach links', rechts: '(−1|2)' },
-          { links: 'Verschiebung um 5 nach unten', rechts: '(3|−3)' },
-          { links: 'Drehung um 90° gegen den Uhrzeigersinn um den Ursprung', rechts: '(−2|3)' },
-        ],
+        text: 'Auf dem Entwurfsbogen ist ein Koordinatensystem gezeichnet, und darin liegen die vier Ecken eines '
+          + 'Musterfeldes: A, B, C und D. Die Knüpferin hat jede Ecke genau auf einen Kreuzungspunkt der '
+          + 'Gitterlinien gesetzt – alles lässt sich also ablesen, ohne zu messen.',
+        auftrag: 'Lies die vier Angaben aus dem Plan ab. Jede richtige Antwort deckt eine Ziffer auf.',
+        typ: 'ablesen',
         code: '0403',
-        codeRegel: 'Wenn alle Paare stimmen, erscheint der Code: zuerst die <strong>Anzahl der Bildpunkte mit negativer x-Koordinate</strong> (zweistellig), dann die <strong>Anzahl mit negativer y-Koordinate</strong>.',
-        tipps: [
-          'Bei der Spiegelung an der x-Achse ändert nur die y-Koordinate ihr Vorzeichen, bei der Spiegelung an der y-Achse nur die x-Koordinate.',
-          'Die Punktspiegelung am Ursprung dreht beide Vorzeichen um. Bei der Drehung um 90° gegen den Uhrzeigersinn wird aus (x|y) der Punkt (−y|x).',
-          'Negative x-Koordinate haben (−3|2), (−3|−2), (−1|2) und (−2|3) – das sind 4. Negative y-Koordinate haben (3|−2), (−3|−2) und (3|−3) – das sind 3.',
+        codeRegel: 'Jede richtige Antwort deckt eine Ziffer auf – von oben nach unten.',
+        diagramm: {
+          art: 'koordinaten',
+          xVon: -6, xBis: 6, yVon: -4, yBis: 4,
+          xSchritt: 1, ySchritt: 1,
+          xName: 'x', yName: 'y',
+          punkte: [
+            { x: -4, y: 3, name: 'A' }, { x: 2, y: 3, name: 'B' },
+            { x: 2, y: -2, name: 'C' }, { x: -4, y: -2, name: 'D' },
+          ],
+          beschreibung: 'Koordinatensystem mit den Rechteckecken A(−4|3), B(2|3), C(2|−2) und D(−4|−2)',
+        },
+        aufgaben: [
+          { frage: 'Wie lautet die <strong>y-Koordinate</strong> von Punkt A?', antwort: '3', zeichen: '0' },
+          { frage: 'Wie viele Kästchen ist die Strecke von A nach B lang?', antwort: '6', einheit: 'Kästchen', zeichen: '4' },
+          { frage: 'Wie viele Kästchen ist die Strecke von B nach C lang?', antwort: '5', einheit: 'Kästchen', zeichen: '0' },
+          { frage: 'Wie viele Kästchen groß ist die Fläche des Rechtecks ABCD?', antwort: '30', einheit: 'Kästchen', zeichen: '3' },
         ],
-        loesung: '(3|−2), (−3|2), (−3|−2), (−1|2), (3|−3), (−2|3) → 4 mit negativem x, 3 mit negativem y.',
+        tipps: [
+          'Lies für jede Ecke zuerst das Zahlenpaar ab: zuerst nach rechts (x), dann nach oben (y).',
+          'Bei einer waagerechten Strecke zählst du die Kästchen von der einen x-Koordinate bis zur anderen, bei einer senkrechten genauso mit den y-Koordinaten. Die Fläche eines Rechtecks ist Länge mal Breite.',
+          'A(−4|3), B(2|3), C(2|−2), D(−4|−2): die y-Koordinate von A ist 3; von −4 bis 2 sind es 6 Kästchen; von 3 bis −2 sind es 5 Kästchen; 6 · 5 = 30 Kästchen.',
+        ],
+        loesung: 'y = 3; 6 Kästchen; 5 Kästchen; 30 Kästchen → 0, 4, 0, 3.',
       },
       {
         titel: 'Rätsel 3: Der halbe Teppich',
@@ -648,34 +959,53 @@ export default [
         tipps: [
           'Falte die Figur in Gedanken: Jede Faltlinie, bei der beide Hälften genau aufeinanderliegen, ist eine Symmetrieachse.',
           'Beim Quadrat gibt es zwei Mittellinien und zwei Diagonalen. Beim gleichseitigen Dreieck geht jede Achse durch eine Ecke und die gegenüberliegende Seitenmitte.',
-          '4 Achsen beim Quadrat · die Verschiebung erhält die Richtung · Punktspiegelung = Drehung um 180° · 3 Achsen beim gleichseitigen Dreieck.',
+          '4 Achsen beim Quadrat; die Verschiebung erhält die Richtung; Punktspiegelung = Drehung um 180°; 3 Achsen beim gleichseitigen Dreieck.',
         ],
-        loesung: '4 · Verschiebung · 180° · 3 → K, N, O, T.',
+        loesung: '4; Verschiebung; 180°; 3 → K, N, O, T.',
       },
       {
-        titel: 'Rätsel 5: Die Winkelleiste',
-        text: 'Auf einer schmalen Holzleiste hat die Knüpferin sechs Winkel notiert – manche in Grad, manche als '
-          + 'Bruchteil des Vollkreises. Sortiert hat sie die Leiste nie; das Schloss darunter verlangt aber genau das.',
-        auftrag: 'Ordne die Angaben vom <strong>kleinsten</strong> zum <strong>größten</strong> Winkel.',
-        typ: 'reihenfolge',
-        codeAmEnde: true,
-        saat: 233,
-        elemente: [
-          { text: '25°' },
-          { text: '<sup>1</sup>⁄<sub>10</sub> eines Vollkreises' },
-          { text: '<sup>1</sup>⁄<sub>8</sub> eines Vollkreises' },
-          { text: '52°' },
-          { text: '<sup>1</sup>⁄<sub>6</sub> eines Vollkreises' },
-          { text: '<sup>1</sup>⁄<sub>5</sub> eines Vollkreises' },
-        ],
+        titel: 'Rätsel 5: Die Winkellade',
+        text: 'Auf der Werkbank liegt die Winkellade der Knüpferin: vier Schieber, mit denen sie ihre Sterne und '
+          + 'Musterdreiecke eingeteilt hat. Unter jedem Schieber zeigt ein Fenster, was der eingestellte Winkel '
+          + 'bewirkt – ob er richtig steht, hat dort nie jemand hingeschrieben. Das musste die Knüpferin selbst '
+          + 'wissen.',
+        auftrag: 'Stelle jeden Schieber auf den gesuchten Wert ein. Das Fenster darunter zeigt dir nur die Wirkung.',
+        typ: 'schieben',
         code: '3652',
-        codeRegel: 'Der Code sind die <strong>Gradzahlen</strong> der zweiten und der vierten Angabe der sortierten Reihe.',
-        tipps: [
-          'Rechne jeden Bruchteil in Grad um: Bruchteil mal 360°.',
-          '1/10 von 360° = 36° · 1/8 von 360° = 45° · 1/6 von 360° = 60° · 1/5 von 360° = 72°.',
-          'Reihenfolge: 25°, 1/10 (36°), 1/8 (45°), 52°, 1/6 (60°), 1/5 (72°). An zweiter Stelle steht 36°, an vierter 52°.',
+        codeRegel: 'Die <strong>Einerziffern</strong> der vier eingestellten Werte – von oben nach unten.',
+        aufgaben: [
+          {
+            frage: 'Stelle den Winkel so ein, dass er zusammen mit 157° einen gestreckten Winkel bildet.',
+            von: 0, bis: 180, schritt: 1, antwort: 23, einheit: '°',
+            anzeige: (w) => `157° + ${fmt(w)}° = ${fmt(157 + w)}°`,
+            zeichen: '3',
+          },
+          {
+            frage: 'Ein Vollkreis wird in gleich große Sektoren von je 10° geteilt. Stelle die Zahl der Sektoren ein.',
+            von: 2, bis: 60, schritt: 1, antwort: 36, einheit: 'Sektoren',
+            anzeige: (w) => `${fmt(w)} Sektoren zu 10° füllen zusammen ${fmt(10 * w)}°`,
+            zeichen: '6',
+          },
+          {
+            frage: 'In einem dreieckigen Musterfeld messen zwei Winkel 65° und 70°. Stelle den dritten Winkel ein.',
+            von: 0, bis: 120, schritt: 1, antwort: 45, einheit: '°',
+            anzeige: (w) => `65° + 70° + ${fmt(w)}° = ${fmt(135 + w)}°`,
+            zeichen: '5',
+          },
+          {
+            frage: 'Fünf gleich große Winkel liegen um einen Punkt und füllen zusammen den Vollkreis. Stelle die '
+              + 'Größe eines dieser Winkel ein.',
+            von: 0, bis: 120, schritt: 1, antwort: 72, einheit: '°',
+            anzeige: (w) => `5 · ${fmt(w)}° = ${fmt(5 * w)}°`,
+            zeichen: '2',
+          },
         ],
-        loesung: '25° < 36° < 45° < 52° < 60° < 72° → zweite Angabe 36°, vierte Angabe 52°.',
+        tipps: [
+          'Schiebt und lest das Fenster mit: Bei drei Schiebern müsst ihr genau auf 180° oder auf 360° landen.',
+          'Ein gestreckter Winkel misst 180°, ein Vollkreis 360°, und die drei Winkel eines Dreiecks ergeben zusammen 180°. Beim zweiten Schieber überlegt ihr, wie oft 10° in einen Vollkreis passen.',
+          '180° − 157° = 23°; 360° : 10° = 36 Sektoren; 180° − 65° − 70° = 45°; 360° : 5 = 72°. Einerziffern: 3, 6, 5, 2.',
+        ],
+        loesung: '23°; 36 Sektoren; 45°; 72° → Einerziffern 3, 6, 5, 2.',
       },
       {
         titel: 'Rätsel 6: Das Gitternetz',
@@ -683,20 +1013,39 @@ export default [
           + 'Vier Fragen stehen daneben – die Knüpferin hat sie ihren Lehrmädchen zum Abschluss gestellt.',
         auftrag: 'Rechne die vier Aufgaben. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Der Punkt A(−4|3) wird an der y-Achse gespiegelt. Wie lautet die <strong>x-Koordinate</strong> des Bildpunktes?', antwort: '4', zeichen: '4' },
-          { frage: 'Die Punkte A(−3|1) und B(5|1) sind die Enden einer Strecke. Wie viele Kästchen ist sie lang?', antwort: '8', einheit: 'Kästchen', zeichen: '8' },
-          { frage: 'Ein Rechteck hat die Ecken (−2|−1), (4|−1), (4|3) und (−2|3). Wie viele Kästchen groß ist seine Fläche?', antwort: '24', einheit: 'Kästchen', zeichen: '4' },
-          { frage: 'Der Punkt C(2|−5) wird um 7 Kästchen nach oben verschoben. Wie lautet die <strong>y-Koordinate</strong> des Bildpunktes?', antwort: '2', zeichen: '2' },
-        ],
-        code: '4842',
         codeRegel: 'Die <strong>Einerziffern</strong> der vier Ergebnisse – von oben nach unten.',
         tipps: [
           'Zeichne dir das Koordinatensystem auf und trage die Punkte ein – dann siehst du die Antworten direkt.',
-          'Für die Länge einer waagerechten Strecke zählst du die Kästchen von der einen x-Koordinate bis zur anderen: von −3 bis 5.',
-          'Spiegelbild von (−4|3) ist (4|3). Die Strecke ist 8 Kästchen lang. Das Rechteck ist 6 breit und 4 hoch: 24 Kästchen. −5 + 7 = 2.',
+          'Beim Spiegeln an der y-Achse wechselt nur die x-Koordinate ihr Vorzeichen. Für die Länge einer waagerechten Strecke zählst du die Kästchen von der einen x-Koordinate bis zur anderen; die Fläche des Rechtecks ist Breite mal Höhe.',
         ],
-        loesung: 'x = 4 · 8 Kästchen · 24 Kästchen · y = 2 → Einerziffern 4, 8, 4, 2.',
+        zufall: (z) => {
+          const ax = z.ganz(-6, -2), ay = z.ganz(1, 6);
+          const bildX = -ax;
+          const bx1 = z.ganz(-6, -1), bx2 = z.ganz(1, 6), by = z.ganz(-5, 5);
+          const laenge = bx2 - bx1;
+          const lx = z.ganz(-5, -1), rx = z.ganz(1, 5);
+          const uy = z.ganz(-4, -1), oy = z.ganz(1, 4);
+          const breite = rx - lx, hoehe = oy - uy;
+          const flaeche = breite * hoehe;
+          const cx = z.ganz(-5, 5), cy = z.ganz(-6, -2);
+          const schritt = z.ganz(1 - cy, 8 - cy);
+          const neuY = cy + schritt;
+          const ziffern = einerListe(bildX, laenge, flaeche, neuY);
+          return {
+            regel: 'einer',
+            aufgaben: [
+              { frage: `Der Punkt A(${fmt(ax)}|${ay}) wird an der y-Achse gespiegelt. Wie lautet die <strong>x-Koordinate</strong> des Bildpunktes?`, antwort: antw(bildX) },
+              { frage: `Die Punkte P(${fmt(bx1)}|${fmt(by)}) und Q(${bx2}|${fmt(by)}) sind die Enden einer Strecke. Wie viele Kästchen ist sie lang?`, antwort: antw(laenge), einheit: 'Kästchen' },
+              { frage: `Ein Rechteck hat die Ecken (${fmt(lx)}|${fmt(uy)}), (${rx}|${fmt(uy)}), (${rx}|${oy}) und (${fmt(lx)}|${oy}). Wie viele Kästchen groß ist seine Fläche?`, antwort: antw(flaeche), einheit: 'Kästchen' },
+              { frage: `Der Punkt C(${fmt(cx)}|${fmt(cy)}) wird um ${schritt} Kästchen nach oben verschoben. Wie lautet die <strong>y-Koordinate</strong> des Bildpunktes?`, antwort: antw(neuY) },
+            ],
+            tipp: `Das Bild von A(${fmt(ax)}|${ay}) ist (${bildX}|${ay}), die x-Koordinate ist also ${bildX}; `
+              + `von ${fmt(bx1)} bis ${bx2} sind es ${laenge} Kästchen; `
+              + `das Rechteck ist ${breite} Kästchen breit und ${hoehe} hoch, ${breite} · ${hoehe} = ${flaeche} Kästchen; `
+              + `${fmt(cy)} + ${schritt} = ${neuY}. Einerziffern: ${ziffern}.`,
+            loesung: `x = ${bildX}; ${laenge} Kästchen; ${flaeche} Kästchen; y = ${neuY} → Einerziffern ${ziffern}.`,
+          };
+        },
       },
     ],
   },
@@ -726,47 +1075,107 @@ export default [
           + 'Vier Zeilen hat der Müller nur halb ausgefüllt – die Ergebnisspalte ist leer geblieben.',
         auftrag: 'Rechne die vier Aufgaben. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Wie viel sind <sup>3</sup>⁄<sub>5</sub> von 45 kg?', antwort: '27', einheit: 'kg', zeichen: '7' },
-          { frage: 'Ein Sack wiegt 2,4 kg. Wie viel wiegen 15 Säcke?', antwort: '36', einheit: 'kg', zeichen: '6' },
-          { frage: 'Rechne: 7,2 : 0,8', antwort: '9', zeichen: '9' },
-          { frage: 'Wie viele Tüten zu 0,25 kg kann man aus 11 kg Mehl füllen?', antwort: '44', einheit: 'Tüten', zeichen: '4' },
-        ],
-        code: '7694',
         codeRegel: 'Die <strong>Einerziffern</strong> der vier Ergebnisse – von oben nach unten.',
         tipps: [
           'Einen Bruchteil berechnest du, indem du durch den Nenner teilst und mit dem Zähler malnimmst.',
-          'Beim Teilen durch eine Dezimalzahl verschiebst du in beiden Zahlen das Komma gleich weit: 7,2 : 0,8 = 72 : 8.',
-          '45 : 5 · 3 = 27 kg. 2,4 · 15 = 36 kg. 72 : 8 = 9. 11 : 0,25 = 1100 : 25 = 44 Tüten. Einerziffern: 7, 6, 9, 4.',
+          'Beim Teilen durch eine Dezimalzahl verschiebst du in beiden Zahlen das Komma gleich weit nach rechts, bis der Teiler eine ganze Zahl ist. Dann teilst du wie gewohnt.',
         ],
-        loesung: '27 kg · 36 kg · 9 · 44 Tüten → Einerziffern 7, 6, 9, 4.',
+        zufall: (z) => {
+          // 1) Bruchteil einer Masse – die Masse ist ein Vielfaches des Nenners.
+          const [z1, n1] = z.aus([[3, 5], [2, 3], [3, 4], [5, 6], [5, 8], [4, 5], [7, 8], [2, 5]]);
+          const t1 = z.ganz(Math.ceil(24 / n1), Math.floor(90 / n1));
+          const korn = n1 * t1, anteil = z1 * t1;
+          // 2) Dezimalzahl mal ganze Zahl – in Zehnteln gerechnet, Ergebnis stets ganz.
+          const sackZehntel = z.aus([15, 25, 35, 45]);
+          const saecke = z.vielfach(8, 24, 2);
+          const gewicht = (sackZehntel * saecke) / 10;
+          // 3) Division zweier Dezimalzahlen – sie geht immer auf.
+          const teilerZehntel = z.aus([2, 4, 5, 6, 8, 15, 25]);
+          const quotient = z.ganz(4, 14);
+          const dividendZehntel = teilerZehntel * quotient;
+          // 4) Wie viele Tüten passen in die Mehlmenge – in Hundertsteln gerechnet.
+          const tueteH = z.aus([20, 25, 40, 50, 75]);
+          const tueten = z.ganz(12, 48);
+          const mehlH = tueteH * tueten;
+          const ziffern = einerListe(anteil, gewicht, quotient, tueten);
+          return {
+            regel: 'einer',
+            aufgaben: [
+              { frage: `Wie viel sind ${bruch(z1, n1)} von ${korn} kg?`, antwort: antw(anteil), einheit: 'kg' },
+              { frage: `Ein Sack wiegt ${fmt(sackZehntel / 10)} kg. Wie viel wiegen ${saecke} Säcke?`, antwort: antw(gewicht), einheit: 'kg' },
+              { frage: `Rechne: ${fmt(dividendZehntel / 10)} : ${fmt(teilerZehntel / 10)}`, antwort: antw(quotient) },
+              { frage: `Wie viele Tüten zu ${fmt(tueteH / 100)} kg kann man aus ${fmt(mehlH / 100)} kg Mehl füllen?`, antwort: antw(tueten), einheit: 'Tüten' },
+            ],
+            tipp: `${korn} : ${n1} = ${t1}, ${t1} · ${z1} = ${anteil} kg; `
+              + `${fmt(sackZehntel / 10)} · ${saecke} = ${fmt(gewicht)} kg; `
+              + `${fmt(dividendZehntel / 10)} : ${fmt(teilerZehntel / 10)} = ${fmt(dividendZehntel)} : ${fmt(teilerZehntel)} = ${quotient}; `
+              + `${fmt(mehlH / 100)} : ${fmt(tueteH / 100)} = ${fmt(mehlH)} : ${fmt(tueteH)} = ${tueten} Tüten. `
+              + `Einerziffern: ${ziffern}.`,
+            loesung: `${anteil} kg; ${fmt(gewicht)} kg; ${quotient}; ${tueten} Tüten → Einerziffern ${ziffern}.`,
+          };
+        },
       },
       {
-        titel: 'Rätsel 2: Die Rechenwand',
-        text: 'An der Bretterwand neben dem Mahlgang hat der Müller mit Kreide Aufgaben notiert, darunter die '
-          + 'Ergebnisse. Der Mehlstaub hat die Verbindungslinien längst geschluckt.',
-        auftrag: 'Verbinde jede Aufgabe mit ihrem Ergebnis.',
-        typ: 'zuordnen',
-        titelLinks: 'Aufgabe',
-        titelRechts: 'Ergebnis',
-        codeAmEnde: true,
-        saat: 347,
-        paare: [
-          { links: '<sup>2</sup>⁄<sub>3</sub> · <sup>3</sup>⁄<sub>4</sub>', rechts: '<sup>1</sup>⁄<sub>2</sub>' },
-          { links: '<sup>4</sup>⁄<sub>5</sub> : <sup>2</sup>⁄<sub>5</sub>', rechts: '2' },
-          { links: '<sup>3</sup>⁄<sub>8</sub> · <sup>4</sup>⁄<sub>9</sub>', rechts: '<sup>1</sup>⁄<sub>6</sub>' },
-          { links: '<sup>5</sup>⁄<sub>6</sub> : <sup>1</sup>⁄<sub>3</sub>', rechts: '<sup>5</sup>⁄<sub>2</sub>' },
-          { links: '<sup>7</sup>⁄<sub>8</sub> · <sup>8</sup>⁄<sub>21</sub>', rechts: '<sup>1</sup>⁄<sub>3</sub>' },
-          { links: '<sup>9</sup>⁄<sub>10</sub> : <sup>3</sup>⁄<sub>5</sub>', rechts: '<sup>3</sup>⁄<sub>2</sub>' },
-        ],
+        titel: 'Rätsel 2: Der Kreideblock an der Bretterwand',
+        text: 'An der Bretterwand neben dem Mahlgang hat der Müllerjunge vier Rechnungen mit Kreide aufgeschrieben. '
+          + 'In jeder steckt genau ein Fehler, und der Müller hat ihn nie angestrichen – gefunden werden muss er '
+          + 'trotzdem. Gesucht ist jedes Mal die Zeile, in der es zum ersten Mal schiefgeht.',
+        auftrag: 'Tippe in jedem Rechenweg die Zeile an, in der <strong>zum ersten Mal</strong> etwas falsch ist.',
+        typ: 'fehlerfinden',
         code: '5216',
-        codeRegel: 'Wenn alle Paare stimmen, erscheint der Code: Zähler und Nenner des <strong>größten</strong> und des <strong>kleinsten</strong> Ergebnisses.',
-        tipps: [
-          'Brüche malnimmst du Zähler mal Zähler und Nenner mal Nenner – kürzen darfst du schon vorher.',
-          'Durch einen Bruch teilst du, indem du mit dem Kehrbruch malnimmst: 4/5 : 2/5 = 4/5 · 5/2.',
-          'Ergebnisse: 1/2, 2, 1/6, 5/2, 1/3, 3/2. Das größte ist 5/2 (2,5), das kleinste 1/6.',
+        codeRegel: 'Jede gefundene Zeile deckt eine Ziffer auf – von oben nach unten.',
+        faelle: [
+          {
+            titel: 'Wie viel wiegen sechs Säcke zu 12,5 kg?',
+            zeilen: [
+              'Ein Sack Mehl wiegt 12,5 kg.',
+              'Sechs Säcke wiegen 6 · 12,5 kg.',
+              'Ohne Komma gerechnet: 6 · 125 = 750',
+              'Das Komma kommt zwei Stellen von rechts: 7,50 kg',
+              'Antwort: Sechs Säcke wiegen 7,5 kg.',
+            ],
+            falsch: 3, zeichen: '5',
+          },
+          {
+            titel: 'Wie viele Tüten zu 0,25 kg ergeben 3 kg Mehl?',
+            zeilen: [
+              '3 kg Mehl sollen in Tüten zu 0,25 kg gefüllt werden.',
+              'Gerechnet wird 3 · 0,25.',
+              '= 0,75',
+              'Antwort: Es werden 0,75 Tüten.',
+            ],
+            falsch: 1, zeichen: '2',
+          },
+          {
+            titel: 'Wie viel sind <sup>3</sup>⁄<sub>4</sub> : <sup>1</sup>⁄<sub>2</sub>?',
+            zeilen: [
+              'Durch einen Bruch teilt man, indem man mit einem Kehrbruch malnimmt.',
+              'Umgedreht wird der <strong>erste</strong> Bruch: <sup>4</sup>⁄<sub>3</sub> · <sup>1</sup>⁄<sub>2</sub>',
+              '= <sup>4</sup>⁄<sub>6</sub>',
+              'Vollständig gekürzt: <sup>2</sup>⁄<sub>3</sub>',
+              'Antwort: Das Ergebnis ist <sup>2</sup>⁄<sub>3</sub>.',
+            ],
+            falsch: 1, zeichen: '1',
+          },
+          {
+            titel: 'Wie viel sind 2,4 : 0,4?',
+            zeilen: [
+              'Gesucht ist 2,4 : 0,4.',
+              'In beiden Zahlen wird das Komma um eine Stelle nach rechts verschoben: 24 : 4',
+              '24 : 4 = 6',
+              'Weil zwei Kommas verschoben wurden, wird das Ergebnis noch durch 10 geteilt: 0,6',
+              'Antwort: 2,4 : 0,4 = 0,6.',
+            ],
+            falsch: 3, zeichen: '6',
+          },
         ],
-        loesung: '1/2 · 2 · 1/6 · 5/2 · 1/3 · 3/2 → größtes 5/2, kleinstes 1/6.',
+        tipps: [
+          'Prüft Zeile für Zeile. Oft rechnet der Junge sauber weiter – falsch ist schon der Ansatz in einer der ersten Zeilen.',
+          'Beim Malnehmen von Dezimalzahlen hat das Ergebnis so viele Nachkommastellen wie beide Zahlen zusammen. Beim Teilen darf man beide Kommas gleich weit verschieben, ohne das Ergebnis zu ändern. Und durch einen Bruch teilt man mit dem Kehrbruch des <strong>zweiten</strong> Bruchs.',
+          'Zeile 4 (6 · 12,5 kg = 75 kg); Zeile 2 (richtig ist 3 : 0,25 = 12 Tüten); '
+            + 'Zeile 2 (3/4 : 1/2 = 3/4 · 2/1 = 3/2); Zeile 4 (2,4 : 0,4 = 24 : 4 = 6).',
+        ],
+        loesung: 'Zeile 4; Zeile 2; Zeile 2; Zeile 4 → 5, 2, 1, 6. Richtig wären 75 kg; 12 Tüten; 3/2; 6.',
       },
       {
         titel: 'Rätsel 3: Die Mühlsteintafel',
@@ -809,34 +1218,41 @@ export default [
         tipps: [
           'Beim Malnehmen von Dezimalzahlen zählst du die Nachkommastellen beider Zahlen zusammen.',
           'Durch eine Zahl kleiner als 1 zu teilen vergrößert das Ergebnis: 8 : 0,5 fragt, wie oft 0,5 in 8 passt.',
-          'Kehrbruch · 0,6 · 0,4 = 0,24 · 3 : 0,25 = 12 Tüten · 8 : 0,5 = 16 = 8 · 2.',
+          'Kehrbruch; 0,6 · 0,4 = 0,24; 3 : 0,25 = 12 Tüten; 8 : 0,5 = 16 = 8 · 2.',
         ],
-        loesung: 'Kehrbruch · 0,24 · 12 · 8 · 2 → M, E, H, L.',
+        loesung: 'Kehrbruch; 0,24; 12; 8 · 2 → M, E, H, L.',
       },
       {
-        titel: 'Rätsel 5: Die Sacktreppe',
-        text: 'Die Säcke stehen auf der Treppe zum Speicher, auf jedem klebt ein Zettel mit einer Rechnung. Der Müller '
-          + 'hat sie immer so gestapelt, dass das kleinste Ergebnis unten steht.',
-        auftrag: 'Ordne die Aufgaben nach ihrem Ergebnis vom <strong>kleinsten</strong> zum <strong>größten</strong>.',
-        typ: 'reihenfolge',
-        codeAmEnde: true,
-        saat: 181,
-        elemente: [
-          { text: '<sup>2</sup>⁄<sub>5</sub> · <sup>1</sup>⁄<sub>2</sub>' },
-          { text: '0,6 · 0,5' },
-          { text: '<sup>2</sup>⁄<sub>3</sub> · <sup>3</sup>⁄<sub>4</sub>' },
-          { text: '<sup>3</sup>⁄<sub>5</sub> : <sup>4</sup>⁄<sub>5</sub>' },
-          { text: '1,2 · 0,8' },
-          { text: '<sup>7</sup>⁄<sub>8</sub> : <sup>2</sup>⁄<sub>3</sub>' },
-        ],
+        titel: 'Rätsel 5: Die Kartenschublade des Müllers',
+        text: 'In der Schublade unter dem Mahlgang liegen acht Rechenkarten und acht Ergebniskarten, vom Mehlstaub '
+          + 'ganz grau. Auf die Rückseiten hat der Müller eine Zahl gemalt und die Karten danach in der Eile '
+          + 'durcheinandergeworfen. Zu sehen ist die Zahl erst, wenn alle Paare richtig liegen.',
+        auftrag: 'Lege zu jeder Rechenkarte die passende Ergebniskarte. Das fertige Bild zeigt den Code.',
+        typ: 'legen',
         code: '2075',
-        codeRegel: 'Wandle die Ergebnisse von <strong>Platz 1</strong> und <strong>Platz 4</strong> in Prozent um und schreibe beide Zahlen hintereinander.',
-        tipps: [
-          'Rechne jedes Ergebnis als Dezimalzahl aus, dann lässt es sich leicht vergleichen.',
-          '2/5 · 1/2 = 1/5 = 0,2 · 0,6 · 0,5 = 0,3 · 2/3 · 3/4 = 1/2 = 0,5 · 3/5 : 4/5 = 3/4 = 0,75 · 1,2 · 0,8 = 0,96 · 7/8 : 2/3 = 21/16 ≈ 1,31.',
-          'Reihenfolge: 0,2 · 0,3 · 0,5 · 0,75 · 0,96 · 1,31. Platz 1 ist 0,2 = 20 %, Platz 4 ist 0,75 = 75 %.',
+        zahlbild: '2075',
+        spalten: 4,
+        saat: 181,
+        titelLinks: 'Rechenkarten',
+        titelRechts: 'Ergebniskarten',
+        codeRegel: 'Die Zahl, die das fertige Bild zeigt.',
+        karten: [
+          { rechnung: '0,8 · 0,3', ergebnis: '0,24' },
+          { rechnung: '3,6 : 0,6', ergebnis: '6' },
+          { rechnung: '<sup>5</sup>⁄<sub>6</sub> : <sup>5</sup>⁄<sub>9</sub>', ergebnis: '1,5' },
+          { rechnung: '12,5 · 4', ergebnis: '50' },
+          { rechnung: '<sup>5</sup>⁄<sub>8</sub> von 32', ergebnis: '20' },
+          { rechnung: '7,2 : 0,9', ergebnis: '8' },
+          { rechnung: '0,25 · 36', ergebnis: '9' },
+          { rechnung: '<sup>2</sup>⁄<sub>3</sub> · 4,5', ergebnis: '3' },
         ],
-        loesung: '0,2 < 0,3 < 0,5 < 0,75 < 0,96 < 1,3125 → Platz 1 = 20 %, Platz 4 = 75 %.',
+        tipps: [
+          'Legt zuerst die Karten, die ihr im Kopf rechnen könnt – zum Beispiel ein Viertel von 36.',
+          'Beim Malnehmen zweier Dezimalzahlen hat das Ergebnis so viele Nachkommastellen wie beide Zahlen zusammen. Beim Teilen verschiebt man in beiden Zahlen das Komma gleich weit nach rechts. Durch einen Bruch teilt man mit dem Kehrbruch.',
+          '0,8 · 0,3 = 0,24; 3,6 : 0,6 = 6; 5/6 : 5/9 = 5/6 · 9/5 = 3/2 = 1,5; 12,5 · 4 = 50; 5/8 von 32 = 20; '
+            + '7,2 : 0,9 = 8; 0,25 · 36 = 9; 2/3 · 4,5 = 3. Das Bild zeigt 2075.',
+        ],
+        loesung: '0,24; 6; 1,5; 50; 20; 8; 9; 3 – das fertige Bild zeigt 2075.',
       },
       {
         titel: 'Rätsel 6: Die Abrechnung des Müllers',
@@ -844,20 +1260,45 @@ export default [
           + 'am Mahlgang nach – so hat es der Müller eingerichtet.',
         auftrag: 'Rechne die vier Aufgaben. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: '952 kg Korn werden gleichmäßig auf 8 Säcke verteilt. Wie viele Kilogramm kommen in jeden Sack?', antwort: '119', einheit: 'kg', zeichen: '9' },
-          { frage: 'Ein Sack wiegt 12,5 kg. Wie viel wiegen 6 Säcke?', antwort: '75', einheit: 'kg', zeichen: '5' },
-          { frage: 'Wie viele Gramm sind <sup>3</sup>⁄<sub>8</sub> von 1,6 kg?', antwort: '600', einheit: 'g', zeichen: '0' },
-          { frage: '3,6 kg Mehl werden in Tüten zu 0,15 kg gefüllt. Wie viele Tüten werden das?', antwort: '24', einheit: 'Tüten', zeichen: '4' },
-        ],
-        code: '9504',
         codeRegel: 'Die <strong>Einerziffern</strong> der vier Ergebnisse – von oben nach unten.',
         tipps: [
           'Teile schriftlich und achte bei Dezimalzahlen darauf, wo das Komma hingehört.',
-          'Bei Aufgabe 3 rechnest du zuerst 1,6 kg in 1600 g um. Bei Aufgabe 4 verschiebst du das Komma in beiden Zahlen um zwei Stellen: 360 : 15.',
-          '952 : 8 = 119 kg. 12,5 · 6 = 75 kg. 1600 : 8 · 3 = 600 g. 360 : 15 = 24 Tüten. Einerziffern: 9, 5, 0, 4.',
+          'Bei Aufgabe 3 rechnest du die Kilogramm zuerst in Gramm um und bestimmst dann den Bruchteil. Bei Aufgabe 4 verschiebst du in beiden Zahlen das Komma gleich weit nach rechts, dann teilst du zwei ganze Zahlen.',
         ],
-        loesung: '119 kg · 75 kg · 600 g · 24 Tüten → Einerziffern 9, 5, 0, 4.',
+        zufall: (z) => {
+          // 1) Division ohne Rest – rückwärts gerechnet.
+          const saecke = z.aus([6, 7, 8, 9]);
+          const proSack = z.ganz(85, 165);
+          const korn = saecke * proSack;
+          // 2) Dezimalzahl mal ganze Zahl – in Zehnteln, das Ergebnis bleibt ganz.
+          const sackZehntel = z.aus([125, 145, 165, 185, 225, 245]);
+          const anzahl = z.vielfach(4, 12, 2);
+          const gewicht = (sackZehntel * anzahl) / 10;
+          // 3) Bruchteil einer Masse mit Komma – in Gramm gerechnet.
+          const [z3, n3] = z.aus([[3, 8], [5, 8], [7, 8], [3, 4], [2, 5], [3, 5], [4, 5], [5, 6]]);
+          const schrittG = z.vielfach(Math.ceil(600 / n3), Math.floor(3200 / n3), 10 / ggt(n3, 10));
+          const gesamtG = n3 * schrittG, fettG = z3 * schrittG;
+          // 4) Wie viele Tüten – in Hundertsteln gerechnet.
+          const tueteH = z.aus([12, 15, 20, 25, 30, 40, 50]);
+          const tueten = z.ganz(12, 40);
+          const mehlH = tueteH * tueten;
+          const ziffern = einerListe(proSack, gewicht, fettG, tueten);
+          return {
+            regel: 'einer',
+            aufgaben: [
+              { frage: `${fmt(korn)} kg Korn werden gleichmäßig auf ${saecke} Säcke verteilt. Wie viele Kilogramm kommen in jeden Sack?`, antwort: antw(proSack), einheit: 'kg' },
+              { frage: `Ein Sack wiegt ${fmt(sackZehntel / 10)} kg. Wie viel wiegen ${anzahl} Säcke?`, antwort: antw(gewicht), einheit: 'kg' },
+              { frage: `Wie viele Gramm sind ${bruch(z3, n3)} von ${fmt(gesamtG / 1000)} kg?`, antwort: antw(fettG), einheit: 'g' },
+              { frage: `${fmt(mehlH / 100)} kg Mehl werden in Tüten zu ${fmt(tueteH / 100)} kg gefüllt. Wie viele Tüten werden das?`, antwort: antw(tueten), einheit: 'Tüten' },
+            ],
+            tipp: `${fmt(korn)} : ${saecke} = ${proSack} kg; `
+              + `${fmt(sackZehntel / 10)} · ${anzahl} = ${fmt(gewicht)} kg; `
+              + `${fmt(gesamtG / 1000)} kg = ${fmt(gesamtG)} g, ${fmt(gesamtG)} : ${n3} · ${z3} = ${fmt(fettG)} g; `
+              + `${fmt(mehlH / 100)} : ${fmt(tueteH / 100)} = ${fmt(mehlH)} : ${fmt(tueteH)} = ${tueten} Tüten. `
+              + `Einerziffern: ${ziffern}.`,
+            loesung: `${proSack} kg; ${fmt(gewicht)} kg; ${fmt(fettG)} g; ${tueten} Tüten → Einerziffern ${ziffern}.`,
+          };
+        },
       },
     ],
   },
@@ -921,36 +1362,62 @@ export default [
         tipps: [
           'Für den Median muss die Liste zuerst geordnet werden – der häufigste Wert ist etwas anderes.',
           'Die relative Häufigkeit ist immer ein Anteil zwischen 0 und 1 und lässt sich als Prozentzahl schreiben: 25 : 200 = 0,125.',
-          'Median = Wert in der Mitte · Anzahl : Gesamtzahl · 12,5 % · das arithmetische Mittel reagiert am stärksten auf Ausreißer.',
+          'Median = Wert in der Mitte; Anzahl : Gesamtzahl; 12,5 %; das arithmetische Mittel reagiert am stärksten auf Ausreißer.',
         ],
-        loesung: 'Mitte der geordneten Liste · Anzahl : Gesamtzahl · 12,5 % · arithmetisches Mittel → N, E, S, T.',
+        loesung: 'Mitte der geordneten Liste; Anzahl : Gesamtzahl; 12,5 %; arithmetisches Mittel → N, E, S, T.',
       },
       {
-        titel: 'Rätsel 3: Der zweite Zählbogen',
-        text: 'Im Schreibtisch liegt ein zweiter Zählbogen mit neun Werten: <strong>3, 5, 5, 8, 9, 12, 12, 16, 20</strong>. '
-          + 'Der Beobachter hat die Kenngrößen auf lose Zettel geschrieben, bevor ihm der Wind dazwischenkam.',
-        auftrag: 'Verbinde jede Kenngröße mit ihrem Wert.',
-        typ: 'zuordnen',
-        titelLinks: 'Kenngröße',
-        titelRechts: 'Wert',
-        codeAmEnde: true,
-        saat: 283,
-        paare: [
-          { links: 'Arithmetisches Mittel', rechts: '10' },
-          { links: 'Median', rechts: '9' },
-          { links: 'Spannweite', rechts: '17' },
-          { links: 'Unteres Quartil', rechts: '5' },
-          { links: 'Oberes Quartil', rechts: '14' },
-          { links: 'Kleinster Wert', rechts: '3' },
-        ],
+        titel: 'Rätsel 3: Die Lücken im zweiten Zählbogen',
+        text: 'Im Schreibtisch liegt ein zweiter Zählbogen, bei dem der Wind durchs offene Fenster einzelne Zahlen '
+          + 'weggewischt hat. Bekannt ist nur noch, was am Ende herauskommen muss. Solche Lücken hat der Beobachter '
+          + 'immer durch Probieren gefüllt: einsetzen, nachrechnen, enger werden.',
+        auftrag: 'Tippe einen Versuch ein und drücke auf „Probieren". Jede Zeile sagt dir, ob du zu klein oder zu '
+          + 'groß liegst. Gesucht sind ganze Zahlen.',
+        typ: 'probieren',
         code: '1417',
-        codeRegel: 'Wenn alle Paare stimmen, erscheint der Code: das <strong>obere Quartil</strong> und die <strong>Spannweite</strong>, jeweils zweistellig.',
-        tipps: [
-          'Die neun Werte sind bereits geordnet – der Median ist damit der fünfte Wert.',
-          'Für die Quartile teilst du die Liste am Median: unten 3, 5, 5, 8 und oben 12, 12, 16, 20. Bei vier Werten ist das Quartil der Mittelwert der beiden mittleren.',
-          'Summe 90 : 9 = 10 · Median 9 · 20 − 3 = 17 · unteres Quartil (5 + 5) : 2 = 5 · oberes Quartil (12 + 16) : 2 = 14.',
+        codeRegel: 'Die <strong>Einerziffern</strong> der vier gefundenen Zahlen – von oben nach unten.',
+        aufgaben: [
+          {
+            frage: 'Ein Tag nennt die Werte 6, 9, 14 und 20 sowie einen fünften Wert, der größer ist als alle '
+              + 'anderen. Die Spannweite der fünf Werte beträgt 15. Wie groß ist der fünfte Wert?',
+            antwort: '21', von: 15, bis: 45,
+            pruefe: (x) => {
+              const g = Math.max(20, x), k = Math.min(6, x);
+              return `größter Wert ${fmt(g)}, kleinster Wert ${fmt(k)}, Spannweite ${fmt(rund(g - k))}`;
+            },
+            zeichen: '1',
+          },
+          {
+            frage: 'Von 50 gezählten Vögeln waren 48 % Meisen. Wie viele Meisen waren es?',
+            antwort: '24', von: 1, bis: 50,
+            pruefe: (x) => `${fmt(x)} von 50 = ${fmt(rund(2 * x))} %`,
+            zeichen: '4',
+          },
+          {
+            frage: 'Von neun Werten kennt man acht: 4, 6, 7, 9, 12, 14, 15 und 20. Der Median aller neun Werte '
+              + 'ist 11. Welcher Wert fehlt?',
+            antwort: '11', von: 1, bis: 30,
+            pruefe: (x) => {
+              const s = [4, 6, 7, 9, 12, 14, 15, 20, x].sort((a, b) => a - b);
+              return `geordnet ${s.map(fmt).join(', ')} – Median ${fmt(s[4])}`;
+            },
+            zeichen: '1',
+          },
+          {
+            frage: 'Die ersten neun Beobachtungstage brachten zusammen 153 Vögel. Nach dem zehnten Tag beträgt '
+              + 'das arithmetische Mittel genau 18 Vögel je Tag. Wie viele Vögel brachte der zehnte Tag?',
+            antwort: '27', von: 1, bis: 60,
+            pruefe: (x) => `(153 + ${fmt(x)}) : 10 = ${fmt(rund((153 + x) / 10))}`,
+            zeichen: '7',
+          },
         ],
-        loesung: 'Mittel 10, Median 9, Spannweite 17, unteres Quartil 5, oberes Quartil 14, kleinster Wert 3.',
+        tipps: [
+          'Setzt eine Zahl aus der Mitte des Bereichs ein und schaut, in welche Richtung ihr müsst. Mit jedem Versuch halbiert sich der Bereich.',
+          'Spannweite heißt größter Wert minus kleinster Wert. Prozent rechnet man als Anzahl geteilt durch Gesamtzahl. Der Median ist der Wert in der Mitte der geordneten Liste – bei neun Werten also der fünfte. Das arithmetische Mittel ist die Summe geteilt durch die Anzahl.',
+          '6 + 15 = 21; 50 : 100 · 48 = 24 Meisen; bei neun Werten steht der Median an fünfter Stelle, die '
+            + 'fehlende Zahl ist 11; 10 · 18 = 180 und 180 − 153 = 27. Einerziffern: 1, 4, 1, 7.',
+        ],
+        loesung: '21; 24; 11; 27 → Einerziffern 1, 4, 1, 7.',
       },
       {
         titel: 'Rätsel 4: Die Prozenttafel',
@@ -975,30 +1442,63 @@ export default [
         loesung: 'Richtig: 3/20, 7/25, 9/50, 6/40, 12/80, 21/60 (6 Felder). Falsch sind 4/25 = 16 %, 8/50 = 16 %, 15/60 = 25 %, 9/20 = 45 %, 13/50 = 26 %, 18/40 = 45 %.',
       },
       {
-        titel: 'Rätsel 5: Die Kenngrößenleiste',
-        text: 'Auf der Fensterbank steht eine Holzleiste mit sechs Schiebern, einer für jede Kenngröße des zweiten '
-          + 'Zählbogens (3, 5, 5, 8, 9, 12, 12, 16, 20). Der Beobachter schiebt sie immer von links nach rechts in '
-          + 'aufsteigender Reihenfolge.',
-        auftrag: 'Ordne die Kenngrößen nach ihrem <strong>Wert</strong> vom kleinsten zum größten.',
-        typ: 'reihenfolge',
-        codeAmEnde: true,
-        saat: 197,
-        elemente: [
-          { text: 'Kleinster Wert' },
-          { text: 'Unteres Quartil' },
-          { text: 'Median' },
-          { text: 'Arithmetisches Mittel' },
-          { text: 'Oberes Quartil' },
-          { text: 'Spannweite' },
-        ],
+        titel: 'Rätsel 5: Der Übungsblock des Praktikanten',
+        text: 'Auf der Fensterbank liegt der Übungsblock des Praktikanten. Vier Auswertungen hat er aufgeschrieben, '
+          + 'und in jeder steckt genau ein Fehler – deshalb hat der Beobachter sie nie abgeschickt. Erst wenn in '
+          + 'jeder Rechnung die erste falsche Zeile gefunden ist, gibt das Schloss nach.',
+        auftrag: 'Tippe in jedem Rechenweg die Zeile an, in der <strong>zum ersten Mal</strong> etwas falsch ist.',
+        typ: 'fehlerfinden',
         code: '0914',
-        codeRegel: 'Der Code sind die <strong>Werte</strong> der Kenngrößen auf Platz 3 und Platz 5 – jeweils zweistellig.',
-        tipps: [
-          'Die Werte hast du in Rätsel 3 schon bestimmt – ordne sie jetzt nur noch.',
-          'Kleinster Wert 3, unteres Quartil 5, Median 9, Mittel 10, oberes Quartil 14, Spannweite 17.',
-          'Reihenfolge: 3, 5, 9, 10, 14, 17. Auf Platz 3 steht der Median mit 9, auf Platz 5 das obere Quartil mit 14.',
+        codeRegel: 'Jede gefundene Zeile deckt eine Ziffer auf – von oben nach unten.',
+        faelle: [
+          {
+            titel: 'Wie groß ist der Median der Werte 12, 5, 9, 3 und 8?',
+            zeilen: [
+              'Die fünf Werte lauten 12, 5, 9, 3 und 8.',
+              'Der Median ist der Wert in der Mitte.',
+              'In der Mitte dieser Reihe steht die 9.',
+              'Antwort: Der Median ist 9.',
+            ],
+            falsch: 2, zeichen: '0',
+          },
+          {
+            titel: 'Wie groß ist das arithmetische Mittel von 4, 7, 10 und 15?',
+            zeilen: [
+              'Zuerst werden alle Werte addiert: 4 + 7 + 10 + 15 = 36',
+              'Dann wird die Summe durch die Anzahl der Werte geteilt.',
+              'Es sind drei Werte, also 36 : 3 = 12.',
+              'Antwort: Das arithmetische Mittel ist 12.',
+            ],
+            falsch: 2, zeichen: '9',
+          },
+          {
+            titel: 'Wie viel Prozent sind 12 von 48 Beobachtungen?',
+            zeilen: [
+              'Die relative Häufigkeit ist die Anzahl geteilt durch die Gesamtzahl.',
+              'Gerechnet wird 48 : 12 = 4.',
+              'In Prozent sind das 4 · 100 % = 400 %.',
+              'Antwort: 12 von 48 sind 400 %.',
+            ],
+            falsch: 1, zeichen: '1',
+          },
+          {
+            titel: 'Wie groß ist die Spannweite der Werte 3, 5, 5, 8, 9, 12, 16 und 20?',
+            zeilen: [
+              'Spannweite heißt: größter Wert minus kleinster Wert.',
+              'Der größte Wert ist 20, der kleinste ist 5.',
+              '20 − 5 = 15',
+              'Antwort: Die Spannweite ist 15.',
+            ],
+            falsch: 1, zeichen: '4',
+          },
         ],
-        loesung: '3 < 5 < 9 < 10 < 14 < 17 → Platz 3 ist der Median (9), Platz 5 das obere Quartil (14).',
+        tipps: [
+          'Prüft jede Zeile einzeln. Häufig ist schon der Ansatz falsch, und danach wird nur noch sauber mit der falschen Zahl weitergerechnet.',
+          'Für den Median muss die Liste zuerst geordnet werden. Beim arithmetischen Mittel zählt man die Werte genau ab. Die relative Häufigkeit ist Anzahl geteilt durch Gesamtzahl – nicht umgekehrt. Und die Spannweite braucht den kleinsten Wert, nicht einen beliebigen kleinen.',
+          'Zeile 3 (geordnet 3, 5, 8, 9, 12 – der Median ist 8); Zeile 3 (es sind vier Werte: 36 : 4 = 9); '
+            + 'Zeile 2 (12 : 48 = 0,25 = 25 %); Zeile 2 (der kleinste Wert ist 3, also 20 − 3 = 17).',
+        ],
+        loesung: 'Zeile 3; Zeile 3; Zeile 2; Zeile 2 → 0, 9, 1, 4. Richtig wären Median 8; Mittel 9; 25 %; Spannweite 17.',
       },
       {
         titel: 'Rätsel 6: Der Jahresbericht',
@@ -1006,20 +1506,49 @@ export default [
           + 'Auswertung nicht mehr geschafft – und ohne sie bleibt das letzte Schloss zu.',
         auftrag: 'Rechne die vier Aufgaben. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Von 200 gezählten Vögeln waren 46 Meisen. Wie viel Prozent sind das?', antwort: '23', einheit: '%', zeichen: '3' },
-          { frage: 'Im Kreisdiagramm: Wie viel Grad entsprechen einem Anteil von 35 %?', antwort: '126', einheit: '°', zeichen: '6' },
-          { frage: 'An sechs Tagen wurden 8, 11, 7, 14, 9 und 11 Vögel gezählt. Wie groß ist das arithmetische Mittel?', antwort: '10', zeichen: '0' },
-          { frage: 'Von 250 Beobachtungen entfielen 60 auf Amseln. Wie viel Prozent sind das?', antwort: '24', einheit: '%', zeichen: '4' },
-        ],
-        code: '3604',
         codeRegel: 'Die <strong>Einerziffern</strong> der vier Ergebnisse – von oben nach unten.',
         tipps: [
           'Für die Prozentzahl teilst du die Anzahl durch die Gesamtzahl und nimmst das Ergebnis mal 100.',
-          'Im Kreisdiagramm gehören 100 % zu 360°. Ein Prozent sind also 3,6°.',
-          '46 : 200 = 0,23 = 23 %. 0,35 · 360° = 126°. (8+11+7+14+9+11) : 6 = 60 : 6 = 10. 60 : 250 = 0,24 = 24 %.',
+          'Im Kreisdiagramm gehören 100 % zu 360°. Ein Prozent sind also 3,6°. Beim arithmetischen Mittel addierst du alle Werte und teilst die Summe durch ihre Anzahl.',
         ],
-        loesung: '23 % · 126° · 10 · 24 % → Einerziffern 3, 6, 0, 4.',
+        zufall: (z) => {
+          // 1) Relative Häufigkeit in Prozent – die Prozentzahl ist vorgegeben, die Anzahl folgt.
+          const gesamt1 = z.aus([200, 400, 500]);
+          const proz1 = z.ganz(12, 48);
+          const meisen = (gesamt1 / 100) * proz1;
+          // 2) Prozent in Grad – nur Vielfache von 5 %, dann geht es ohne Rest auf.
+          const proz2 = z.vielfach(10, 90, 5);
+          const grad = (proz2 * 36) / 10;
+          // 3) Sechs Werte, die paarweise um das Mittel liegen – die Summe geht auf.
+          const mittel = z.ganz(8, 17);
+          const d1 = z.ganz(1, 4), d2 = z.ganz(1, 4), d3 = z.ganz(1, 3);
+          const werte = z.mische([mittel - d1, mittel + d1, mittel - d2, mittel + d2, mittel - d3, mittel + d3]);
+          // 4) Noch eine relative Häufigkeit in Prozent. Neu würfeln, bis der
+          //    Prozentsatz ein anderer ist als in Aufgabe 1 (höchstens 50 Versuche).
+          let gesamt4 = 200, proz4 = 20;
+          for (let versuch = 0; versuch < 50; versuch++) {
+            gesamt4 = z.aus([150, 200, 250, 300, 400]);
+            proz4 = z.vielfach(12, 44, 2);
+            if (proz4 !== proz1) break;
+          }
+          const amseln = (gesamt4 * proz4) / 100;
+          const ziffern = einerListe(proz1, grad, mittel, proz4);
+          return {
+            regel: 'einer',
+            aufgaben: [
+              { frage: `Von ${fmt(gesamt1)} gezählten Vögeln waren ${meisen} Meisen. Wie viel Prozent sind das?`, antwort: antw(proz1), einheit: '%' },
+              { frage: `Im Kreisdiagramm: Wie viel Grad entsprechen einem Anteil von ${proz2} %?`, antwort: antw(grad), einheit: '°' },
+              { frage: `In sechs Beobachtungsstunden wurden ${werte.slice(0, 5).join(', ')} und ${werte[5]} Vögel gezählt. Wie groß ist das arithmetische Mittel je Stunde?`, antwort: antw(mittel) },
+              { frage: `Von ${fmt(gesamt4)} Beobachtungen entfielen ${amseln} auf Amseln. Wie viel Prozent sind das?`, antwort: antw(proz4), einheit: '%' },
+            ],
+            tipp: `${meisen} : ${fmt(gesamt1)} = ${fmt(proz1 / 100)} = ${proz1} %; `
+              + `${fmt(proz2 / 100)} · 360° = ${grad}°; `
+              + `(${werte.join(' + ')}) : 6 = ${6 * mittel} : 6 = ${mittel}; `
+              + `${amseln} : ${fmt(gesamt4)} = ${fmt(proz4 / 100)} = ${proz4} %. `
+              + `Einerziffern: ${ziffern}.`,
+            loesung: `${proz1} %; ${grad}°; ${mittel}; ${proz4} % → Einerziffern ${ziffern}.`,
+          };
+        },
       },
     ],
   },
@@ -1049,20 +1578,46 @@ export default [
           + 'Steiger angefangen – die Ergebnisspalte ist leer geblieben, weil die Schicht zu Ende war.',
         auftrag: 'Rechne die vier Aufgaben. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: '6 gleiche Kisten wiegen zusammen 96 kg. Wie viel wiegen 9 Kisten?', antwort: '144', einheit: 'kg', zeichen: '4' },
-          { frage: '4 Pumpen brauchen 18 Stunden, um den Schacht leerzupumpen. Wie lange brauchen 9 Pumpen?', antwort: '8', einheit: 'Stunden', zeichen: '8' },
-          { frage: 'Der Förderkorb fährt in 5 Minuten 180 Meter. Wie viele Meter schafft er in 12 Minuten?', antwort: '432', einheit: 'm', zeichen: '2' },
-          { frage: '8 Grubenlampen verbrauchen 56 kWh. Wie viel verbrauchen 5 Lampen?', antwort: '35', einheit: 'kWh', zeichen: '5' },
-        ],
-        code: '4825',
         codeRegel: 'Die <strong>Einerziffern</strong> der vier Ergebnisse – von oben nach unten.',
         tipps: [
           'Rechne beim Dreisatz zuerst auf eine Einheit herunter und dann auf die gefragte Anzahl hoch.',
-          'Achtung bei Aufgabe 2: Mehr Pumpen brauchen weniger Zeit – das ist antiproportional. Hier rechnest du 4 · 18 und teilst durch 9.',
-          '96 : 6 · 9 = 144 kg. 4 · 18 : 9 = 8 Stunden. 180 : 5 · 12 = 432 m. 56 : 8 · 5 = 35 kWh. Einerziffern: 4, 8, 2, 5.',
+          'Achtung bei Aufgabe 2: Mehr Pumpen brauchen weniger Zeit – das ist antiproportional. Hier multiplizierst du erst Anzahl und Zeit und teilst das Ergebnis durch die neue Anzahl.',
         ],
-        loesung: '144 kg · 8 Stunden · 432 m · 35 kWh → Einerziffern 4, 8, 2, 5.',
+        zufall: (z) => {
+          // 1) Proportional – rückwärts über das Gewicht einer Kiste.
+          const proKiste = z.ganz(8, 24);
+          const n1 = z.aus([4, 5, 6, 8]), m1 = z.ganz(9, 15);
+          const kisten = n1 * proKiste, ziel1 = m1 * proKiste;
+          // 2) Antiproportional – beide Pumpenzahlen teilen die Arbeit ohne Rest.
+          const p2 = z.aus([3, 4, 6]), q2 = z.aus([8, 9, 10, 12]);
+          const kgv = (p2 * q2) / ggt(p2, q2);
+          const t2 = z.ganz(Math.ceil(Math.max(48, 5 * q2) / kgv), Math.floor(Math.min(120, 28 * p2) / kgv));
+          const arbeit = kgv * t2, stunden = arbeit / p2, ziel2 = arbeit / q2;
+          // 3) Proportional – über die Strecke je Minute.
+          const proMin = z.ganz(24, 60);
+          const a3 = z.aus([4, 5, 6, 8]), c3 = z.ganz(9, 15);
+          const strecke = a3 * proMin, ziel3 = c3 * proMin;
+          // 4) Proportional – über den Verbrauch je Lampe.
+          const proLampe = z.ganz(4, 12);
+          const n4 = z.aus([6, 8, 9, 10, 12]), m4 = z.ganz(3, 5);
+          const kwh = n4 * proLampe, ziel4 = m4 * proLampe;
+          const ziffern = einerListe(ziel1, ziel2, ziel3, ziel4);
+          return {
+            regel: 'einer',
+            aufgaben: [
+              { frage: `${n1} gleiche Kisten wiegen zusammen ${fmt(kisten)} kg. Wie viel wiegen ${m1} Kisten?`, antwort: antw(ziel1), einheit: 'kg' },
+              { frage: `${p2} Pumpen brauchen ${stunden} Stunden, um den Schacht leerzupumpen. Wie lange brauchen ${q2} Pumpen?`, antwort: antw(ziel2), einheit: 'Stunden' },
+              { frage: `Der Förderkorb fährt in ${a3} Minuten ${fmt(strecke)} Meter. Wie viele Meter schafft er in ${c3} Minuten?`, antwort: antw(ziel3), einheit: 'm' },
+              { frage: `${n4} Grubenlampen verbrauchen in einer Schicht ${kwh} kWh. Wie viel verbrauchen ${m4} Lampen in einer Schicht?`, antwort: antw(ziel4), einheit: 'kWh' },
+            ],
+            tipp: `${fmt(kisten)} : ${n1} = ${proKiste} kg je Kiste, ${proKiste} · ${m1} = ${fmt(ziel1)} kg; `
+              + `${p2} · ${stunden} = ${arbeit} Pumpenstunden, ${arbeit} : ${q2} = ${ziel2} Stunden; `
+              + `${fmt(strecke)} : ${a3} = ${proMin} m je Minute, ${proMin} · ${c3} = ${fmt(ziel3)} m; `
+              + `${kwh} : ${n4} = ${proLampe} kWh je Lampe, ${proLampe} · ${m4} = ${ziel4} kWh. `
+              + `Einerziffern: ${ziffern}.`,
+            loesung: `${fmt(ziel1)} kg; ${ziel2} Stunden; ${fmt(ziel3)} m; ${ziel4} kWh → Einerziffern ${ziffern}.`,
+          };
+        },
       },
       {
         titel: 'Rätsel 2: Die Prüffragen des Steigers',
@@ -1081,36 +1636,47 @@ export default [
         tipps: [
           'Proportional heißt: doppelt so viel, doppelt so teuer. Antiproportional heißt: doppelt so viele, halb so lange.',
           'Bei negativen Zahlen gilt: Je weiter links auf dem Zahlenstrahl, desto kleiner. −12 liegt links von −7.',
-          '9 : 12 · 20 = 15 € · Arbeiter und Zeit sind antiproportional · −12 ist am kleinsten · von −4 bis 0 sind es 4, von 0 bis 5 sind es 5, zusammen 9.',
+          '9 : 12 · 20 = 15 €; Arbeiter und Zeit sind antiproportional; −12 ist am kleinsten; von −4 bis 0 sind es 4, von 0 bis 5 sind es 5, zusammen 9.',
         ],
-        loesung: '15 € · Arbeiter und Zeit · −12 · 9 → T, I, E, F.',
+        loesung: '15 €; Arbeiter und Zeit; −12; 9 → T, I, E, F.',
       },
       {
-        titel: 'Rätsel 3: Die Fördertabelle',
-        text: 'An der Stirnseite hängt die Fördertabelle, und jemand hat die rechte Spalte abgeschnitten und daneben '
-          + 'gepinnt. Jede Zeile beginnt mit einer bekannten Menge und fragt nach einer anderen.',
-        auftrag: 'Verbinde jede Aufgabe mit ihrem Ergebnis.',
-        typ: 'zuordnen',
-        titelLinks: 'Aufgabe',
-        titelRechts: 'Ergebnis',
-        codeAmEnde: true,
-        saat: 367,
-        paare: [
-          { links: '3 kg Salz kosten 7,50 € – was kosten 8 kg?', rechts: '20,00 €' },
-          { links: '5 Loren fassen 850 kg – wie viel fassen 12 Loren?', rechts: '2040 kg' },
-          { links: '4 Arbeiter brauchen 15 Stunden – wie lange brauchen 6?', rechts: '10 Stunden' },
-          { links: '7 m Kabel wiegen 2,80 kg – wie viel wiegen 25 m?', rechts: '10 kg' },
-          { links: '6 Lampen verbrauchen 54 kWh – wie viel verbrauchen 11?', rechts: '99 kWh' },
-          { links: '9 Säcke wiegen 288 kg – wie viel wiegen 5 Säcke?', rechts: '160 kg' },
-        ],
+        titel: 'Rätsel 3: Die Plättchenlade am Pult',
+        text: 'In der Lade unter dem Pult liegen Zahlenplättchen und Rechenzeichen, mit denen der Steiger seine '
+          + 'Dreisatzrechnungen gelegt hat. Vier Zielwerte stehen auf dem Deckel, und zu jedem soll ein '
+          + 'Rechenausdruck gelegt werden, der genau diesen Wert ergibt. Jedes Plättchen lässt sich nur einmal '
+          + 'einhängen, und ihr müsst nicht alle benutzen.',
+        auftrag: 'Baue zu jedem Zielwert einen passenden Term. Jeder getroffene Zielwert deckt eine Ziffer auf.',
+        typ: 'termbauen',
         code: '2040',
-        codeRegel: 'Wenn alle Paare stimmen, erscheint der Code: das <strong>Ergebnis der Lorenaufgabe</strong> – die Kilogrammzahl.',
-        tipps: [
-          'Rechne immer zuerst auf eine Einheit herunter: auf 1 kg, 1 Lore, 1 Meter oder 1 Lampe.',
-          'Nur die Aufgabe mit den Arbeitern ist antiproportional: 4 · 15 = 60 Arbeitsstunden, geteilt durch 6 Arbeiter.',
-          '7,50 : 3 · 8 = 20 € · 850 : 5 · 12 = 2040 kg · 60 : 6 = 10 Stunden · 2,80 : 7 · 25 = 10 kg · 54 : 6 · 11 = 99 kWh · 288 : 9 · 5 = 160 kg.',
+        codeRegel: 'Jeder getroffene Zielwert deckt eine Ziffer auf – von oben nach unten.',
+        aufgaben: [
+          {
+            frage: '5 Loren fassen zusammen 850 kg. So viele Kilogramm fassen 12 Loren: Baue einen Term mit dem '
+              + 'Wert <strong>2040</strong>.',
+            ziel: 2040, bausteine: ['850', '5', '12', '2', '6', ':', '·'], zeichen: '2', musterloesung: '850 : 5 · 12',
+          },
+          {
+            frage: '3 kg Salz kosten 7,50 €. So viele Euro kosten 8 kg: Baue einen Term mit dem Wert <strong>20</strong>.',
+            ziel: 20, bausteine: ['7,5', '3', '8', '2', '4', ':', '·'], zeichen: '0', musterloesung: '7,5 : 3 · 8',
+          },
+          {
+            frage: '6 Grubenlampen verbrauchen 54 kWh. So viele Kilowattstunden verbrauchen 11 Lampen: Baue einen '
+              + 'Term mit dem Wert <strong>99</strong>.',
+            ziel: 99, bausteine: ['54', '6', '11', '2', '3', ':', '·'], zeichen: '4', musterloesung: '54 : 6 · 11',
+          },
+          {
+            frage: '9 Pumpen brauchen 8 Stunden. So lange brauchen 6 Pumpen – hier ist der Zusammenhang '
+              + 'antiproportional: Baue einen Term mit dem Wert <strong>12</strong>.',
+            ziel: 12, bausteine: ['9', '8', '6', '5', '3', ':', '·'], zeichen: '0', musterloesung: '9 · 8 : 6',
+          },
         ],
-        loesung: '20,00 € · 2040 kg · 10 Stunden · 10 kg · 99 kWh · 160 kg.',
+        tipps: [
+          'Rechnet beim Dreisatz zuerst auf eine Einheit herunter – auf eine Lore, ein Kilogramm, eine Lampe – und dann auf die gefragte Anzahl hoch. Genau in dieser Reihenfolge legt ihr auch die Plättchen.',
+          'Teilen und Malnehmen werden von links nach rechts gerechnet, eine Klammer braucht ihr hier nicht. Beim letzten Zielwert ist es umgekehrt: Mehr Pumpen brauchen weniger Zeit, deshalb nimmt man Anzahl und Zeit erst mal und teilt danach.',
+          '850 : 5 · 12 = 2040; 7,5 : 3 · 8 = 20; 54 : 6 · 11 = 99; 9 · 8 : 6 = 12.',
+        ],
+        loesung: '850 : 5 · 12 = 2040; 7,5 : 3 · 8 = 20; 54 : 6 · 11 = 99; 9 · 8 : 6 = 12 → 2, 0, 4, 0.',
       },
       {
         titel: 'Rätsel 4: Die Sohlentafel',
@@ -1135,29 +1701,36 @@ export default [
         loesung: 'Treffer: −5, −7, −8, −6, −13, −12 (6 Felder). Kleinste: −13 und −12 → 13 + 12 = 25.',
       },
       {
-        titel: 'Rätsel 5: Die Sohlenliste',
-        text: 'Im Pult liegt die Liste der Sohlen, auf denen heute gearbeitet wird – als Höhen über und unter dem '
-          + 'Schachtmund notiert. Der Steiger ordnet sie immer von der tiefsten zur höchsten.',
-        auftrag: 'Ordne die Zahlen von der <strong>kleinsten</strong> zur <strong>größten</strong>.',
-        typ: 'reihenfolge',
-        codeAmEnde: true,
-        saat: 251,
-        elemente: [
-          { text: '−17' },
-          { text: '−9' },
-          { text: '−4' },
-          { text: '0' },
-          { text: '6' },
-          { text: '13' },
-        ],
+        titel: 'Rätsel 5: Die Sohlenkartei',
+        text: 'Im Pult liegt die Sohlenkartei: acht Rechenkarten mit Höhen über und unter dem Schachtmund und acht '
+          + 'Ergebniskarten. Auf die Rückseiten hat der Steiger eine Zahl gemalt und die Karten dann in der Eile '
+          + 'durcheinandergeworfen. Zu sehen ist die Zahl erst, wenn alle Paare richtig liegen.',
+        auftrag: 'Lege zu jeder Rechenkarte die passende Ergebniskarte. Das fertige Bild zeigt den Code.',
+        typ: 'legen',
         code: '1706',
-        codeRegel: 'Der Code sind die <strong>erste</strong> und die <strong>fünfte</strong> Zahl der sortierten Reihe – jeweils ohne Vorzeichen und zweistellig.',
-        tipps: [
-          'Bei negativen Zahlen ist die Zahl mit dem größeren Betrag die kleinere: −17 liegt weiter links als −9.',
-          'Null steht genau in der Mitte: alle negativen Zahlen links davon, alle positiven rechts.',
-          'Reihenfolge: −17, −9, −4, 0, 6, 13. Die erste Zahl ist −17, die fünfte ist 6.',
+        zahlbild: '1706',
+        spalten: 4,
+        saat: 251,
+        titelLinks: 'Rechenkarten',
+        titelRechts: 'Ergebniskarten',
+        codeRegel: 'Die Zahl, die das fertige Bild zeigt.',
+        karten: [
+          { rechnung: '−9 + 4', ergebnis: '−5' },
+          { rechnung: '5 − 13', ergebnis: '−8' },
+          { rechnung: '−4 − 7', ergebnis: '−11' },
+          { rechnung: '−18 + 12', ergebnis: '−6' },
+          { rechnung: '6 − 19', ergebnis: '−13' },
+          { rechnung: '−2 − 14', ergebnis: '−16' },
+          { rechnung: '−6 + 13', ergebnis: '7' },
+          { rechnung: '−10 + 10', ergebnis: '0' },
         ],
-        loesung: '−17 < −9 < −4 < 0 < 6 < 13 → erste Zahl −17, fünfte Zahl 6.',
+        tipps: [
+          'Stellt euch den Zahlenstrahl senkrecht vor: Plus heißt nach oben, Minus nach unten. Der Schachtmund ist die Null.',
+          'Fangt mit den Karten an, bei denen beide Zahlen gleich groß sind oder die positive Zahl größer ist – dort landet ihr genau auf oder über der Null.',
+          '−9 + 4 = −5; 5 − 13 = −8; −4 − 7 = −11; −18 + 12 = −6; 6 − 19 = −13; −2 − 14 = −16; '
+            + '−6 + 13 = 7; −10 + 10 = 0. Das Bild zeigt 1706.',
+        ],
+        loesung: '−5; −8; −11; −6; −13; −16; 7; 0 – das fertige Bild zeigt 1706.',
       },
       {
         titel: 'Rätsel 6: Die Schichtübergabe',
@@ -1165,20 +1738,41 @@ export default [
           + 'Steiger hat die Angaben notiert, das Rechnen aber der nächsten Schicht überlassen.',
         auftrag: 'Rechne die vier Aufgaben. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Ein Korb steht auf −120 m, der andere auf +45 m. Wie viele Meter liegen zwischen ihnen?', antwort: '165', einheit: 'm', zeichen: '5' },
-          { frage: 'Ein Korb steht auf −85 m und fährt 110 m nach oben. Auf welcher Höhe ist er dann?', antwort: ['25', '+25'], einheit: 'm', zeichen: '5' },
-          { frage: 'Die Temperatur im Stollen fällt von 6 °C um 14 Grad. Welche Temperatur ist dann erreicht?', antwort: ['-8', '−8'], einheit: '°C', zeichen: '8' },
-          { frage: 'In 4 Minuten fährt der Korb 72 Meter. Wie viele Meter schafft er in 9 Minuten?', antwort: '162', einheit: 'm', zeichen: '2' },
-        ],
-        code: '5582',
         codeRegel: 'Die <strong>Einerziffern</strong> der vier Ergebnisse – von oben nach unten (bei negativen Zahlen ohne das Minuszeichen).',
         tipps: [
           'Zeichne dir einen senkrechten Zahlenstrahl: über dem Schachtmund positiv, darunter negativ.',
-          'Der Abstand zweier Zahlen ist die Summe der Beträge, wenn sie auf verschiedenen Seiten der Null liegen: 120 + 45.',
-          '120 + 45 = 165 m. −85 + 110 = 25 m. 6 − 14 = −8 °C. 72 : 4 · 9 = 162 m. Einerziffern: 5, 5, 8, 2.',
+          'Liegen zwei Zahlen auf verschiedenen Seiten der Null, ist ihr Abstand die Summe der beiden Beträge. Beim Dreisatz rechnest du zuerst auf eine Minute herunter.',
         ],
-        loesung: '165 m · +25 m · −8 °C · 162 m → Einerziffern 5, 5, 8, 2.',
+        zufall: (z) => {
+          const tief1 = z.ganz(85, 215), hoch1 = z.ganz(25, 85);
+          const abstand = tief1 + hoch1;
+          const tief2 = z.ganz(60, 140);
+          const auf2 = z.ganz(tief2 + 10, tief2 + 60);
+          const hoehe = auf2 - tief2;
+          const start3 = z.ganz(2, 9);
+          const fall3 = z.ganz(start3 + 2, start3 + 14);
+          const temperatur = start3 - fall3;
+          const minuten = z.aus([4, 5, 6]);
+          const proMin = z.ganz(14, 26);
+          const strecke = minuten * proMin;
+          const ziel = z.ganz(8, 14), weit = ziel * proMin;
+          const ziffern = einerListe(abstand, hoehe, temperatur, weit);
+          return {
+            regel: 'einer',
+            aufgaben: [
+              { frage: `Ein Korb steht auf ${fmt(-tief1)} m, der andere auf +${hoch1} m. Wie viele Meter liegen zwischen ihnen?`, antwort: antw(abstand), einheit: 'm' },
+              { frage: `Ein Korb steht auf ${fmt(-tief2)} m und fährt ${auf2} m nach oben. Auf welcher Höhe ist er dann?`, antwort: [antw(hoehe), `+${hoehe}`], einheit: 'm' },
+              { frage: `Am Schachtmund fällt die Temperatur über Nacht von ${start3} °C um ${fall3} Grad. Welche Temperatur ist dann erreicht?`, antwort: antw(temperatur), einheit: '°C' },
+              { frage: `In ${minuten} Minuten fährt der Korb ${fmt(strecke)} Meter. Wie viele Meter schafft er in ${ziel} Minuten?`, antwort: antw(weit), einheit: 'm' },
+            ],
+            tipp: `${tief1} + ${hoch1} = ${abstand} m; `
+              + `${fmt(-tief2)} + ${auf2} = ${fmt(hoehe)} m; `
+              + `${start3} − ${fall3} = ${fmt(temperatur)} °C; `
+              + `${fmt(strecke)} : ${minuten} = ${proMin} m je Minute, ${proMin} · ${ziel} = ${fmt(weit)} m. `
+              + `Einerziffern: ${ziffern}.`,
+            loesung: `${abstand} m; +${hoehe} m; ${fmt(temperatur)} °C; ${fmt(weit)} m → Einerziffern ${ziffern}.`,
+          };
+        },
       },
     ],
   },

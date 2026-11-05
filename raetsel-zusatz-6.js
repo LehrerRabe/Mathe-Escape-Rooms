@@ -7,6 +7,8 @@
    Themenfolge nach dem schulinternen Curriculum
    (Lambacher Schweizer G9, Kernlehrplan NRW 23.06.2019).                     */
 
+import { fmt, antw, einerziffer } from './zufall.js';
+
 export default {
 
   /* =============================================================
@@ -33,7 +35,7 @@ export default {
         'Für Prozente erweiterst du auf den Nenner 100. Zum Vergleichen bringst du die Brüche auf einen gemeinsamen Nenner – für 8, 5 und 12 passt 120.',
         '14/21 = 2/3 und 15/25 = 3/5 lassen sich kürzen, 13/20 nicht. 9/20 = 45/100 = 45 %. 3/8 = 45/120, 2/5 = 48/120, 5/12 = 50/120 – also ist 5/12 am größten. 5 Torten auf 8 Gäste: jeder bekommt 5/8.',
       ],
-      loesung: '13/20 · 45 % · 5/12 · 5/8 → G, U, S, S.',
+      loesung: '13/20; 45 %; 5/12; 5/8 → G, U, S, S.',
     },
     {
       titel: 'Rätsel 6: Die Mehlkammer',
@@ -42,20 +44,43 @@ export default {
         + 'die letzte Ziffer des Ergebnisses – so steht es klein unter der Tafel.',
       auftrag: 'Rechne die vier Aufgaben. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
       typ: 'rechnen',
-      aufgaben: [
-        { frage: 'Wie viel sind <sup>5</sup>⁄<sub>8</sub> von 72 Küchlein?', antwort: '45', einheit: 'Küchlein', zeichen: '5' },
-        { frage: '<sup>3</sup>⁄<sub>7</sub> eines Mehlsacks sind 6 kg. Wie viel wiegt der ganze Sack?', antwort: '14', einheit: 'kg', zeichen: '4' },
-        { frage: 'Wie viele Gramm sind <sup>1</sup>⁄<sub>3</sub> von 1,8 kg Marzipan?', antwort: '600', einheit: 'g', zeichen: '0' },
-        { frage: 'Kürze <sup>56</sup>⁄<sub>84</sub> vollständig. Welche Zahl steht dann im Zähler?', antwort: '2', zeichen: '2' },
-      ],
-      code: '5402',
       codeRegel: 'Die Einerziffern der vier Ergebnisse – von oben nach unten.',
       tipps: [
         'Für einen Bruchteil teilst du zuerst durch den Nenner und nimmst dann mal den Zähler.',
-        'Bei Aufgabe 2 gehst du rückwärts: 6 kg sind 3 Siebtel, ein Siebtel ist also 2 kg. Beim Kürzen suchst du den größten gemeinsamen Teiler von 56 und 84.',
-        '72 : 8 · 5 = 45; 6 : 3 · 7 = 14 kg; 1 800 g : 3 = 600 g; 56/84 = 2/3, der Zähler ist 2. Einerziffern: 5, 4, 0, 2.',
+        'Bei Aufgabe 2 gehst du rückwärts: Teile die angegebene Menge durch den Zähler – das ist ein Teil – und nimm diesen Teil dann mal den Nenner. Rechne bei Aufgabe 3 zuerst in Gramm um. Beim Kürzen suchst du den größten gemeinsamen Teiler von Zähler und Nenner.',
       ],
-      loesung: '45 Küchlein · 14 kg · 600 g · Zähler 2 → Einerziffern 5, 4, 0, 2.',
+      zufall: (z) => {
+        const schreib = (za, ne) => `<sup>${za}</sup>⁄<sub>${ne}</sub>`;
+        // Aufgabe 1: die Menge ist ein Vielfaches des Nenners.
+        const [za1, ne1] = z.aus([[5, 8], [3, 8], [7, 8], [2, 3], [3, 4], [2, 5], [3, 5], [4, 5], [5, 6]]);
+        const teil1 = z.ganz(Math.ceil(24 / ne1), Math.floor(96 / ne1)), menge1 = ne1 * teil1;
+        // Aufgabe 2: rückwärts – ein Teil wird gewürfelt, daraus Angabe und ganzer Sack.
+        const [za2, ne2] = z.aus([[3, 7], [2, 7], [4, 7], [2, 5], [3, 5], [3, 8], [5, 8], [2, 3], [3, 4]]);
+        const teil2 = z.ganz(2, 4), angabe = za2 * teil2, sack = ne2 * teil2;
+        // Aufgabe 3: die Gesamtmenge ist ein Vielfaches von 50 g, also höchstens zwei Nachkommastellen.
+        const ne3 = z.aus([3, 4, 5, 6]);
+        const teil3 = z.vielfach(Math.ceil(1200 / ne3), Math.floor(3600 / ne3), 50);
+        const gramm3 = ne3 * teil3, kilo3 = gramm3 / 1000;
+        // Aufgabe 4: ein gekürzter Bruch wird erweitert und muss zurückgekürzt werden.
+        const [za4, ne4] = z.aus([[2, 3], [3, 4], [2, 5], [3, 5], [4, 5], [5, 6], [3, 7], [4, 7], [5, 8], [7, 8], [5, 9]]);
+        const mit = z.ganz(6, 14), oben = za4 * mit, unten = ne4 * mit;
+        const ziffern = [za1 * teil1, sack, teil3, za4].map(einerziffer).join(', ');
+        return {
+          regel: 'einer',
+          aufgaben: [
+            { frage: `Wie viele sind ${schreib(za1, ne1)} von ${menge1} Küchlein?`, antwort: antw(za1 * teil1), einheit: 'Küchlein' },
+            { frage: `${schreib(za2, ne2)} eines Mehlsacks sind ${angabe} kg. Wie viel wiegt der ganze Sack?`, antwort: antw(sack), einheit: 'kg' },
+            { frage: `Wie viele Gramm sind ${schreib(1, ne3)} von ${fmt(kilo3)} kg Marzipan?`, antwort: antw(teil3), einheit: 'g' },
+            { frage: `Kürze ${schreib(oben, unten)} vollständig. Welche Zahl steht dann im Zähler?`, antwort: antw(za4) },
+          ],
+          tipp: `${menge1} : ${ne1} · ${za1} = ${za1 * teil1} Küchlein; `
+            + `${angabe} : ${za2} = ${teil2}, ${teil2} · ${ne2} = ${sack} kg; `
+            + `${fmt(kilo3)} kg = ${fmt(gramm3)} g, ${fmt(gramm3)} : ${ne3} = ${fmt(teil3)} g; `
+            + `${oben} und ${unten} sind beide durch ${mit} teilbar, also ${oben}/${unten} = ${za4}/${ne4}, der Zähler ist ${za4}. `
+            + `Einerziffern: ${ziffern}.`,
+          loesung: `${za1 * teil1} Küchlein; ${sack} kg; ${fmt(teil3)} g; Zähler ${za4} → Einerziffern ${ziffern}.`,
+        };
+      },
     },
   ],
 
@@ -73,12 +98,12 @@ export default {
       codeAmEnde: true,
       saat: 149,
       elemente: [
-        { text: '0,9' },
-        { text: '1,09' },
         { text: '0,089' },
-        { text: '1,901' },
+        { text: '0,9' },
         { text: '0,91' },
+        { text: '1,09' },
         { text: '1,9' },
+        { text: '1,901' },
       ],
       code: '0089',
       codeRegel: 'Der Code ist die <strong>kleinste</strong> der sechs Zahlen – alle vier Ziffern hintereinander, ohne Komma.',
@@ -96,20 +121,45 @@ export default {
         + 'Kommaschreibweise, um Runden, um Gewichte und um die Mitte zwischen zwei Zahlen.',
       auftrag: 'Beantworte die vier Fragen. Jede richtige Antwort deckt einen Buchstaben auf.',
       typ: 'rechnen',
-      aufgaben: [
-        { frage: 'Schreibe <sup>7</sup>⁄<sub>8</sub> als Dezimalzahl.', antwort: '0,875', zeichen: 'G' },
-        { frage: 'Runde 12,0649 auf Tausendstel.', antwort: '12,065', zeichen: 'E' },
-        { frage: 'Wie viele Gramm sind 0,45 kg?', antwort: '450', einheit: 'g', zeichen: 'L' },
-        { frage: 'Welche Zahl liegt genau in der Mitte zwischen 2,4 und 2,5?', antwort: '2,45', zeichen: 'D' },
-      ],
       code: 'GELD',
       codeRegel: 'Jede richtige Antwort deckt einen Buchstaben auf – von oben nach unten.',
       tipps: [
         'Einen Bruch wandelst du in eine Dezimalzahl um, indem du den Zähler durch den Nenner teilst.',
-        'Beim Runden auf Tausendstel entscheidet die vierte Nachkommastelle. 1 kg sind 1 000 g. Die Mitte zwischen zwei Zahlen findest du, indem du beide addierst und halbierst.',
-        '7 : 8 = 0,875. Bei 12,0649 ist die vierte Stelle eine 9, also wird aufgerundet: 12,065. 0,45 kg = 450 g. (2,4 + 2,5) : 2 = 4,9 : 2 = 2,45.',
+        'Beim Runden auf Zehntel entscheidet die zweite Nachkommastelle. 1 kg sind 1 000 g. Die Mitte zwischen zwei Zahlen findest du, indem du beide addierst und halbierst.',
       ],
-      loesung: '0,875 · 12,065 · 450 g · 2,45 → G, E, L, D.',
+      zufall: (z) => {
+        const wort = 'GELD';   // Buchstabencode bleibt fest, nur die Zahlen würfeln
+        // Nur Brüche, die auf höchstens zwei Nachkommastellen aufgehen.
+        const [za, ne] = z.aus([[1, 2], [1, 4], [3, 4], [1, 5], [2, 5], [3, 5], [4, 5], [1, 20], [3, 20], [7, 20], [9, 20], [11, 20], [13, 20], [17, 20], [1, 25], [3, 25], [7, 25], [9, 25], [11, 25]]);
+        const dezimal = za / ne;
+        // Runden auf Zehntel: die Hundertstelstelle entscheidet, die 5 bleibt außen vor.
+        const ganze = z.ganz(5, 19), zehntel = z.ganz(0, 9), hundertstel = z.aus([1, 2, 3, 4, 6, 7, 8, 9]);
+        const roh = ganze * 100 + zehntel * 10 + hundertstel;
+        const zahl = roh / 100, gerundet = Math.round(roh / 10) / 10;
+        // Gewicht in Kilogramm, immer ein Vielfaches von 50 g.
+        const hundertstelKg = z.vielfach(15, 195, 5);
+        const kilo = hundertstelKg / 100, gramm = hundertstelKg * 10;
+        // Mitte zwischen zwei Zehnteln – das ergibt genau zwei Nachkommastellen.
+        const links = z.ganz(11, 89);
+        const unten = links / 10, oben = (links + 1) / 10;
+        const summe = (2 * links + 1) / 10, mitte = (2 * links + 1) / 20;
+        return {
+          regel: 'buchstaben',
+          code: wort,
+          aufgaben: [
+            { frage: `Schreibe <sup>${za}</sup>⁄<sub>${ne}</sub> als Dezimalzahl.`, antwort: antw(dezimal) },
+            { frage: `Runde ${fmt(zahl)} auf Zehntel.`, antwort: antw(gerundet) },
+            { frage: `Wie viele Gramm sind ${fmt(kilo)} kg?`, antwort: antw(gramm), einheit: 'g' },
+            { frage: `Welche Zahl liegt genau in der Mitte zwischen ${fmt(unten)} und ${fmt(oben)}?`, antwort: antw(mitte) },
+          ],
+          tipp: `${za} : ${ne} = ${fmt(dezimal)}; `
+            + `bei ${fmt(zahl)} ist die Hundertstelstelle eine ${hundertstel}, also wird ${hundertstel >= 5 ? 'auf' : 'ab'}gerundet: ${fmt(gerundet)}; `
+            + `${fmt(kilo)} kg = ${fmt(gramm)} g; `
+            + `(${fmt(unten)} + ${fmt(oben)}) : 2 = ${fmt(summe)} : 2 = ${fmt(mitte)}. `
+            + `Die vier Buchstaben lauten ${wort.split('').join(', ')}.`,
+          loesung: `${fmt(dezimal)}; ${fmt(gerundet)}; ${fmt(gramm)} g; ${fmt(mitte)} → ${wort.split('').join(', ')}.`,
+        };
+      },
     },
   ],
 
@@ -162,7 +212,7 @@ export default {
         'Bei Kommazahlen schreibst du Komma unter Komma und ergänzt fehlende Stellen mit Nullen: 0,80 − 0,35 und 2,00 − 0,07.',
         '1/4 + 1/5 = 5/20 + 4/20 = 9/20. 0,80 − 0,35 = 0,45. 3/5 + 1/2 = 6/10 + 5/10 = 11/10 > 1. 2,00 − 0,07 = 1,93.',
       ],
-      loesung: '9/20 · 0,45 · 3/5 + 1/2 = 1,1 · 1,93 → R, O, H, R.',
+      loesung: '9/20; 0,45; 3/5 + 1/2 = 1,1; 1,93 → R, O, H, R.',
     },
   ],
 
@@ -190,7 +240,7 @@ export default {
         'Die Quadranten werden gegen den Uhrzeigersinn gezählt, beginnend oben rechts. Bei negativen Zahlen ist die Zahl kleiner, die weiter links auf dem Zahlenstrahl liegt.',
         '145° ist stumpf. 360° : 6 = 60°. P(4|−3) liegt rechts und unten, also im IV. Quadranten. −11 liegt links von −7, ist also kleiner.',
       ],
-      loesung: '145° · 60° · IV. Quadrant · −11 → N, O, R, D.',
+      loesung: '145°; 60°; IV. Quadrant; −11 → N, O, R, D.',
     },
     {
       titel: 'Rätsel 6: Das Spiegelprotokoll',
@@ -199,20 +249,30 @@ export default {
         + 'um den Ursprung. Für das Schloss zählt jeweils nur die letzte Ziffer.',
       auftrag: 'Rechne die vier Aufgaben. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
       typ: 'rechnen',
-      aufgaben: [
-        { frage: 'P(−3|5) wird an der y-Achse gespiegelt. Welche x-Koordinate hat der Bildpunkt?', antwort: '3', zeichen: '3' },
-        { frage: 'Um wie viel Grad dreht sich der Minutenzeiger in 25 Minuten?', antwort: '150', einheit: '°', zeichen: '0' },
-        { frage: 'Ein Kreisdiagramm wird in 8 gleich große Sektoren geteilt. Wie groß ist ein Mittelpunktswinkel?', antwort: '45', einheit: '°', zeichen: '5' },
-        { frage: 'Q(6|−2) wird am Ursprung gespiegelt (Drehung um 180°). Welche y-Koordinate hat der Bildpunkt?', antwort: '2', zeichen: '2' },
-      ],
-      code: '3052',
       codeRegel: 'Die Einerziffern der vier Ergebnisse – von oben nach unten.',
       tipps: [
         'Beim Spiegeln an der y-Achse wechselt das Vorzeichen der x-Koordinate, die y-Koordinate bleibt.',
         'In 60 Minuten dreht sich der Minutenzeiger um 360°, in einer Minute also um 6°. Beim Spiegeln am Ursprung wechseln beide Koordinaten das Vorzeichen.',
-        'P(−3|5) → P′(3|5), x = 3. 25 · 6° = 150°. 360° : 8 = 45°. Q(6|−2) → Q′(−6|2), y = 2. Einerziffern: 3, 0, 5, 2.',
       ],
-      loesung: 'x = 3 · 150° · 45° · y = 2 → Einerziffern 3, 0, 5, 2.',
+      zufall: (z) => {
+        const px = z.ganz(2, 9), py = z.ganz(2, 9);
+        const minuten = z.ganz(7, 55), grad = 6 * minuten;
+        const sektoren = z.aus([4, 5, 6, 8, 9, 10, 12, 15, 18, 20, 24]), winkel = 360 / sektoren;
+        const qx = z.ganz(2, 9), qy = z.ganz(2, 9);
+        const ziffern = [px, grad, winkel, qy].map(einerziffer).join(', ');
+        return {
+          regel: 'einer',
+          aufgaben: [
+            { frage: `P(−${px}|${py}) wird an der y-Achse gespiegelt. Welche x-Koordinate hat der Bildpunkt?`, antwort: antw(px) },
+            { frage: `Um wie viel Grad dreht sich der Minutenzeiger in ${minuten} Minuten?`, antwort: antw(grad), einheit: '°' },
+            { frage: `Ein Kreisdiagramm wird in ${sektoren} gleich große Sektoren geteilt. Wie groß ist ein Mittelpunktswinkel?`, antwort: antw(winkel), einheit: '°' },
+            { frage: `Q(${qx}|−${qy}) wird am Ursprung gespiegelt (Drehung um 180°). Welche y-Koordinate hat der Bildpunkt?`, antwort: antw(qy) },
+          ],
+          tipp: `P(−${px}|${py}) → P′(${px}|${py}), x = ${px}; ${minuten} · 6° = ${grad}°; `
+            + `360° : ${sektoren} = ${winkel}°; Q(${qx}|−${qy}) → Q′(−${qx}|${qy}), y = ${qy}. Einerziffern: ${ziffern}.`,
+          loesung: `x = ${px}; ${grad}°; ${winkel}°; y = ${qy} → Einerziffern ${ziffern}.`,
+        };
+      },
     },
   ],
 
@@ -266,7 +326,7 @@ export default {
         'Durch 0,5 teilen ist dasselbe wie mit 2 malnehmen. Einen Bruch durch eine ganze Zahl teilst du, indem du den Nenner mit dieser Zahl multiplizierst.',
         '0,6 · 0,5 = 0,30 = 0,3. Teilen durch 0,5 verdoppelt den Wert. 3/5 : 3 = 3/15 = 1/5. 2,5 · 40 = 100.',
       ],
-      loesung: '0,3 · verdoppelt sich · 1/5 · 100 → K, O, R, B.',
+      loesung: '0,3; verdoppelt sich; 1/5; 100 → K, O, R, B.',
     },
   ],
 
@@ -300,7 +360,7 @@ export default {
         'Die Spannweite ist der größte Wert minus der kleinste. Bei fünf geordneten Werten ist der dritte der Median.',
         '(2+4+6+8+10) : 5 = 6; (1+2+9) : 3 = 4; Median von 3, 7, 7, 9, 14 ist 7; 20 − 5 = 15; Median von 2, 2, 3, 5, 8 ist 3; (10+20+30+40) : 4 = 25. Die vier kleinsten Werte: 3, 4, 6, 7.',
       ],
-      loesung: 'Mittelwert 6 · Mittelwert 4 · Median 7 · Spannweite 15 · Median 3 · Mittelwert 25 → kleinste vier: 3, 4, 6, 7.',
+      loesung: 'Mittelwert 6; Mittelwert 4; Median 7; Spannweite 15; Median 3; Mittelwert 25 → kleinste vier: 3, 4, 6, 7.',
     },
     {
       titel: 'Rätsel 6: Die Niederschlagsreihe',
@@ -322,7 +382,7 @@ export default {
         'Die Reihe ist schon geordnet, der Median ist also der dritte Wert. Vergleiche danach jeden Messwert mit dem Mittelwert.',
         '35 − 12 = 23 mm. (12 + 18 + 25 + 30 + 35) : 5 = 120 : 5 = 24 mm. Median ist 25 mm. Über 24 liegen 25, 30 und 35 – das sind 3 Werte. Einerziffern: 3, 4, 5, 3.',
       ],
-      loesung: 'Spannweite 23 mm · Mittelwert 24 mm · Median 25 mm · 3 Werte über dem Mittelwert.',
+      loesung: 'Spannweite 23 mm; Mittelwert 24 mm; Median 25 mm; 3 Werte über dem Mittelwert.',
     },
   ],
 
@@ -376,7 +436,7 @@ export default {
         'Beim Dreisatz rechnest du zuerst den Preis für ein Heft aus. Proportional heißt: doppelt so viel von dem einen bedeutet doppelt so viel von dem anderen.',
         'Jede Zahl ist das Doppelte der vorherigen: nach 40 kommt 80. 6 € : 8 = 0,75 € je Heft, also 12 · 0,75 € = 9 €. „Das Doppelte, vermehrt um 5" ist 2 · n + 5. Ein doppelt so altes Kind hat nicht die doppelte Schuhgröße – das ist nicht proportional.',
       ],
-      loesung: '80 · 9 € · 2 · n + 5 · Alter → Schuhgröße → T, A, K, T.',
+      loesung: '80; 9 €; 2 · n + 5; Alter → Schuhgröße → T, A, K, T.',
     },
   ],
 };

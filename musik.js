@@ -93,6 +93,10 @@ const NACH_MOTIV = {
   // Klasse 6, zweiter Satz
   krug: 'ruhig', zapfsaeule: 'werkstatt', schleuse: 'weit', teppich: 'geheimnis',
   muehle: 'werkstatt', strichliste: 'labor', aufzug: 'geheimnis',
+  // Sporträume (Differenzierung)
+  stadion: 'feierlich', spielfeld: 'heiter', turnierplan: 'werkstatt',
+  turnhalle: 'werkstatt', becken: 'weit', stoppuhr: 'labor',
+  staffel: 'heiter', zielscheibe: 'geheimnis', hantel: 'werkstatt', tabelle: 'labor',
   standard: 'ruhig',
 };
 

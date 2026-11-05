@@ -1,6 +1,7 @@
 /* Rätsel-Engine: Interaktionen, Code-Anzeige, digitales Schloss, Tippkarten. */
 
 import { h, leer, svgIcon, ICON, antwortStimmt, mische } from './util.js';
+import { diagrammSvg, ziffernBild, bildKachel, termWert, termText } from './formen.js';
 
 /* =====================================================================
    Interaktionen
@@ -367,6 +368,406 @@ function baueGitter(raetsel, aufAenderung) {
   };
 }
 
+/* ---------- Ablesen: Werte aus einem Diagramm ---------- */
+
+/* Ein Koordinatensystem oder Säulendiagramm über den gewohnten Eingabefeldern.
+   Das Bild zeichnet `formen.js` aus einer Beschreibung – so kann es mitwürfeln,
+   und der Ausdruck zeigt genau dasselbe. */
+function baueAblesen(raetsel, aufAenderung) {
+  const innen = baueRechnen(raetsel, aufAenderung);
+  const bild = h('div', { class: 'diagramm', html: diagrammSvg(raetsel.diagramm) });
+  return { ...innen, element: h('div', {}, bild, innen.element) };
+}
+
+/* ---------- Term bauen: aus Bausteinen einen Zielwert treffen ---------- */
+
+function baueTermbauen(raetsel, aufAenderung) {
+  const aufgaben = raetsel.aufgaben || [];
+  const gebaut = aufgaben.map(() => []);        // benutzte Bausteine, als Indizes
+  const geloest = aufgaben.map(() => false);
+  const teile = [];
+
+  const melde = () => {
+    aufAenderung(codeTeile(
+      raetsel,
+      aufgaben.map((a, i) => (geloest[i] ? a.zeichen : null)),
+      geloest.every(Boolean),
+    ));
+  };
+
+  const zeichneNeu = (i) => {
+    const a = aufgaben[i];
+    const t = teile[i];
+    const folge = gebaut[i].map(k => a.bausteine[k]);
+    const wert = termWert(folge);
+    geloest[i] = wert !== null && Math.abs(wert - a.ziel) < 1e-9;
+
+    t.term.textContent = folge.length ? termText(folge) : '…';
+    t.wert.textContent = folge.length === 0 ? ''
+      : wert === null ? 'noch kein vollständiger Term'
+      : `ergibt ${String(wert).replace('.', ',').replace('-', '−')}`;
+    t.block.className = 'termaufgabe' + (geloest[i] ? ' richtig' : '');
+    t.zeichen.textContent = geloest[i] ? a.zeichen : '?';
+    t.knoepfe.forEach((b, k) => { b.disabled = gebaut[i].includes(k); });
+    t.zurueck.disabled = gebaut[i].length === 0;
+    melde();
+  };
+
+  const kasten = h('div');
+  aufgaben.forEach((a, i) => {
+    const term = h('span', { class: 'termzeile', text: '…' });
+    const wert = h('span', { class: 'termwert' });
+    const zeichen = h('span', { class: 'marke-zeichen', title: 'Code-Zeichen' }, '?');
+    const knoepfe = a.bausteine.map((b, k) => {
+      const knopf = h('button', { type: 'button', class: 'baustein', html: b });
+      knopf.addEventListener('click', () => { gebaut[i].push(k); zeichneNeu(i); });
+      return knopf;
+    });
+    const zurueck = h('button', { type: 'button', class: 'klein' }, 'Zurück');
+    zurueck.addEventListener('click', () => { gebaut[i].pop(); zeichneNeu(i); });
+    const loeschen = h('button', { type: 'button', class: 'klein' }, 'Leeren');
+    loeschen.addEventListener('click', () => { gebaut[i] = []; zeichneNeu(i); });
+
+    const block = h('div', { class: 'termaufgabe' },
+      h('div', { class: 'frage', html: `${i + 1}. ${a.frage || `Baue einen Term mit dem Wert <strong>${a.ziel}</strong>.`}` }),
+      h('div', { class: 'termablage' }, term, wert, zeichen),
+      h('div', { class: 'bausteine' }, ...knoepfe),
+      h('div', { class: 'termknoepfe' }, zurueck, loeschen),
+    );
+    teile.push({ block, term, wert, zeichen, knoepfe, zurueck });
+    kasten.append(block);
+  });
+
+  aufgaben.forEach((_, i) => zeichneNeu(i));
+
+  return {
+    element: kasten,
+    zustand: () => gebaut.map(g => g.slice()),
+    setzeZustand: (z) => {
+      if (!Array.isArray(z)) return;
+      z.forEach((g, i) => { if (Array.isArray(g) && gebaut[i]) { gebaut[i] = g.slice(); zeichneNeu(i); } });
+    },
+    istFertig: () => geloest.every(Boolean),
+  };
+}
+
+/* ---------- Fehler finden: die falsche Zeile eines Rechenwegs ---------- */
+
+function baueFehlerfinden(raetsel, aufAenderung) {
+  const faelle = raetsel.faelle || [];
+  const wahl = faelle.map(() => null);
+  const teile = [];
+
+  const melde = () => {
+    aufAenderung(codeTeile(
+      raetsel,
+      faelle.map((f, i) => (wahl[i] === f.falsch ? f.zeichen : null)),
+      faelle.every((f, i) => wahl[i] === f.falsch),
+    ));
+  };
+
+  const kasten = h('div');
+  faelle.forEach((f, i) => {
+    const zeichen = h('span', { class: 'marke-zeichen', title: 'Code-Zeichen' }, '?');
+    const zeilen = [];
+    const liste = h('ol', { class: 'wegzeilen' });
+    f.zeilen.forEach((text, j) => {
+      const knopf = h('button', { type: 'button', class: 'wegzeile', html: text });
+      knopf.addEventListener('click', () => {
+        wahl[i] = j;
+        zeilen.forEach((z, k) => {
+          z.className = 'wegzeile' + (k === j ? (k === f.falsch ? ' gefunden' : ' daneben') : '');
+        });
+        block.className = 'fehlerfall' + (j === f.falsch ? ' richtig' : '');
+        zeichen.textContent = j === f.falsch ? f.zeichen : '?';
+        melde();
+      });
+      zeilen.push(knopf);
+      liste.append(h('li', {}, knopf));
+    });
+    const block = h('div', { class: 'fehlerfall' },
+      h('div', { class: 'frage' },
+        h('span', { html: f.titel || `Rechenweg ${i + 1}` }), zeichen),
+      liste,
+    );
+    teile.push({ block, zeilen });
+    kasten.append(block);
+  });
+
+  melde();
+
+  return {
+    element: kasten,
+    zustand: () => wahl.slice(),
+    setzeZustand: (z) => {
+      if (!Array.isArray(z)) return;
+      z.forEach((j, i) => { if (j !== null && j !== undefined && teile[i]?.zeilen[j]) teile[i].zeilen[j].click(); });
+    },
+    istFertig: () => faelle.every((f, i) => wahl[i] === f.falsch),
+  };
+}
+
+/* ---------- Legen: Ergebniskarten an Rechenkarten – es entsteht ein Zahlbild ---------- */
+
+/* Jede richtig gelegte Karte deckt eine Kachel auf. Sind alle gelegt, zeigen
+   die Kacheln zusammen das Bild der gesuchten Zahl – das ist der Code. */
+function baueLegen(raetsel, aufAenderung) {
+  const karten = raetsel.karten || [];
+  const spalten = raetsel.spalten || 4;
+  const zeilen = Math.max(1, Math.ceil(karten.length / spalten));
+  const zahl = String(raetsel.zahlbild || raetsel.code || '');
+  const bild = ziffernBild(zahl);
+  const gelegt = new Set();
+  let gewaehlt = null;                       // angetippte Rechenkarte
+  const reihenfolge = mische(karten.map((_, i) => i), raetsel.saat || 71);
+
+  const fertig = () => karten.every((_, i) => gelegt.has(i));
+
+  const melde = () => {
+    const code = (raetsel.code || '').split('');
+    aufAenderung(fertig() ? code : code.map(() => null));
+  };
+
+  const kacheln = [], links = [], rechts = [];
+
+  const zeichneNeu = () => {
+    karten.forEach((_, i) => {
+      const auf = gelegt.has(i);
+      kacheln[i].className = 'kachel' + (auf ? ' auf' : '');
+      kacheln[i].innerHTML = auf ? bildKachel(bild, i % spalten, Math.floor(i / spalten), spalten, zeilen) : '';
+      links[i].className = 'karteelem' + (auf ? ' verbunden' : (gewaehlt === i ? ' gewaehlt' : ''));
+    });
+    reihenfolge.forEach((idx, pos) => {
+      rechts[pos].className = 'karteelem' + (gelegt.has(idx) ? ' verbunden' : '');
+    });
+    melde();
+  };
+
+  const raster = h('div', {
+    class: 'kachelraster',
+    style: `grid-template-columns: repeat(${spalten}, 1fr); aspect-ratio: ${bild.breite} / ${bild.hoehe}`,
+  });
+  karten.forEach((_, i) => {
+    const k = h('div', { class: 'kachel' });
+    kacheln.push(k);
+    raster.append(k);
+  });
+
+  const spalteLinks = h('div', { class: 'spalte' },
+    h('div', { class: 'ueberschrift', text: raetsel.titelLinks || 'Rechenkarten' }));
+  const spalteRechts = h('div', { class: 'spalte' },
+    h('div', { class: 'ueberschrift', text: raetsel.titelRechts || 'Ergebniskarten' }));
+
+  karten.forEach((k, i) => {
+    const b = h('button', { type: 'button', class: 'karteelem' }, h('span', { html: k.rechnung }));
+    b.addEventListener('click', () => {
+      if (gelegt.has(i)) { gelegt.delete(i); gewaehlt = null; }
+      else gewaehlt = gewaehlt === i ? null : i;
+      zeichneNeu();
+    });
+    links[i] = b;
+    spalteLinks.append(b);
+  });
+
+  reihenfolge.forEach((idx, pos) => {
+    const b = h('button', { type: 'button', class: 'karteelem' }, h('span', { html: karten[idx].ergebnis }));
+    b.addEventListener('click', () => {
+      if (gelegt.has(idx)) { gelegt.delete(idx); zeichneNeu(); return; }
+      if (gewaehlt === null) return;
+      if (gewaehlt === idx) { gelegt.add(idx); gewaehlt = null; zeichneNeu(); return; }
+      const falsch = gewaehlt;
+      b.classList.add('nein');
+      links[falsch].classList.add('nein');
+      setTimeout(() => {
+        b.classList.remove('nein');
+        links[falsch]?.classList.remove('nein');
+        gewaehlt = null;
+        zeichneNeu();
+      }, 650);
+    });
+    rechts[pos] = b;
+    spalteRechts.append(b);
+  });
+
+  const element = h('div', { class: 'legen' },
+    raster,
+    h('p', { class: 'kachelhinweis', text: raetsel.bildhinweis
+      || 'Jede richtig gelegte Karte deckt ein Stück des Bildes auf. Am Ende steht dort der Code.' }),
+    h('div', { class: 'zuordnen' }, spalteLinks, spalteRechts),
+  );
+  zeichneNeu();
+
+  return {
+    element,
+    zustand: () => [...gelegt],
+    setzeZustand: (z) => {
+      if (!Array.isArray(z)) return;
+      gelegt.clear();
+      z.forEach(i => { if (i >= 0 && i < karten.length) gelegt.add(i); });
+      zeichneNeu();
+    },
+    istFertig: fertig,
+  };
+}
+
+/* ---------- Schieben: einen Wert einstellen und die Wirkung sehen ---------- */
+
+/* Ein Schieberegler je Teilaufgabe. Während die Gruppe schiebt, zeigt die Zeile
+   die **Wirkung** des eingestellten Werts (`anzeige(wert)`), nicht die Antwort –
+   so wird aus Rechnen ein Ausprobieren: „Ab wann passt es?" Der Zielwert steht
+   in `antwort`, damit dieselbe Mechanik wie überall den Code aufdeckt. */
+function baueSchieben(raetsel, aufAenderung) {
+  const aufgaben = raetsel.aufgaben || [];
+  const stand = aufgaben.map(a => Number(a.von ?? 0));
+  const geloest = aufgaben.map(() => false);
+  const teile = [];
+
+  const melde = () => {
+    aufAenderung(codeTeile(
+      raetsel,
+      aufgaben.map((a, i) => (geloest[i] ? a.zeichen : null)),
+      geloest.every(Boolean),
+    ));
+  };
+
+  const zeichneNeu = (i) => {
+    const a = aufgaben[i], t = teile[i];
+    const wert = stand[i];
+    const schritt = Number(a.schritt ?? 1);
+    geloest[i] = Math.abs(wert - Number(a.antwort)) < Math.min(schritt, 1) / 2;
+    t.wert.textContent = `${String(wert).replace('.', ',').replace('-', '−')}${a.einheit ? ' ' + a.einheit : ''}`;
+    t.wirkung.innerHTML = typeof a.anzeige === 'function' ? a.anzeige(wert) : '';
+    t.zeile.className = 'reglerzeile' + (geloest[i] ? ' richtig' : '');
+    t.zeichen.textContent = geloest[i] ? a.zeichen : '?';
+    melde();
+  };
+
+  const liste = h('div', { class: 'reglerliste' });
+  aufgaben.forEach((a, i) => {
+    const schieber = h('input', {
+      type: 'range', class: 'regler',
+      min: String(a.von ?? 0), max: String(a.bis ?? 100), step: String(a.schritt ?? 1),
+      value: String(a.von ?? 0), 'aria-label': 'Wert einstellen für: ' + a.frage,
+    });
+    const wert = h('span', { class: 'reglerwert' });
+    const wirkung = h('span', { class: 'reglerwirkung' });
+    const zeichen = h('span', { class: 'marke-zeichen', title: 'Code-Zeichen' }, '?');
+    schieber.addEventListener('input', () => { stand[i] = Number(schieber.value); zeichneNeu(i); });
+    const zeile = h('div', { class: 'reglerzeile' },
+      h('div', { class: 'frage', html: `${i + 1}. ${a.frage}` }),
+      h('div', { class: 'reglerbau' }, schieber, wert, zeichen),
+      wirkung,
+    );
+    teile.push({ zeile, schieber, wert, wirkung, zeichen });
+    liste.append(zeile);
+  });
+
+  aufgaben.forEach((_, i) => zeichneNeu(i));
+
+  return {
+    element: liste,
+    zustand: () => stand.slice(),
+    setzeZustand: (z) => {
+      if (!Array.isArray(z)) return;
+      z.forEach((v, i) => {
+        if (teile[i] && v !== null && v !== undefined) {
+          stand[i] = Number(v); teile[i].schieber.value = String(v); zeichneNeu(i);
+        }
+      });
+    },
+    istFertig: () => geloest.every(Boolean),
+  };
+}
+
+/* ---------- Probieren: einen Wert einkreisen ---------- */
+
+/* Systematisches Probieren – in Klasse 9 ausdrücklich Lehrplanstoff
+   („algorithmische Näherungsverfahren"). Jeder Versuch bleibt als Zeile stehen
+   und sagt „zu klein" oder „zu groß"; `pruefe(x)` zeigt dazu, was der Versuch
+   ergeben hat. Getroffen wird erst, wenn der Wert genau stimmt. */
+function baueProbieren(raetsel, aufAenderung) {
+  const aufgaben = raetsel.aufgaben || [];
+  const versuche = aufgaben.map(() => []);     // gemerkte Eingaben als Text
+  const geloest = aufgaben.map(() => false);
+  const teile = [];
+
+  const melde = () => {
+    aufAenderung(codeTeile(
+      raetsel,
+      aufgaben.map((a, i) => (geloest[i] ? a.zeichen : null)),
+      geloest.every(Boolean),
+    ));
+  };
+
+  const alsZahl = (text) => Number(String(text).replace(/\s/g, '').replace('−', '-').replace(',', '.'));
+
+  const zeichneNeu = (i) => {
+    const a = aufgaben[i], t = teile[i];
+    const ziel = alsZahl(Array.isArray(a.antwort) ? a.antwort[0] : a.antwort);
+    leer(t.liste);
+    versuche[i].forEach((text) => {
+      const x = alsZahl(text);
+      const treffer = antwortStimmt(text, a.antwort);
+      const urteil = treffer ? 'getroffen' : (x < ziel ? 'zu klein' : 'zu groß');
+      t.liste.append(h('li', { class: 'versuch ' + (treffer ? 'treffer' : 'daneben') },
+        h('span', { class: 'versuchwert', text: `${text}${a.einheit ? ' ' + a.einheit : ''}` }),
+        typeof a.pruefe === 'function'
+          ? h('span', { class: 'versuchwirkung', html: a.pruefe(x) }) : null,
+        h('span', { class: 'versuchurteil', text: urteil }),
+      ));
+    });
+    geloest[i] = versuche[i].some(v => antwortStimmt(v, a.antwort));
+    t.block.className = 'probierfall' + (geloest[i] ? ' richtig' : '');
+    t.zeichen.textContent = geloest[i] ? a.zeichen : '?';
+    t.eingabe.disabled = geloest[i];
+    t.knopf.disabled = geloest[i];
+    melde();
+  };
+
+  const kasten = h('div');
+  aufgaben.forEach((a, i) => {
+    const eingabe = h('input', {
+      type: 'text', inputmode: 'decimal', autocomplete: 'off', spellcheck: 'false',
+      'aria-label': 'Versuch für: ' + a.frage, placeholder: a.platzhalter || 'Versuch',
+    });
+    const knopf = h('button', { type: 'button', class: 'klein' }, 'Probieren');
+    const versuchen = () => {
+      const text = eingabe.value.trim();
+      if (!text || Number.isNaN(alsZahl(text))) return;
+      if (!versuche[i].includes(text)) versuche[i].push(text);
+      eingabe.value = '';
+      zeichneNeu(i);
+    };
+    knopf.addEventListener('click', versuchen);
+    eingabe.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); versuchen(); } });
+    const zeichen = h('span', { class: 'marke-zeichen', title: 'Code-Zeichen' }, '?');
+    const liste = h('ol', { class: 'versuchsliste' });
+    const spanne = (a.von !== undefined && a.bis !== undefined)
+      ? h('p', { class: 'versuchspanne', text: `Der gesuchte Wert liegt zwischen ${a.von} und ${a.bis}.` })
+      : null;
+    const block = h('div', { class: 'probierfall' },
+      h('div', { class: 'frage' }, h('span', { html: `${i + 1}. ${a.frage}` }), zeichen),
+      spanne,
+      h('div', { class: 'probierbau' }, eingabe, a.einheit ? h('span', { class: 'einheit', text: a.einheit }) : null, knopf),
+      liste,
+    );
+    teile.push({ block, eingabe, knopf, liste, zeichen });
+    kasten.append(block);
+  });
+
+  aufgaben.forEach((_, i) => zeichneNeu(i));
+
+  return {
+    element: kasten,
+    zustand: () => versuche.map(v => v.slice()),
+    setzeZustand: (z) => {
+      if (!Array.isArray(z)) return;
+      z.forEach((v, i) => { if (Array.isArray(v) && versuche[i]) { versuche[i] = v.slice(); zeichneNeu(i); } });
+    },
+    istFertig: () => geloest.every(Boolean),
+  };
+}
+
 const BAUARTEN = {
   rechnen: baueRechnen,
   knobeln: baueRechnen,
@@ -374,6 +775,12 @@ const BAUARTEN = {
   zuordnen: baueZuordnen,
   reihenfolge: baueReihenfolge,
   gitter: baueGitter,
+  ablesen: baueAblesen,
+  termbauen: baueTermbauen,
+  fehlerfinden: baueFehlerfinden,
+  legen: baueLegen,
+  schieben: baueSchieben,
+  probieren: baueProbieren,
 };
 
 /* =====================================================================

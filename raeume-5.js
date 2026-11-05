@@ -3,6 +3,8 @@
    I Zahlen und Größen · II Symmetrie · III Rechnen · IV Flächen · V Körper · VI Brüche      */
 
 import weitereRaeume from './raeume-5-weitere.js';
+import sportRaeume from './raeume-5-sport.js';
+import { fmt, antw, einerziffer } from './zufall.js';
 
 /* ---------- Hilfszeichnungen ---------- */
 
@@ -90,72 +92,131 @@ const GRUNDRAEUME = [
             + 'weiter."',
           auftrag: 'Rechne die vier Aufgaben. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
           typ: 'rechnen',
-          aufgaben: [
-            { frage: 'In der ersten Woche kamen 12 486 Gäste, in der zweiten 9 857. Wie viele Gäste waren es zusammen?', antwort: '22343', einheit: 'Gäste', zeichen: '3' },
-            { frage: 'Eine Klasse zahlt zusammen 196 € Eintritt. Eine Karte kostet 7 €. Wie viele Karten wurden gekauft?', antwort: '28', einheit: 'Karten', zeichen: '8' },
-            { frage: 'Die Museumsnacht dauerte von 19:45 Uhr bis 23:30 Uhr. Wie viele Minuten waren das?', antwort: '225', einheit: 'min', zeichen: '5' },
-            { frage: 'Der Meteorit im Schaukasten wiegt 3 kg 450 g. Wie viele Gramm sind das?', antwort: '3450', einheit: 'g', zeichen: '0' },
-          ],
-          code: '3850',
           codeRegel: 'Die Einerziffern der vier Ergebnisse – von oben nach unten.',
           tipps: [
             'Lies bei jeder Aufgabe genau, welche Einheit gesucht ist. Überlege erst dann, welche Rechenart passt.',
-            'Aufgabe 2 ist eine Divisionsaufgabe. Bei Aufgabe 3 rechne zuerst bis 20:00 Uhr. Bei Aufgabe 4 gilt: 1 kg = 1000 g.',
-            '12 486 + 9 857 = 22 343. 196 : 7 = 28. Von 19:45 bis 20:00 sind 15 min, dann bis 23:30 noch 3 h 30 min = 210 min, zusammen 225 min. 3 kg 450 g = 3 · 1000 g + 450 g = 3 450 g. Einerziffern: 3, 8, 5, 0.',
+            'Aufgabe 2 ist eine Divisionsaufgabe. Bei Aufgabe 3 rechne zuerst bis zur nächsten vollen Stunde. Bei Aufgabe 4 gilt: 1 kg = 1000 g.',
           ],
-          loesung: '22 343 Gäste · 28 Karten · 225 min · 3 450 g → Einerziffern 3, 8, 5, 0.',
+          zufall: (z) => {
+            const w1 = z.ganz(10000, 19999), w2 = z.ganz(5000, 9999);
+            const preis = z.aus([5, 6, 7, 8]), karten = z.ganz(18, 39);
+            const startH = z.ganz(18, 20), startM = z.aus([15, 30, 45]);
+            const dauer = z.vielfach(150, 255, 15);
+            const endeMin = startH * 60 + startM + dauer;
+            const uhr = (min) => `${String(Math.floor(min / 60) % 24).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}`;
+            const bisVoll = 60 - startM;
+            const kg = z.ganz(2, 9), gr = z.vielfach(50, 950, 50);
+            return {
+              regel: 'einer',
+              aufgaben: [
+                { frage: `In der ersten Woche kamen ${fmt(w1)} Gäste, in der zweiten ${fmt(w2)}. Wie viele Gäste waren es zusammen?`, antwort: antw(w1 + w2), einheit: 'Gäste' },
+                { frage: `Eine Klasse zahlt zusammen ${fmt(preis * karten)} € Eintritt. Eine Karte kostet ${preis} €. Wie viele Karten wurden gekauft?`, antwort: antw(karten), einheit: 'Karten' },
+                { frage: `Die Museumsnacht dauerte von ${uhr(startH * 60 + startM)} Uhr bis ${uhr(endeMin)} Uhr. Wie viele Minuten waren das?`, antwort: antw(dauer), einheit: 'min' },
+                { frage: `Der Meteorit im Schaukasten wiegt ${kg} kg ${gr} g. Wie viele Gramm sind das?`, antwort: antw(kg * 1000 + gr), einheit: 'g' },
+              ],
+              tipp: `${fmt(w1)} + ${fmt(w2)} = ${fmt(w1 + w2)}; ${fmt(preis * karten)} : ${preis} = ${karten}; `
+                + `von ${uhr(startH * 60 + startM)} bis ${uhr((startH + 1) * 60)} sind ${bisVoll} min, dann noch ${dauer - bisVoll} min, zusammen ${dauer} min; `
+                + `${kg} kg ${gr} g = ${kg} · 1000 g + ${gr} g = ${fmt(kg * 1000 + gr)} g. `
+                + `Einerziffern: ${[w1 + w2, karten, dauer, kg * 1000 + gr].map(einerziffer).join(', ')}.`,
+              loesung: `${fmt(w1 + w2)} Gäste; ${karten} Karten; ${dauer} min; ${fmt(kg * 1000 + gr)} g `
+                + `→ Einerziffern ${[w1 + w2, karten, dauer, kg * 1000 + gr].map(einerziffer).join(', ')}.`,
+            };
+          },
         },
         {
-          titel: 'Rätsel 2: Das Schild mit den Einheiten',
-          text: 'Beim Umbau sind die Schilder der Vitrinen durcheinandergeraten und liegen nun in zwei Stapeln auf dem Boden. Jede '
-            + 'Angabe gibt es zweimal – einmal in der einen, einmal in einer anderen Einheit. Erst wenn die Paare wieder '
-            + 'zusammenliegen, gibt der Kasten den nächsten Code frei.',
-          auftrag: 'Verbinde die sechs Paare, die gleich groß sind. Tippe links eine Karte an, dann rechts die passende.',
-          typ: 'zuordnen',
-          titelLinks: 'Angabe',
-          titelRechts: 'genauso groß wie',
-          codeAmEnde: true,
-          saat: 211,
-          paare: [
-            { links: '3 500 g', rechts: '3,5 kg' },
-            { links: '250 cm', rechts: '2 m 50 cm' },
-            { links: '150 min', rechts: '2 h 30 min' },
-            { links: '4 500 m', rechts: '4,5 km' },
-            { links: '8,05 €', rechts: '805 ct' },
-            { links: '2 t', rechts: '2 000 kg' },
-          ],
+          titel: 'Rätsel 2: Die Säulen der Rekordjahre',
+          text: 'An der Stirnwand der Halle hängt eine große Tafel. Für jedes Jahr zeigt eine Säule, wie viele neue '
+            + 'Rekorde das Museum eingetragen hat. Mit Kreide steht darunter: „Alle Säulen enden genau auf einer Linie – '
+            + 'wer richtig abliest, braucht nicht zu schätzen."',
+          auftrag: 'Lies die vier Werte aus dem Säulendiagramm ab. Jede richtige Antwort deckt eine Codeziffer auf.',
+          typ: 'ablesen',
           code: '6204',
-          codeRegel: 'Der Code erscheint, sobald alle sechs Paare richtig verbunden sind.',
-          tipps: [
-            'Wandle beide Angaben in dieselbe – am besten die kleinere – Einheit um. Dann kannst du gut vergleichen.',
-            '1 kg = 1000 g · 1 m = 100 cm · 1 km = 1000 m · 1 h = 60 min · 1 € = 100 ct · 1 t = 1000 kg.',
-            '3 500 g = 3,5 kg · 250 cm = 2 m 50 cm · 150 min = 2 h 30 min · 4 500 m = 4,5 km · 8,05 € = 805 ct · 2 t = 2 000 kg.',
+          codeRegel: 'Die <strong>Einerziffern</strong> der vier abgelesenen Zahlen – von oben nach unten.',
+          diagramm: {
+            art: 'saeulen',
+            yName: 'neue Rekorde',
+            ySchritt: 2,
+            yBis: 24,
+            werte: [
+              { name: '2020', wert: 6 }, { name: '2021', wert: 12 }, { name: '2022', wert: 10 },
+              { name: '2023', wert: 24 }, { name: '2024', wert: 18 },
+            ],
+            beschreibung: 'Säulendiagramm der neuen Rekorde: 2020 sechs, 2021 zwölf, 2022 zehn, 2023 vierundzwanzig, 2024 achtzehn',
+          },
+          aufgaben: [
+            { frage: 'Wie viele neue Rekorde wurden 2020 eingetragen?', antwort: '6', einheit: 'Rekorde', zeichen: '6' },
+            { frage: 'Wie viele Rekorde wurden 2023 mehr eingetragen als 2021?', antwort: '12', einheit: 'Rekorde', zeichen: '2' },
+            { frage: 'Wie viele Rekorde wurden in den fünf Jahren zusammen eingetragen?', antwort: '70', einheit: 'Rekorde', zeichen: '0' },
+            { frage: 'Wie viele Rekorde wurden im stärksten Jahr eingetragen?', antwort: '24', einheit: 'Rekorde', zeichen: '4' },
           ],
-          loesung: '3 500 g = 3,5 kg; 250 cm = 2 m 50 cm; 150 min = 2 h 30 min; 4 500 m = 4,5 km; 8,05 € = 805 ct; 2 t = 2 000 kg.',
+          tipps: [
+            'Lies zuerst ab, wie viele Rekorde eine Linie des Gitters wert ist – dann sind alle Säulen schnell gelesen.',
+            'Zwischen zwei Linien liegen immer gleich viele Rekorde. Für die Summe schreibst du die fünf Werte untereinander und addierst sie.',
+            '2020: 6; 24 − 12 = 12; 6 + 12 + 10 + 24 + 18 = 70; stärkstes Jahr ist 2023 mit 24. Einerziffern: 6, 2, 0, 4.',
+          ],
+          loesung: '6 Rekorde; 12 Rekorde; 70 Rekorde; 24 Rekorde → Einerziffern 6, 2, 0, 4.',
         },
         {
-          titel: 'Rätsel 3: Die Zeitleiste der Rekorde',
-          text: 'An der Wand hängt eine lange Leiste mit fünf Rekordlängen, von der kürzesten bis zur längsten. Der Nachtwächter hat die '
-            + 'Tafeln beim Putzen abgenommen und falsch wieder eingehängt. Die Leiste klemmt, solange die Reihenfolge nicht stimmt.',
-          auftrag: 'Ordne die fünf Angaben von der <strong>kleinsten</strong> zur <strong>größten</strong> Länge.',
-          typ: 'reihenfolge',
-          codeAmEnde: true,
-          saat: 17,
-          elemente: [
-            { text: '45 cm – längster Bleistift' },
-            { text: '0,9 m – größter Schuh' },
-            { text: '125 cm – längste Pizza­schaufel' },
-            { text: '2 m 5 cm – größter Hut' },
-            { text: '3 500 mm – längster Schal' },
-          ],
+          titel: 'Rätsel 3: Der Notizblock des Nachtwächters',
+          text: 'Auf dem Tisch der Nachtwache liegt ein Block mit vier Rechnungen von heute Abend. In jeder steckt '
+            + 'genau ein Fehler – und zwar in einer einzigen Zeile. Von dort an hat der Nachtwächter brav falsch '
+            + 'weitergerechnet, deshalb sieht am Ende alles ordentlich aus.',
+          auftrag: 'Tippe in jedem Rechenweg die Zeile an, in der <strong>zum ersten Mal</strong> etwas falsch ist.',
+          typ: 'fehlerfinden',
           code: '5172',
-          codeRegel: 'Der Code erscheint, wenn die Reihenfolge stimmt.',
-          tipps: [
-            'Rechne alle Angaben in dieselbe Einheit um – Zentimeter passt hier gut.',
-            '1 m = 100 cm und 1 cm = 10 mm. Also sind 0,9 m gleich 90 cm und 3 500 mm gleich 350 cm.',
-            'In Zentimetern: 45 – 90 – 125 – 205 – 350. Das ist die gesuchte Reihenfolge.',
+          codeRegel: 'Jede gefundene Zeile deckt eine Codeziffer auf – von oben nach unten.',
+          faelle: [
+            {
+              titel: 'Wie lange dauerte die Museumsnacht in Minuten?',
+              zeilen: [
+                'Die Museumsnacht dauerte von 19:45 Uhr bis 23:15 Uhr.',
+                'Von 19:45 Uhr bis 23:15 Uhr sind es 23 − 19 = 4 Stunden.',
+                '4 Stunden sind 4 · 60 min = 240 min.',
+                'Antwort: Die Museumsnacht dauerte 240 Minuten.',
+              ],
+              falsch: 1, zeichen: '5',
+            },
+            {
+              titel: 'Wie viele Gramm wiegt der Meteorit?',
+              zeilen: [
+                'Der Meteorit im Schaukasten wiegt 3 kg 250 g.',
+                'Es gilt 1 kg = 100 g.',
+                'Also sind 3 kg gleich 3 · 100 g = 300 g.',
+                '300 g + 250 g = 550 g.',
+                'Antwort: Der Meteorit wiegt 550 g.',
+              ],
+              falsch: 1, zeichen: '1',
+            },
+            {
+              titel: 'Was zahlt eine Klasse für 24 Karten zu je 7 €?',
+              zeilen: [
+                'Eine Karte kostet 7 €, die Klasse braucht 24 Karten.',
+                '24 · 7 = 20 · 7 + 4 · 7',
+                '= 140 + 28',
+                '= 158',
+                'Antwort: Die Klasse zahlt 158 €.',
+              ],
+              falsch: 3, zeichen: '7',
+            },
+            {
+              titel: 'Wie viele Gäste kamen in zwei Wochen, auf Hunderter gerundet?',
+              zeilen: [
+                'In der ersten Woche kamen 12 450 Gäste, in der zweiten 8 370 Gäste.',
+                'Zusammen: 12 450 + 8 370',
+                '= 20 720',
+                'Auf Hunderter gerundet sind das 20 700 Gäste.',
+                'Antwort: Es kamen etwa 20 700 Gäste.',
+              ],
+              falsch: 2, zeichen: '2',
+            },
           ],
-          loesung: '45 cm < 0,9 m (90 cm) < 125 cm < 2 m 5 cm (205 cm) < 3 500 mm (350 cm).',
+          tipps: [
+            'Lies jeden Rechenweg Zeile für Zeile und frage dich bei jeder Zeile: Stimmt genau dieser Schritt? Der Fehler steckt meist nicht in der letzten Zeile.',
+            'Prüfe besonders die Umrechnungen: 1 kg = 1 000 g und 1 h = 60 min. Bei einer Zeitspanne zählen die Minuten mit, nicht nur die vollen Stunden.',
+            'Zeile 2 (von 19:45 Uhr bis 23:15 Uhr sind 3 h 30 min, also 210 min); Zeile 2 (1 kg = 1 000 g, der Meteorit wiegt 3 250 g); '
+              + 'Zeile 4 (140 + 28 = 168, die Klasse zahlt 168 €); Zeile 3 (12 450 + 8 370 = 20 820, gerundet 20 800).',
+          ],
+          loesung: 'Zeile 2; Zeile 2; Zeile 4; Zeile 3 – richtig wären 210 min; 3 250 g; 168 €; 20 800 Gäste.',
         },
         {
           titel: 'Rätsel 4: Der Zahlenschrank',
@@ -227,75 +288,131 @@ const GRUNDRAEUME = [
           auftrag: 'Spiegle wie angegeben und trage die gesuchte Koordinate als Zahl ein. Jede richtige Antwort deckt eine Codeziffer auf.',
           typ: 'rechnen',
           bild: koordinatenBild(),
-          aufgaben: [
-            { frage: 'Spiegle P(2|3) an der roten Geraden x = 5. Wie groß ist die <strong>x-Koordinate</strong> des Bildpunktes P′?', antwort: '8', zeichen: '8' },
-            { frage: 'Spiegle Q(1|7) an der roten Geraden x = 5. Wie groß ist die <strong>x-Koordinate</strong> von Q′?', antwort: '9', zeichen: '9' },
-            { frage: 'Spiegle R(3|1) an der blauen Geraden y = 4. Wie groß ist die <strong>y-Koordinate</strong> von R′?', antwort: '7', zeichen: '7' },
-            { frage: 'Spiegle S(3|2) am Punkt Z(5|5). Wie groß ist die <strong>y-Koordinate</strong> von S′?', antwort: '8', zeichen: '8' },
-          ],
-          code: '8978',
           codeRegel: 'Die vier Ziffern von oben nach unten.',
           tipps: [
             'Beim Spiegeln an einer Geraden bleibt der Abstand zur Geraden gleich – nur die Seite wechselt.',
-            'P(2|3) liegt 3 Kästchen links von x = 5, also liegt P′ 3 Kästchen rechts davon. Bei der Punktspiegelung an Z ist Z die Mitte zwischen Punkt und Bildpunkt.',
-            'P′(8|3), Q′(9|7), R′(3|7), S′(7|8). Gesucht sind 8, 9, 7 und 8.',
+            'Zähle, wie viele Kästchen der Punkt von der Spiegelachse entfernt liegt, und gehe auf der anderen Seite genauso weit. Bei der Punktspiegelung an Z ist Z die Mitte zwischen Punkt und Bildpunkt.',
           ],
-          loesung: 'P′(8|3), Q′(9|7), R′(3|7), S′(7|8) → 8, 9, 7, 8.',
+          zufall: (z) => {
+            // Die Punkte und die beiden Achsen stehen in der Zeichnung fest;
+            // gewürfelt wird, welche vier Spiegelungen gefragt sind.
+            const punkte = [
+              { n: 'P', x: 2, y: 3 }, { n: 'Q', x: 1, y: 7 },
+              { n: 'R', x: 3, y: 1 }, { n: 'S', x: 3, y: 2 },
+            ];
+            const achseX = 5, achseY = 4, zx = 5, zy = 5;
+            const baueVier = () => {
+              const vorrat = [];
+              for (const p of punkte) {
+                const sx = 2 * achseX - p.x, sy = 2 * achseY - p.y;
+                const px = 2 * zx - p.x, py = 2 * zy - p.y;
+                const nachX = z.mal(0.5);   // bei der Punktspiegelung nach x oder nach y fragen
+                vorrat.push({
+                  frage: `Spiegle ${p.n}(${p.x}|${p.y}) an der roten Geraden x = ${achseX}. Wie groß ist die <strong>x-Koordinate</strong> des Bildpunktes ${p.n}′?`,
+                  wert: sx,
+                  weg: `${p.n}(${p.x}|${p.y}) liegt ${achseX - p.x} Kästchen links von x = ${achseX}, also ${p.n}′(${sx}|${p.y}) mit x = ${sx}`,
+                });
+                vorrat.push({
+                  frage: `Spiegle ${p.n}(${p.x}|${p.y}) an der blauen Geraden y = ${achseY}. Wie groß ist die <strong>y-Koordinate</strong> von ${p.n}′?`,
+                  wert: sy,
+                  weg: `${p.n}(${p.x}|${p.y}) hat von y = ${achseY} den Abstand ${Math.abs(achseY - p.y)}, also ${p.n}′(${p.x}|${sy}) mit y = ${sy}`,
+                });
+                vorrat.push({
+                  frage: `Spiegle ${p.n}(${p.x}|${p.y}) am Punkt Z(${zx}|${zy}). Wie groß ist die <strong>${nachX ? 'x' : 'y'}-Koordinate</strong> von ${p.n}′?`,
+                  wert: nachX ? px : py,
+                  weg: `Z(${zx}|${zy}) ist die Mitte zwischen ${p.n}(${p.x}|${p.y}) und ${p.n}′(${px}|${py}), also ${nachX ? `x = ${px}` : `y = ${py}`}`,
+                });
+              }
+              return z.mische(vorrat).slice(0, 4);
+            };
+            // Neu würfeln, bis die vier gesuchten Koordinaten verschieden sind –
+            // sonst steht am Schloss viermal dieselbe Ziffer. Nach 50 Versuchen
+            // bleibt der letzte Wurf stehen.
+            let gewaehlt = baueVier();
+            for (let versuch = 0; versuch < 50; versuch++) {
+              if (new Set(gewaehlt.map(a => a.wert)).size === 4) break;
+              gewaehlt = baueVier();
+            }
+            const ziffern = gewaehlt.map(a => einerziffer(a.wert)).join(', ');
+            return {
+              regel: 'einer',
+              aufgaben: gewaehlt.map(a => ({ frage: a.frage, antwort: antw(a.wert) })),
+              tipp: `${gewaehlt.map(a => a.weg).join('; ')}. Gesucht sind ${ziffern}.`,
+              loesung: `${gewaehlt.map(a => `${a.wert}`).join('; ')} → ${ziffern}.`,
+            };
+          },
         },
         {
-          titel: 'Rätsel 3: Die Scherben am Boden',
-          text: 'Vor der dritten Tür liegen zwölf Spiegelscherben, jede in der Form einer anderen Figur. Dreht man manche von ihnen auf '
-            + 'dem Boden um ihren Mittelpunkt, sehen sie danach genauso aus wie vorher. Nur diese Scherben gehören in den Rahmen.',
-          auftrag: 'Markiere alle Figuren, die <strong>punktsymmetrisch</strong> sind.',
-          typ: 'gitter',
-          spalten: 3,
-          zellen: [
-            { text: 'Quadrat', treffer: true },
-            { text: 'gleichschenkliges Trapez' },
-            { text: 'Parallelogramm', treffer: true },
-            { text: 'gleichseitiges Dreieck' },
-            { text: 'Kreis', treffer: true },
-            { text: 'Drachenviereck' },
-            { text: 'Rechteck', treffer: true },
-            { text: 'regelmäßiges Fünfeck' },
-            { text: 'regelmäßiges Sechseck', treffer: true },
-            { text: 'rechtwinkliges Dreieck' },
-            { text: 'Raute', treffer: true },
-            { text: 'Buchstabe T' },
-          ],
+          titel: 'Rätsel 3: Die Achsenkarten',
+          text: 'Vor der dritten Spiegeltür liegen acht Figurenkarten und acht Zahlenkarten verstreut auf dem Parkett. '
+            + 'Auf der Rückseite der Karten ist eine Zahl aufgemalt – man sieht sie erst, wenn jede Figur bei ihrer '
+            + 'Achsenzahl liegt.',
+          auftrag: 'Lege zu jeder Figurenkarte die Karte mit der <strong>Anzahl ihrer Symmetrieachsen</strong>. Das fertige Bild zeigt den Code.',
+          typ: 'legen',
           code: '0606',
-          codeRegel: 'Der Code besteht aus der Anzahl der markierten und der Anzahl der nicht markierten Figuren – jeweils zweistellig (z. B. 04 und 08 → 0408).',
-          tipps: [
-            'Punktsymmetrisch heißt: Drehst du die Figur um 180° um ihren Mittelpunkt, sieht sie genauso aus wie vorher.',
-            'Drehe jede Figur in Gedanken auf den Kopf. Beim gleichseitigen Dreieck zeigt die Spitze danach nach unten – also nicht punktsymmetrisch. Beim Parallelogramm passt es.',
-            'Punktsymmetrisch sind Quadrat, Parallelogramm, Kreis, Rechteck, regelmäßiges Sechseck und Raute – also 6 Figuren. Die anderen 6 sind es nicht.',
+          zahlbild: '0606',
+          spalten: 4,
+          codeRegel: 'Die Zahl, die das fertige Bild zeigt.',
+          karten: [
+            { rechnung: 'Quadrat', ergebnis: '4' },
+            { rechnung: 'Rechteck (kein Quadrat)', ergebnis: '2' },
+            { rechnung: 'gleichseitiges Dreieck', ergebnis: '3' },
+            { rechnung: 'regelmäßiges Fünfeck', ergebnis: '5' },
+            { rechnung: 'regelmäßiges Sechseck', ergebnis: '6' },
+            { rechnung: 'Parallelogramm (kein Rechteck, keine Raute)', ergebnis: '0' },
+            { rechnung: 'gleichschenkliges Trapez (kein Rechteck)', ergebnis: '1' },
+            { rechnung: 'regelmäßiges Achteck', ergebnis: '8' },
           ],
-          loesung: 'Punktsymmetrisch: Quadrat, Parallelogramm, Kreis, Rechteck, regelmäßiges Sechseck, Raute (6 von 12) → 06 und 06.',
+          tipps: [
+            'Eine Symmetrieachse ist eine Faltlinie, an der beide Hälften genau aufeinanderliegen. Falte jede Figur in Gedanken.',
+            'Bei einem regelmäßigen Vieleck gibt es so viele Achsen, wie die Figur Ecken hat. Beim Rechteck sind die Diagonalen keine Symmetrieachsen.',
+            'Quadrat 4; Rechteck 2; gleichseitiges Dreieck 3; regelmäßiges Fünfeck 5; regelmäßiges Sechseck 6; '
+              + 'Parallelogramm 0; gleichschenkliges Trapez 1; regelmäßiges Achteck 8. Das Bild zeigt 0606.',
+          ],
+          loesung: '4; 2; 3; 5; 6; 0; 1; 8 – das Bild zeigt 0606.',
         },
         {
-          titel: 'Rätsel 4: Die Spiegelachsen',
-          text: 'Über der letzten Tür hängen sechs Figuren an dünnen Ketten, alle durcheinander. Der Riegel ist mit den Haken verbunden '
-            + 'und löst sich erst, wenn die Figuren in der richtigen Ordnung hängen.',
-          auftrag: 'Ordne die Figuren nach der <strong>Anzahl ihrer Symmetrieachsen</strong> – von der kleinsten zur größten Anzahl.',
-          typ: 'reihenfolge',
-          codeAmEnde: true,
-          saat: 83,
-          elemente: [
-            { text: 'Parallelogramm (kein Rechteck, keine Raute)' },
-            { text: 'gleichschenkliges Dreieck (nicht gleichseitig)' },
-            { text: 'Rechteck (kein Quadrat)' },
-            { text: 'gleichseitiges Dreieck' },
-            { text: 'Quadrat' },
-            { text: 'regelmäßiges Sechseck' },
-          ],
+          titel: 'Rätsel 4: Die verschiebbaren Spiegel',
+          text: 'Die letzte Tür ist von vier Spiegeln verdeckt, die auf Schienen laufen: Man kann sie Kästchen für '
+            + 'Kästchen verschieben. Im Boden ist ein Gitter eingelegt, und neben jedem Spiegel steht, wohin er einen '
+            + 'bestimmten Punkt werfen soll. Erst wenn alle vier Spiegel richtig stehen, öffnet sich die Tür.',
+          auftrag: 'Schiebe jeden Regler, bis der angezeigte Bildpunkt genau der gesuchte ist. Die eingestellte Zahl ist eine Codeziffer.',
+          typ: 'schieben',
           code: '2346',
-          codeRegel: 'Der Code sind die Achsenzahlen der <strong>letzten vier</strong> Figuren in der richtigen Reihenfolge.',
-          tipps: [
-            'Eine Symmetrieachse ist eine Faltlinie, bei der beide Hälften genau aufeinanderliegen.',
-            'Ein Rechteck hat zwei Achsen, ein Quadrat vier. Ein regelmäßiges Vieleck hat so viele Achsen, wie es Ecken hat.',
-            'Parallelogramm 0, gleichschenkliges Dreieck 1, Rechteck 2, gleichseitiges Dreieck 3, Quadrat 4, regelmäßiges Sechseck 6. Die letzten vier Zahlen sind 2, 3, 4 und 6.',
+          codeRegel: 'Die vier eingestellten Zahlen – von oben nach unten.',
+          aufgaben: [
+            {
+              frage: 'Spiegel 1 ist die senkrechte Gerade x = a. Stelle a so ein, dass P(1|4) auf P′(3|4) abgebildet wird.',
+              von: 1, bis: 12, schritt: 1, antwort: 2,
+              anzeige: (w) => `Bildpunkt: P′(${2 * w - 1}|4)`,
+              zeichen: '2',
+            },
+            {
+              frage: 'Spiegel 2 ist die waagerechte Gerade y = b. Stelle b so ein, dass Q(5|1) auf Q′(5|5) abgebildet wird.',
+              von: 1, bis: 12, schritt: 1, antwort: 3,
+              anzeige: (w) => `Bildpunkt: Q′(5|${2 * w - 1})`,
+              zeichen: '3',
+            },
+            {
+              frage: 'Spiegel 3 ist ein Drehpunkt Z(z|5). Stelle z so ein, dass S(2|3) bei der Punktspiegelung an Z auf S′(6|7) abgebildet wird.',
+              von: 1, bis: 12, schritt: 1, antwort: 4,
+              anzeige: (w) => `Bildpunkt: S′(${2 * w - 2}|7)`,
+              zeichen: '4',
+            },
+            {
+              frage: 'Spiegel 4 ist die waagerechte Gerade y = d. Stelle d so ein, dass T(4|9) auf T′(4|3) abgebildet wird.',
+              von: 5, bis: 12, schritt: 1, antwort: 6,
+              anzeige: (w) => `Bildpunkt: T′(4|${2 * w - 9})`,
+              zeichen: '6',
+            },
           ],
-          loesung: 'Achsen: 0, 1, 2, 3, 4, 6 → letzte vier Zahlen 2, 3, 4, 6.',
+          tipps: [
+            'Der Spiegel liegt immer genau in der Mitte zwischen dem Punkt und seinem Bildpunkt. Zähle die Kästchen.',
+            'Hat der Punkt den Abstand k von der Spiegelachse, dann hat auch der Bildpunkt den Abstand k – nur auf der anderen Seite. Beim Drehpunkt ist Z die Mitte zwischen Punkt und Bildpunkt.',
+            'P(1|4) und P′(3|4): Mitte bei x = 2, also a = 2. Q(5|1) und Q′(5|5): Mitte bei y = 3, also b = 3. '
+              + 'S(2|3) und S′(6|7): Mitte bei (4|5), also z = 4. T(4|9) und T′(4|3): Mitte bei y = 6, also d = 6.',
+          ],
+          loesung: 'a = 2; b = 3; z = 4; d = 6 → Code 2346.',
         },
       ],
     },
@@ -318,26 +435,46 @@ const GRUNDRAEUME = [
         + '„Wer rechnen kann, braucht keine Gewalt."',
       raetsel: [
         {
-          titel: 'Rätsel 1: Die Primzahl-Esse',
-          text: 'In der Esse glüht noch das Feuer. Sechzehn Eisenplatten liegen auf dem Rost, in jede ist eine Zahl geschlagen. Der '
-            + 'Schmied hat nur die unteilbaren aufgehoben – die anderen wanderten zurück in den Schmelztiegel.',
-          auftrag: 'Markiere alle <strong>Primzahlen</strong>.',
-          typ: 'gitter',
-          spalten: 4,
-          zellen: [
-            { text: '51' }, { text: '53', treffer: true }, { text: '57' }, { text: '59', treffer: true },
-            { text: '61', treffer: true }, { text: '63' }, { text: '67', treffer: true }, { text: '69' },
-            { text: '71', treffer: true }, { text: '73', treffer: true }, { text: '77' }, { text: '79', treffer: true },
-            { text: '81' }, { text: '83', treffer: true }, { text: '87' }, { text: '89', treffer: true },
-          ],
+          titel: 'Rätsel 1: Die glühende Zahl in der Esse',
+          text: 'In der Esse glüht eine Eisenplatte, in die der Schmied eine Zahl geschlagen hat – die Glut hat sie '
+            + 'unlesbar gemacht. Am Blasebalg hängen aber vier Zettel. Auf jedem steht, was mit einer gesuchten Zahl '
+            + 'geschieht und was dabei herauskommt. Der Schmied hat nie lange gerechnet: Er hat probiert.',
+          auftrag: 'Tippe eine Zahl ein und drücke auf „Probieren". Die Rückmeldung sagt dir, ob du zu klein oder zu groß warst – kreise den gesuchten Wert damit ein.',
+          typ: 'probieren',
           code: '5389',
-          codeRegel: 'Der Code ist die <strong>kleinste</strong> und die <strong>größte</strong> markierte Primzahl hintereinander.',
-          tipps: [
-            'Eine Primzahl hat genau zwei Teiler: 1 und sich selbst.',
-            'Prüfe bei jeder Zahl, ob sie durch 2, 3, 5 oder 7 teilbar ist. Bei der 3 hilft die Quersumme.',
-            'Primzahlen: 53, 59, 61, 67, 71, 73, 79, 83, 89. Keine Primzahlen: 51 = 3 · 17, 57 = 3 · 19, 63 = 7 · 9, 69 = 3 · 23, 77 = 7 · 11, 81 = 9 · 9, 87 = 3 · 29. Kleinste 53, größte 89.',
+          codeRegel: 'Die <strong>Einerziffern</strong> der vier gefundenen Zahlen – von oben nach unten.',
+          aufgaben: [
+            {
+              frage: 'Welche Zahl ergibt, mit sich selbst malgenommen, 2 025?',
+              antwort: '45', von: 1, bis: 99,
+              pruefe: (x) => `${x} · ${x} = ${fmt(x * x)}`,
+              zeichen: '5',
+            },
+            {
+              frage: 'Welche Zahl ergibt, mit 23 malgenommen, 1 449?',
+              antwort: '63', von: 1, bis: 99,
+              pruefe: (x) => `${x} · 23 = ${fmt(x * 23)}`,
+              zeichen: '3',
+            },
+            {
+              frage: 'Eine Zahl wird um 17 vergrößert, das Ergebnis mit 4 malgenommen. Heraus kommt 260. Welche Zahl war es?',
+              antwort: '48', von: 1, bis: 99,
+              pruefe: (x) => `(${x} + 17) · 4 = ${fmt((x + 17) * 4)}`,
+              zeichen: '8',
+            },
+            {
+              frage: 'Welche Zahl ergibt hoch 3, also Zahl · Zahl · Zahl, genau 24 389?',
+              antwort: '29', von: 1, bis: 50,
+              pruefe: (x) => `${x}³ = ${fmt(x * x * x)}`,
+              zeichen: '9',
+            },
           ],
-          loesung: 'Primzahlen: 53, 59, 61, 67, 71, 73, 79, 83, 89 → kleinste 53, größte 89.',
+          tipps: [
+            'Fange in der Mitte des angegebenen Bereichs an. Jede Rückmeldung halbiert den Bereich, in dem die Zahl noch stecken kann.',
+            'Bei der ersten Aufgabe lohnt ein Blick auf die Einerziffer des Ergebnisses: Sie verrät, auf welche Ziffern die gesuchte Zahl enden kann. Bei der dritten Aufgabe kannst du auch rückwärts rechnen – erst durch 4 teilen, dann 17 abziehen.',
+            '45 · 45 = 2 025; 63 · 23 = 1 449; (48 + 17) · 4 = 65 · 4 = 260; 29 · 29 · 29 = 24 389. Einerziffern: 5, 3, 8, 9.',
+          ],
+          loesung: '45; 63; 48; 29 → Einerziffern 5, 3, 8, 9.',
         },
         {
           titel: 'Rätsel 2: Der Hammer der Rechengesetze',
@@ -346,48 +483,74 @@ const GRUNDRAEUME = [
             + 'Ergebnissen.',
           auftrag: 'Rechne möglichst geschickt. Jede richtige Antwort deckt einen Buchstaben auf.',
           typ: 'rechnen',
-          aufgaben: [
-            { frage: '25 · 4 · 13', antwort: '1300', zeichen: 'G' },
-            { frage: '7 · 99', antwort: '693', zeichen: 'L' },
-            { frage: '23 · 7 + 23 · 3', antwort: '230', zeichen: 'U' },
-            { frage: '5<sup>3</sup> − 4<sup>2</sup>', antwort: '109', zeichen: 'T' },
-          ],
-          code: 'GLUT',
           codeRegel: 'Die vier Buchstaben von oben nach unten.',
           tipps: [
             'Suche nach Zahlen, die sich zu 10, 100 oder 1 000 ergänzen, und setze Klammern.',
-            '25 · 4 = 100. Für 7 · 99 rechne 7 · 100 − 7. Bei 23 · 7 + 23 · 3 kannst du 23 ausklammern. 5³ = 5 · 5 · 5 und 4² = 4 · 4.',
-            '25 · 4 · 13 = 100 · 13 = 1 300. 7 · 99 = 700 − 7 = 693. 23 · (7 + 3) = 23 · 10 = 230. 5³ − 4² = 125 − 16 = 109.',
+            'Bei einem Faktor knapp unter 100 oder 1 000 rechnest du mit der runden Zahl und ziehst den Rest wieder ab. Steht derselbe Faktor in beiden Produkten, klammere ihn aus. Eine Potenz schreibst du zuerst als Produkt aus.',
           ],
-          loesung: '1 300 · 693 · 230 · 109 → G, L, U, T.',
+          zufall: (z) => {
+            const wort = 'GLUT';   // Buchstabencode bleibt fest, nur die Zahlen würfeln
+            const [f1, f2] = z.aus([[25, 4], [4, 25], [50, 2], [2, 50], [20, 5], [5, 20]]);
+            const c = z.ganz(11, 29);
+            const nah = z.aus([99, 999]);
+            const f = z.ganz(3, 9);
+            const d = z.ganz(12, 48);
+            const e1 = z.aus([2, 3, 4, 6, 7, 8]), e2 = 10 - e1;
+            const p = z.ganz(3, 6);
+            // Die Differenz soll mindestens 20 betragen – sonst bleibt von der
+            // Potenzaufgabe am Ende nur eine Kleinigkeit wie 3³ − 5² = 2 übrig.
+            const q = z.ganz(2, Math.min(9, Math.floor(Math.sqrt(p * p * p - 20))));
+            return {
+              regel: 'buchstaben',
+              code: wort,
+              aufgaben: [
+                { frage: `${f1} · ${f2} · ${c}`, antwort: antw(f1 * f2 * c) },
+                { frage: `${f} · ${fmt(nah)}`, antwort: antw(f * nah) },
+                { frage: `${d} · ${e1} + ${d} · ${e2}`, antwort: antw(d * (e1 + e2)) },
+                { frage: `${p}<sup>3</sup> − ${q}<sup>2</sup>`, antwort: antw(p * p * p - q * q) },
+              ],
+              tipp: `${f1} · ${f2} = 100, also 100 · ${c} = ${fmt(f1 * f2 * c)}; `
+                + `${f} · ${fmt(nah)} = ${fmt(f * (nah + 1))} − ${f} = ${fmt(f * nah)}; `
+                + `${d} · (${e1} + ${e2}) = ${d} · 10 = ${fmt(d * 10)}; `
+                + `${p}³ = ${fmt(p * p * p)} und ${q}² = ${q * q}, also ${fmt(p * p * p)} − ${q * q} = ${fmt(p * p * p - q * q)}. `
+                + `Die vier Buchstaben lauten ${wort.split('').join(', ')}.`,
+              loesung: `${fmt(f1 * f2 * c)}; ${fmt(f * nah)}; ${fmt(d * 10)}; ${fmt(p * p * p - q * q)} → ${wort.split('').join(', ')}.`,
+            };
+          },
         },
         {
-          titel: 'Rätsel 3: Die Primfaktor-Zange',
-          text: 'An der Wand hängen sechs Zangen, jede mit einer Zahl beschriftet, daneben sechs Schilder mit Zerlegungen. Der Schmied '
-            + 'sagte immer, jede Zahl sei aus Bausteinen geschmiedet. Nur wer die Bausteine richtig zuordnet, bekommt die letzte Kiste '
-            + 'auf.',
-          auftrag: 'Verbinde jede Zahl mit ihrer Primfaktorzerlegung.',
-          typ: 'zuordnen',
-          titelLinks: 'Zahl',
-          titelRechts: 'Primfaktorzerlegung',
-          codeAmEnde: true,
-          saat: 149,
-          paare: [
-            { links: '72', rechts: '2<sup>3</sup> · 3<sup>2</sup>' },
-            { links: '84', rechts: '2<sup>2</sup> · 3 · 7' },
-            { links: '90', rechts: '2 · 3<sup>2</sup> · 5' },
-            { links: '100', rechts: '2<sup>2</sup> · 5<sup>2</sup>' },
-            { links: '120', rechts: '2<sup>3</sup> · 3 · 5' },
-            { links: '126', rechts: '2 · 3<sup>2</sup> · 7' },
-          ],
+          titel: 'Rätsel 3: Die Zahlenbausteine auf dem Amboss',
+          text: 'Neben dem Amboss steht ein Kasten mit Zahlenplättchen und Rechenzeichen. Auf vier Schildern hat der '
+            + 'Schmied je einen Zielwert eingeschlagen. Zu jedem Zielwert soll ein Term gelegt werden, der genau diesen '
+            + 'Wert ergibt. Jedes Plättchen darf nur einmal benutzt werden – und es bleiben immer welche übrig.',
+          auftrag: 'Baue zu jedem Zielwert einen passenden Term. Jeder getroffene Zielwert deckt eine Codeziffer auf.',
+          typ: 'termbauen',
           code: '2357',
-          codeRegel: 'Wenn alle Paare stimmen, erscheint der Code: es sind genau die vier Primzahlen, die in den Zerlegungen vorkommen – der Größe nach.',
-          tipps: [
-            'Zerlege jede Zahl schrittweise, zum Beispiel 72 = 8 · 9.',
-            'Schreibe die Zerlegung mit Potenzen: 8 = 2³ und 9 = 3². Prüfe am Ende durch Nachrechnen.',
-            '72 = 2³ · 3², 84 = 2² · 3 · 7, 90 = 2 · 3² · 5, 100 = 2² · 5², 120 = 2³ · 3 · 5, 126 = 2 · 3² · 7. Es kommen die Primzahlen 2, 3, 5 und 7 vor.',
+          codeRegel: 'Jeder getroffene Zielwert deckt eine Codeziffer auf – von oben nach unten.',
+          aufgaben: [
+            {
+              frage: 'Vier Reihen mit je 25 Nägeln: Baue einen Term mit dem Wert <strong>100</strong>.',
+              ziel: 100, bausteine: ['25', '4', '7', '2', '·', '+'], zeichen: '2', musterloesung: '25 · 4',
+            },
+            {
+              frage: 'Acht Kisten mit je 125 Nieten: Baue einen Term mit dem Wert <strong>1 000</strong>.',
+              ziel: 1000, bausteine: ['125', '8', '9', '2', '·', '+'], zeichen: '3', musterloesung: '125 · 8',
+            },
+            {
+              frage: 'Der Schmied schafft 48 Nägel am Tag – an 3 Tagen und an 7 weiteren Tagen. Baue einen Term mit dem Wert <strong>480</strong>.',
+              ziel: 480, bausteine: ['48', '3', '7', '5', '2', '(', ')', '·', '+'], zeichen: '5', musterloesung: '48 · (3 + 7)',
+            },
+            {
+              frage: 'Ein Würfel aus Eisenkugeln, 5 Kugeln lang, 5 breit und 5 hoch: Baue einen Term mit dem Wert <strong>125</strong>.',
+              ziel: 125, bausteine: ['5', '5', '5', '3', '2', '·', '·', '+'], zeichen: '7', musterloesung: '5 · 5 · 5',
+            },
           ],
-          loesung: '72 = 2³·3²; 84 = 2²·3·7; 90 = 2·3²·5; 100 = 2²·5²; 120 = 2³·3·5; 126 = 2·3²·7 → Primzahlen 2, 3, 5, 7.',
+          tipps: [
+            'Du musst nicht alle Plättchen benutzen – oft reichen zwei Zahlen und ein Rechenzeichen. Suche nach Zahlen, die zusammen 100 oder 1 000 ergeben.',
+            'Bei der dritten Aufgabe gibt es nur ein einziges 48er-Plättchen: Lege die beiden Tageszahlen in die Klammer und nimm die Summe damit mal. Bei der vierten Aufgabe hilft, dass eine Potenz ein Produkt aus gleichen Faktoren ist.',
+            '25 · 4 = 100; 125 · 8 = 1 000; 48 · (3 + 7) = 48 · 10 = 480; 5 · 5 · 5 = 125.',
+          ],
+          loesung: '25 · 4 = 100; 125 · 8 = 1 000; 48 · (3 + 7) = 480; 5 · 5 · 5 = 125 → Codeziffern 2, 3, 5, 7.',
         },
         {
           titel: 'Rätsel 4: Die Teilbarkeits-Waage',
@@ -395,20 +558,32 @@ const GRUNDRAEUME = [
             + 'der Schmied sie gelöst hätte – ohne Taschenrechner, nur mit Bleistift und Geduld.',
           auftrag: 'Rechne schriftlich. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
           typ: 'rechnen',
-          aufgaben: [
-            { frage: '4 718 + 2 896', antwort: '7614', zeichen: '4' },
-            { frage: '8 024 − 3 657', antwort: '4367', zeichen: '7' },
-            { frage: '327 · 46', antwort: '15042', zeichen: '2' },
-            { frage: '9 576 : 7', antwort: '1368', zeichen: '8' },
-          ],
-          code: '4728',
           codeRegel: 'Die Einerziffern der vier Ergebnisse – von oben nach unten.',
           tipps: [
             'Schreibe die Zahlen stellengerecht untereinander und arbeite von rechts nach links.',
-            'Bei 327 · 46 rechnest du 327 · 40 und 327 · 6 und addierst beides. Bei der Division teilst du Stelle für Stelle.',
-            '4 718 + 2 896 = 7 614. 8 024 − 3 657 = 4 367. 327 · 46 = 13 080 + 1 962 = 15 042. 9 576 : 7 = 1 368. Einerziffern: 4, 7, 2, 8.',
+            'Bei der Multiplikation zerlegst du den zweiten Faktor in Zehner und Einer, rechnest beides einzeln und addierst die Teilergebnisse. Bei der Division teilst du Stelle für Stelle von links nach rechts.',
           ],
-          loesung: '7 614 · 4 367 · 15 042 · 1 368 → Einerziffern 4, 7, 2, 8.',
+          zufall: (z) => {
+            const a1 = z.ganz(3100, 5900), a2 = z.ganz(2100, 3900);
+            const s1 = z.ganz(7000, 9500), s2 = z.ganz(3000, 4999);
+            const m = z.ganz(214, 489);
+            const nz = z.ganz(2, 6) * 10, ne = z.ganz(2, 9);
+            const erg = z.ganz(1100, 1890), teiler = z.ganz(6, 9);
+            const ziffern = [a1 + a2, s1 - s2, m * (nz + ne), erg].map(einerziffer).join(', ');
+            return {
+              regel: 'einer',
+              aufgaben: [
+                { frage: `${fmt(a1)} + ${fmt(a2)}`, antwort: antw(a1 + a2) },
+                { frage: `${fmt(s1)} − ${fmt(s2)}`, antwort: antw(s1 - s2) },
+                { frage: `${fmt(m)} · ${nz + ne}`, antwort: antw(m * (nz + ne)) },
+                { frage: `${fmt(erg * teiler)} : ${teiler}`, antwort: antw(erg) },
+              ],
+              tipp: `${fmt(a1)} + ${fmt(a2)} = ${fmt(a1 + a2)}; ${fmt(s1)} − ${fmt(s2)} = ${fmt(s1 - s2)}; `
+                + `${fmt(m)} · ${nz + ne} = ${fmt(m * nz)} + ${fmt(m * ne)} = ${fmt(m * (nz + ne))}; `
+                + `${fmt(erg * teiler)} : ${teiler} = ${fmt(erg)}. Einerziffern: ${ziffern}.`,
+              loesung: `${fmt(a1 + a2)}; ${fmt(s1 - s2)}; ${fmt(m * (nz + ne))}; ${fmt(erg)} → Einerziffern ${ziffern}.`,
+            };
+          },
         },
       ],
     },
@@ -435,20 +610,37 @@ const GRUNDRAEUME = [
             + 'Schulhofs skizziert und die Maße danebengeschrieben. Die Flächeninhalte fehlen – die wollte er heute nachtragen.',
           auftrag: 'Berechne die Flächeninhalte. Jede richtige Antwort deckt einen Buchstaben auf.',
           typ: 'rechnen',
-          aufgaben: [
-            { frage: 'Ein rechteckiges Beet ist 14 m lang und 9 m breit. Flächeninhalt in m²?', antwort: '126', einheit: 'm²', zeichen: 'P' },
-            { frage: 'Ein rechtwinkliges Dreieck hat die Katheten 12 cm und 7 cm. Flächeninhalt in cm²?', antwort: '42', einheit: 'cm²', zeichen: 'L' },
-            { frage: 'Ein quadratischer Sandkasten hat den Umfang 36 m. Flächeninhalt in m²?', antwort: '81', einheit: 'm²', zeichen: 'A' },
-            { frage: 'Wandle um: 3,5 m² = ? dm²', antwort: '350', einheit: 'dm²', zeichen: 'N' },
-          ],
-          code: 'PLAN',
           codeRegel: 'Die vier Buchstaben von oben nach unten.',
           tipps: [
             'Rechteck: A = Länge · Breite. Ein rechtwinkliges Dreieck ist halb so groß wie das passende Rechteck.',
-            'Beim Quadrat gilt: Umfang = 4 · Seitenlänge – bestimme also zuerst die Seitenlänge. Und 1 m² = 100 dm².',
-            '14 · 9 = 126 m². (12 · 7) : 2 = 42 cm². 36 : 4 = 9 m, also 9 · 9 = 81 m². 3,5 · 100 = 350 dm².',
+            'Beim Quadrat gilt: Umfang = 4 · Seitenlänge – bestimme also zuerst die Seitenlänge. Und zwischen zwei benachbarten Flächeneinheiten liegt immer der Faktor 100.',
           ],
-          loesung: '126 m² · 42 cm² · 81 m² · 350 dm² → P, L, A, N.',
+          zufall: (z) => {
+            const wort = 'PLAN';   // Buchstabencode bleibt fest, nur die Zahlen würfeln
+            // Die größere Seite ist die Länge, die kleinere die Breite.
+            const s1 = z.ganz(8, 19), s2 = z.ganz(5, 12);
+            const laenge = Math.max(s1, s2), breite = Math.min(s1, s2);
+            const k1 = z.vielfach(8, 20, 2), k2 = z.ganz(5, 15);
+            const seite = z.ganz(4, 9);
+            const [von, nach] = z.aus([['m²', 'dm²'], ['dm²', 'cm²']]);
+            const gross = z.ganz(2, 9);
+            return {
+              regel: 'buchstaben',
+              code: wort,
+              aufgaben: [
+                { frage: `Ein rechteckiges Beet ist ${laenge} m lang und ${breite} m breit. Flächeninhalt in m²?`, antwort: antw(laenge * breite), einheit: 'm²' },
+                { frage: `Ein rechtwinkliges Dreieck hat die Katheten ${k1} cm und ${k2} cm. Flächeninhalt in cm²?`, antwort: antw(k1 * k2 / 2), einheit: 'cm²' },
+                { frage: `Ein quadratischer Sandkasten hat den Umfang ${4 * seite} m. Flächeninhalt in m²?`, antwort: antw(seite * seite), einheit: 'm²' },
+                { frage: `Wandle um: ${gross} ${von} = ? ${nach}`, antwort: antw(gross * 100), einheit: nach },
+              ],
+              tipp: `${laenge} · ${breite} = ${fmt(laenge * breite)} m²; (${k1} · ${k2}) : 2 = ${fmt(k1 * k2 / 2)} cm²; `
+                + `${4 * seite} : 4 = ${seite} m, also ${seite} · ${seite} = ${fmt(seite * seite)} m²; `
+                + `${gross} ${von} = ${gross} · 100 ${nach} = ${fmt(gross * 100)} ${nach}. `
+                + `Die vier Buchstaben lauten ${wort.split('').join(', ')}.`,
+              loesung: `${fmt(laenge * breite)} m²; ${fmt(k1 * k2 / 2)} cm²; ${fmt(seite * seite)} m²; ${fmt(gross * 100)} ${nach} `
+                + `→ ${wort.split('').join(', ')}.`,
+            };
+          },
         },
         {
           titel: 'Rätsel 2: Die zusammengesetzte Fläche',
@@ -457,66 +649,151 @@ const GRUNDRAEUME = [
           auftrag: 'Berechne die gesuchten Größen. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
           typ: 'rechnen',
           bild: lFlaecheBild(),
-          aufgaben: [
-            { frage: 'Wie groß ist der Flächeninhalt der L-Fläche in m²?', antwort: '81', einheit: 'm²', zeichen: '1' },
-            { frage: 'Wie groß ist der Umfang der L-Fläche in m?', antwort: '40', einheit: 'm', zeichen: '0' },
-            { frage: 'Wie groß ist die fehlende Ecke (das ausgeschnittene Rechteck) in m²?', antwort: '15', einheit: 'm²', zeichen: '5' },
-            { frage: 'Ein Zaun um die L-Fläche kostet 12 € pro Meter. Was kostet er insgesamt in Euro?', antwort: '480', einheit: '€', zeichen: '0' },
-          ],
-          code: '1050',
           codeRegel: 'Die Einerziffern der vier Ergebnisse – von oben nach unten.',
           tipps: [
             'Ergänze die L-Fläche in Gedanken zu einem großen Rechteck. Was fehlt dann noch?',
-            'Das große Rechteck ist 12 m · 8 m groß. Die fehlende Ecke ist 5 m breit (12 − 7) und 3 m hoch (8 − 5).',
-            'Großes Rechteck: 12 · 8 = 96 m². Ecke: 5 · 3 = 15 m². L-Fläche: 96 − 15 = 81 m². Umfang: 12 + 8 + 7 + 3 + 5 + 5 = 40 m. Zaun: 40 · 12 = 480 €. Einerziffern: 1, 0, 5, 0.',
+            'Die Maße des großen Rechtecks stehen am linken und am unteren Rand der Zeichnung. Die fehlende Ecke ist so breit wie der Unterschied der beiden waagerechten Maße und so hoch wie der Unterschied der beiden senkrechten.',
           ],
-          loesung: '81 m² · 40 m · 15 m² · 480 € → Einerziffern 1, 0, 5, 0.',
+          zufall: (z) => {
+            // Die Maße stehen in der Zeichnung fest; gewürfelt werden die vier
+            // Fragen, ihre Reihenfolge und die beiden Preise.
+            const bAussen = 12, hAussen = 8, bEcke = 5, hEcke = 3;
+            const voll = bAussen * hAussen;
+            const ecke = bEcke * hEcke;
+            const flaeche = voll - ecke;
+            const umfang = bAussen + hAussen + (bAussen - bEcke) + hEcke + bEcke + (hAussen - hEcke);
+            const preisZaun = z.ganz(9, 24), preisBoden = z.ganz(3, 12);
+            const vorrat = [
+              {
+                frage: 'Wie groß ist der Flächeninhalt der L-Fläche in m²?', wert: flaeche, einheit: 'm²',
+                weg: `großes Rechteck ${bAussen} · ${hAussen} = ${fmt(voll)} m², Ecke ${bEcke} · ${hEcke} = ${ecke} m², L-Fläche ${fmt(voll)} − ${ecke} = ${fmt(flaeche)} m²`,
+              },
+              {
+                frage: 'Wie groß ist der Umfang der L-Fläche in m?', wert: umfang, einheit: 'm',
+                weg: `Umfang ${bAussen} + ${hAussen} + ${bAussen - bEcke} + ${hEcke} + ${bEcke} + ${hAussen - hEcke} = ${umfang} m`,
+              },
+              {
+                frage: 'Wie groß ist die fehlende Ecke (das ausgeschnittene Rechteck) in m²?', wert: ecke, einheit: 'm²',
+                weg: `fehlende Ecke ${bEcke} · ${hEcke} = ${ecke} m²`,
+              },
+              {
+                frage: 'Wie groß wäre die Fläche in m², wenn die Ecke nicht fehlen würde?', wert: voll, einheit: 'm²',
+                weg: `großes Rechteck ${bAussen} · ${hAussen} = ${fmt(voll)} m²`,
+              },
+              {
+                frage: `Ein Zaun um die L-Fläche kostet ${preisZaun} € pro Meter. Was kostet er insgesamt in Euro?`, wert: umfang * preisZaun, einheit: '€',
+                weg: `Zaun ${umfang} · ${preisZaun} = ${fmt(umfang * preisZaun)} €`,
+              },
+              {
+                frage: `Die L-Fläche wird gepflastert. Ein Quadratmeter kostet ${preisBoden} €. Was kostet die Pflasterung in Euro?`, wert: flaeche * preisBoden, einheit: '€',
+                weg: `Pflaster ${fmt(flaeche)} · ${preisBoden} = ${fmt(flaeche * preisBoden)} €`,
+              },
+            ];
+            const gewaehlt = z.mische(vorrat).slice(0, 4);
+            const ziffern = gewaehlt.map(a => einerziffer(a.wert)).join(', ');
+            return {
+              regel: 'einer',
+              aufgaben: gewaehlt.map(a => ({ frage: a.frage, antwort: antw(a.wert), einheit: a.einheit })),
+              tipp: `${gewaehlt.map(a => a.weg).join('; ')}. Einerziffern: ${ziffern}.`,
+              loesung: `${gewaehlt.map(a => `${fmt(a.wert)} ${a.einheit}`).join('; ')} → Einerziffern ${ziffern}.`,
+            };
+          },
         },
         {
-          titel: 'Rätsel 3: Sechs Flächen sortieren',
-          text: 'In der dritten Mappe stecken sechs Karteikarten mit Teilflächen des Schulhofs, jede in einer anderen Form und Einheit. '
-            + 'Der Bauleiter hat sie immer nach Größe geordnet abgeheftet – jemand hat den Stapel fallen lassen.',
-          auftrag: 'Ordne die Flächen nach ihrem <strong>Flächeninhalt</strong> – von der kleinsten zur größten.',
-          typ: 'reihenfolge',
-          codeAmEnde: true,
-          saat: 71,
-          elemente: [
-            { text: 'Rechteck 6 cm × 7 cm' },
-            { text: 'Quadrat mit der Seitenlänge 7 cm' },
-            { text: 'rechtwinkliges Dreieck mit den Katheten 10 cm und 12 cm' },
-            { text: 'Rechteck 8 cm × 9 cm' },
-            { text: 'Quadrat mit dem Umfang 36 cm' },
-            { text: 'Rechteck 0,5 dm × 20 cm' },
-          ],
+          titel: 'Rätsel 3: Die Rechenzettel des Bauleiters',
+          text: 'In der dritten Mappe stecken vier Rechenzettel, jeder mit Bleistift geschrieben und oben mit einem '
+            + 'Fragezeichen versehen. Der Bauleiter hat sich auf jedem Zettel genau einmal verrechnet und danach brav '
+            + 'falsch weitergerechnet. Die Mappe gibt den Code erst heraus, wenn alle vier Fehler gefunden sind.',
+          auftrag: 'Tippe in jedem Rechenweg die Zeile an, in der <strong>zum ersten Mal</strong> etwas falsch ist.',
+          typ: 'fehlerfinden',
           code: '4249',
-          codeRegel: 'Der Code sind die Flächeninhalte der <strong>ersten beiden</strong> Figuren in cm², jeweils zweistellig, hintereinander.',
-          tipps: [
-            'Berechne zuerst jeden Flächeninhalt in cm² und notiere ihn neben der Karte.',
-            'Beim Quadrat mit dem Umfang 36 cm ist die Seite 9 cm. Und 0,5 dm sind 5 cm.',
-            'Die Flächeninhalte sind 42, 49, 60, 72, 81 und 100 cm². Die ersten beiden sind 42 und 49.',
+          codeRegel: 'Jede gefundene Zeile deckt eine Codeziffer auf – von oben nach unten.',
+          faelle: [
+            {
+              titel: 'Wie groß ist die Pflasterplatte in cm²?',
+              zeilen: [
+                'Die Platte ist 12 dm lang und 7 dm breit.',
+                'Flächeninhalt: A = 12 dm · 7 dm = 84 dm²',
+                'Umrechnung: 1 dm² = 10 cm².',
+                '84 dm² = 84 · 10 cm² = 840 cm²',
+                'Antwort: Die Platte ist 840 cm² groß.',
+              ],
+              falsch: 2, zeichen: '4',
+            },
+            {
+              titel: 'Wie groß ist der Flächeninhalt des rechteckigen Beets?',
+              zeilen: [
+                'Das Beet ist 12 m lang und 7 m breit.',
+                'Flächeninhalt: A = 2 · (12 m + 7 m)',
+                '= 2 · 19 = 38',
+                'Antwort: Das Beet ist 38 m² groß.',
+              ],
+              falsch: 1, zeichen: '2',
+            },
+            {
+              titel: 'Wie groß ist das dreieckige Blumenbeet?',
+              zeilen: [
+                'Das Beet ist ein rechtwinkliges Dreieck mit den Katheten 8 m und 5 m.',
+                'Flächeninhalt: A = 8 m · 5 m',
+                '= 40 m²',
+                'Antwort: Das Beet ist 40 m² groß.',
+              ],
+              falsch: 1, zeichen: '4',
+            },
+            {
+              titel: 'Wie lang ist der Weg in Wirklichkeit?',
+              zeilen: [
+                'Auf dem Plan im Maßstab 1 : 200 ist der Weg 15 cm lang.',
+                '15 cm · 200 = 3 000 cm',
+                '3 000 cm = 30 m',
+                'Antwort: Der Weg ist in Wirklichkeit 30 cm lang.',
+              ],
+              falsch: 3, zeichen: '9',
+            },
           ],
-          loesung: '42 < 49 < 60 < 72 < 81 < 100 (in cm²) → erste beiden 42 und 49.',
+          tipps: [
+            'Lies jeden Zettel Zeile für Zeile und frage dich bei jeder Zeile: Ist genau dieser Schritt richtig? Der Fehler steckt oft schon in der Formel.',
+            'Umfang und Flächeninhalt haben verschiedene Formeln und verschiedene Einheiten. Ein rechtwinkliges Dreieck ist halb so groß wie das passende Rechteck. Zwischen zwei benachbarten Flächeneinheiten liegt der Faktor 100, zwischen zwei Längeneinheiten der Faktor 10.',
+            'Zeile 3 (1 dm² = 100 cm², also 84 dm² = 8 400 cm²); Zeile 2 (A = 12 m · 7 m = 84 m², die Formel 2 · (a + b) gibt den Umfang); '
+              + 'Zeile 2 (A = 8 m · 5 m : 2 = 20 m²); Zeile 4 (der Weg ist 30 m lang, nicht 30 cm).',
+          ],
+          loesung: 'Zeile 3; Zeile 2; Zeile 2; Zeile 4 – richtig wären 8 400 cm²; 84 m²; 20 m²; 30 m.',
         },
         {
           titel: 'Rätsel 4: Der Maßstab 1 : 200',
-          text: 'Die Planrolle ist mit einem Zahlenschloss gesichert. Unten rechts auf jedem Blatt steht der Maßstab 1 : 200, mit '
-            + 'Bleistift unterstrichen. Vier Längen wollen zwischen Plan und Wirklichkeit übersetzt werden.',
+          text: 'Die Planrolle ist mit einem Zahlenschloss gesichert. Unten rechts auf den Blättern steht der Maßstab 1 : 200, mit '
+            + 'Bleistift unterstrichen – nur das letzte Blatt trägt einen anderen Maßstab. Vier Längen wollen zwischen Plan '
+            + 'und Wirklichkeit übersetzt werden; lies den Maßstab deshalb bei jeder Aufgabe neu.',
           auftrag: 'Rechne zwischen Plan und Wirklichkeit um. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
           typ: 'rechnen',
-          aufgaben: [
-            { frage: 'Auf dem Plan (1 : 200) ist der Schulhof 35 cm lang. Wie lang ist er in Wirklichkeit in Metern?', antwort: '70', einheit: 'm', zeichen: '0' },
-            { frage: 'Eine Strecke ist in Wirklichkeit 48 m lang. Wie lang ist sie auf dem Plan (1 : 200) in Zentimetern?', antwort: '24', einheit: 'cm', zeichen: '4' },
-            { frage: 'Der Sandkasten ist auf dem Plan (1 : 200) 6 cm × 4 cm groß. Wie groß ist er in Wirklichkeit in m²?', antwort: '96', einheit: 'm²', zeichen: '6' },
-            { frage: 'Wie viele Meter in Wirklichkeit entspricht 1 cm auf einem Plan im Maßstab 1 : 500?', antwort: '5', einheit: 'm', zeichen: '5' },
-          ],
-          code: '0465',
           codeRegel: 'Die Einerziffern der vier Ergebnisse – von oben nach unten.',
           tipps: [
-            'Maßstab 1 : 200 heißt: 1 cm auf dem Plan sind 200 cm in Wirklichkeit.',
+            'Maßstab 1 : n heißt: 1 cm auf dem Plan sind n cm in Wirklichkeit. Schau also zuerst nach, welcher Maßstab bei der Aufgabe steht.',
             'Rechne erst in Zentimeter, dann in Meter um (100 cm = 1 m). Bei Flächen musst du beide Seitenlängen getrennt umrechnen.',
-            '35 · 200 = 7 000 cm = 70 m. 48 m = 4 800 cm; 4 800 : 200 = 24 cm. 6 cm → 12 m und 4 cm → 8 m, also 12 · 8 = 96 m². 1 · 500 = 500 cm = 5 m. Einerziffern: 0, 4, 6, 5.',
           ],
-          loesung: '70 m · 24 cm · 96 m² · 5 m → Einerziffern 0, 4, 6, 5.',
+          zufall: (z) => {
+            const planLang = z.vielfach(20, 45, 5);          // cm auf dem Plan
+            const echtLang = z.vielfach(30, 90, 2);          // m in Wirklichkeit
+            const kurz = z.ganz(2, 4), schmal = z.ganz(2, 3); // cm auf dem Plan
+            const anderer = z.aus([300, 400, 500, 600, 800, 1000]);
+            const echtBreite = 2 * kurz, echtTiefe = 2 * schmal;
+            const werte = [planLang * 2, echtLang / 2, echtBreite * echtTiefe, anderer / 100];
+            const ziffern = werte.map(einerziffer).join(', ');
+            return {
+              regel: 'einer',
+              aufgaben: [
+                { frage: `Auf dem Plan (1 : 200) ist der Schulhof ${planLang} cm lang. Wie lang ist er in Wirklichkeit in Metern?`, antwort: antw(werte[0]), einheit: 'm' },
+                { frage: `Eine Strecke ist in Wirklichkeit ${echtLang} m lang. Wie lang ist sie auf dem Plan (1 : 200) in Zentimetern?`, antwort: antw(werte[1]), einheit: 'cm' },
+                { frage: `Der Sandkasten ist auf dem Plan (1 : 200) ${kurz} cm × ${schmal} cm groß. Wie groß ist er in Wirklichkeit in m²?`, antwort: antw(werte[2]), einheit: 'm²' },
+                { frage: `Wie viele Meter in Wirklichkeit entspricht 1 cm auf einem Plan im Maßstab 1 : ${fmt(anderer)}?`, antwort: antw(werte[3]), einheit: 'm' },
+              ],
+              tipp: `${planLang} · 200 = ${fmt(planLang * 200)} cm = ${werte[0]} m; `
+                + `${echtLang} m = ${fmt(echtLang * 100)} cm, ${fmt(echtLang * 100)} : 200 = ${werte[1]} cm; `
+                + `${kurz} cm → ${echtBreite} m und ${schmal} cm → ${echtTiefe} m, also ${echtBreite} · ${echtTiefe} = ${werte[2]} m²; `
+                + `1 · ${fmt(anderer)} = ${fmt(anderer)} cm = ${werte[3]} m. Einerziffern: ${ziffern}.`,
+              loesung: `${werte[0]} m; ${werte[1]} cm; ${werte[2]} m²; ${werte[3]} m → Einerziffern ${ziffern}.`,
+            };
+          },
         },
       ],
     },
@@ -544,72 +821,103 @@ const GRUNDRAEUME = [
             + 'darunter blinkt eine leere Zeile. Ohne Volumenangabe läuft hier nichts weiter.',
           auftrag: 'Berechne. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
           typ: 'rechnen',
-          aufgaben: [
-            { frage: 'Ein Quader ist 12 cm lang, 5 cm breit und 4 cm hoch. Volumen in cm³?', antwort: '240', einheit: 'cm³', zeichen: '0' },
-            { frage: 'Ein Würfel hat die Kantenlänge 6 cm. Volumen in cm³?', antwort: '216', einheit: 'cm³', zeichen: '6' },
-            { frage: 'Ein Quader hat das Volumen 360 cm³, ist 9 cm lang und 5 cm breit. Wie hoch ist er in cm?', antwort: '8', einheit: 'cm', zeichen: '8' },
-            { frage: 'Wie groß ist der Oberflächeninhalt eines Würfels mit der Kantenlänge 5 cm in cm²?', antwort: '150', einheit: 'cm²', zeichen: '0' },
-          ],
-          code: '0680',
           codeRegel: 'Die Einerziffern der vier Ergebnisse – von oben nach unten.',
           tipps: [
             'Volumen eines Quaders: V = Länge · Breite · Höhe. Die Oberfläche eines Würfels besteht aus 6 gleichen Quadraten.',
-            'Bei Aufgabe 3 rechnest du rückwärts: 360 : (9 · 5). Bei Aufgabe 4: 6 · (5 · 5).',
-            '12 · 5 · 4 = 240 cm³. 6 · 6 · 6 = 216 cm³. 360 : 45 = 8 cm. 6 · 25 = 150 cm². Einerziffern: 0, 6, 8, 0.',
+            'Bei Aufgabe 3 rechnest du rückwärts: teile das Volumen durch das Produkt von Länge und Breite. Bei Aufgabe 4 rechnest du 6 · (Kante · Kante).',
           ],
-          loesung: '240 cm³ · 216 cm³ · 8 cm · 150 cm² → Einerziffern 0, 6, 8, 0.',
+          zufall: (z) => {
+            const laenge = z.ganz(8, 18), breite = z.ganz(3, 9), hoehe = z.ganz(2, 7);
+            const kante = z.ganz(4, 9);
+            const l2 = z.ganz(5, 12), b2 = z.ganz(3, 9), h2 = z.ganz(4, 9);
+            const kante2 = z.ganz(3, 9);
+            const werte = [laenge * breite * hoehe, kante * kante * kante, h2, 6 * kante2 * kante2];
+            const ziffern = werte.map(einerziffer).join(', ');
+            return {
+              regel: 'einer',
+              aufgaben: [
+                { frage: `Ein Quader ist ${laenge} cm lang, ${breite} cm breit und ${hoehe} cm hoch. Volumen in cm³?`, antwort: antw(werte[0]), einheit: 'cm³' },
+                { frage: `Ein Würfel hat die Kantenlänge ${kante} cm. Volumen in cm³?`, antwort: antw(werte[1]), einheit: 'cm³' },
+                { frage: `Ein Quader hat das Volumen ${fmt(l2 * b2 * h2)} cm³, ist ${l2} cm lang und ${b2} cm breit. Wie hoch ist er in cm?`, antwort: antw(werte[2]), einheit: 'cm' },
+                { frage: `Wie groß ist der Oberflächeninhalt eines Würfels mit der Kantenlänge ${kante2} cm in cm²?`, antwort: antw(werte[3]), einheit: 'cm²' },
+              ],
+              tipp: `${laenge} · ${breite} · ${hoehe} = ${fmt(werte[0])} cm³; ${kante} · ${kante} · ${kante} = ${fmt(werte[1])} cm³; `
+                + `${l2} · ${b2} = ${fmt(l2 * b2)}, also ${fmt(l2 * b2 * h2)} : ${fmt(l2 * b2)} = ${werte[2]} cm; `
+                + `6 · (${kante2} · ${kante2}) = ${fmt(werte[3])} cm². Einerziffern: ${ziffern}.`,
+              loesung: `${fmt(werte[0])} cm³; ${fmt(werte[1])} cm³; ${werte[2]} cm; ${fmt(werte[3])} cm² → Einerziffern ${ziffern}.`,
+            };
+          },
         },
         {
-          titel: 'Rätsel 2: Netze auf dem Förderband',
-          text: 'Auf dem zweiten Band liegen aufgeklappte Kartons, flach wie Papierbögen. Die Steuerung fragt diesmal nicht nach Maßen, '
-            + 'sondern nach Flächen, Kanten und Ecken – Wissen, das hier jede Packerin im Schlaf hat.',
-          auftrag: 'Wähle bei jeder Frage die richtige Antwort. Jede richtige Antwort deckt einen Buchstaben auf.',
-          typ: 'auswahl',
-          fragen: [
-            { frage: 'Aus wie vielen Flächen besteht das Netz eines Würfels?', optionen: ['4', '6', '8'], richtig: 1, zeichen: 'N' },
-            { frage: 'Wie viele Kanten hat ein Quader?', optionen: ['8', '12', '6'], richtig: 1, zeichen: 'E' },
-            { frage: 'Wie viele Ecken hat ein Quader?', optionen: ['6', '8', '12'], richtig: 1, zeichen: 'T' },
+          titel: 'Rätsel 2: Die Stellräder am Förderband',
+          text: 'Am zweiten Band stehen vier Stellräder. Jedes verändert ein Maß an einer Kiste, und auf der Anzeige '
+            + 'darüber sieht man sofort, was dabei mit dem Volumen oder der Oberfläche passiert. Die Steuerung gibt '
+            + 'einen Buchstaben frei, sobald das verlangte Maß genau erreicht ist.',
+          auftrag: 'Schiebe jeden Regler, bis die Anzeige den verlangten Wert zeigt. Jede richtig eingestellte Größe deckt einen Buchstaben auf.',
+          typ: 'schieben',
+          code: 'NETZ',
+          codeRegel: 'Jede richtig eingestellte Größe deckt einen Buchstaben auf – von oben nach unten.',
+          aufgaben: [
             {
-              frage: 'Welche Aussage über das Schrägbild eines Würfels stimmt?',
-              optionen: ['Alle Kanten werden gleich lang gezeichnet.', 'Die nach hinten verlaufenden Kanten werden verkürzt gezeichnet.', 'Alle Flächen erscheinen als Quadrate.'],
-              richtig: 1, zeichen: 'Z',
+              frage: 'Eine Kiste ist 12 cm lang und 5 cm breit. Stelle die Höhe so ein, dass das Volumen 720 cm³ beträgt.',
+              von: 1, bis: 30, schritt: 1, antwort: 12, einheit: 'cm',
+              anzeige: (w) => `Volumen: 12 cm · 5 cm · ${w} cm = ${fmt(60 * w)} cm³`,
+              zeichen: 'N',
+            },
+            {
+              frage: 'Stelle die Kantenlänge des Würfels so ein, dass sein Volumen 512 cm³ beträgt.',
+              von: 1, bis: 20, schritt: 1, antwort: 8, einheit: 'cm',
+              anzeige: (w) => `Volumen: ${w} cm · ${w} cm · ${w} cm = ${fmt(w * w * w)} cm³`,
+              zeichen: 'E',
+            },
+            {
+              frage: 'Stelle die Kantenlänge des Würfels so ein, dass sein Oberflächeninhalt 600 cm² beträgt.',
+              von: 1, bis: 20, schritt: 1, antwort: 10, einheit: 'cm',
+              anzeige: (w) => `Oberfläche: 6 · ${w} cm · ${w} cm = ${fmt(6 * w * w)} cm²`,
+              zeichen: 'T',
+            },
+            {
+              frage: 'Ein Aquarium ist 50 cm lang und 30 cm breit. Stelle die Füllhöhe so ein, dass genau 60 Liter Wasser hineinpassen.',
+              von: 10, bis: 60, schritt: 2, antwort: 40, einheit: 'cm',
+              anzeige: (w) => `Inhalt: 50 cm · 30 cm · ${w} cm = ${fmt(1500 * w)} cm³ = ${fmt(1500 * w / 1000)} l`,
+              zeichen: 'Z',
             },
           ],
-          code: 'NETZ',
-          codeRegel: 'Die vier Buchstaben von oben nach unten.',
           tipps: [
-            'Ein Würfel ist ein besonderer Quader. Zähle ruhig an einem Schuhkarton nach.',
-            'Ein Quader hat 6 Flächen, 12 Kanten und 8 Ecken. Im Schrägbild zeichnet man die Tiefenkanten meist nur halb so lang.',
-            '6 Flächen – 12 Kanten – 8 Ecken – die nach hinten verlaufenden Kanten werden verkürzt gezeichnet.',
+            'Schiebe erst einmal versuchsweise und beobachte die Anzeige: Wird der Wert größer oder kleiner, wenn du nach rechts schiebst?',
+            'Beim Quader gilt V = Länge · Breite · Höhe – rechne also zuerst Länge · Breite aus und überlege, womit man das noch malnehmen muss. Die Oberfläche eines Würfels besteht aus 6 gleichen Quadraten. Und 1 Liter = 1 000 cm³.',
+            'Höhe 12 cm (12 · 5 · 12 = 720); Kante 8 cm (8 · 8 · 8 = 512); Kante 10 cm (6 · 10 · 10 = 600); Füllhöhe 40 cm (50 · 30 · 40 = 60 000 cm³ = 60 l).',
           ],
-          loesung: '6 / 12 / 8 / verkürzte Tiefenkanten → N, E, T, Z.',
+          loesung: '12 cm; 8 cm; 10 cm; 40 cm → N, E, T, Z.',
         },
         {
-          titel: 'Rätsel 3: Die Volumeneinheiten',
-          text: 'An der Wand hängt die alte Umrechnungstafel aus Blech, auf der hier jeder nachgeschaut hat. Beim Aufräumen ist sie in '
-            + 'zwei Hälften zerrissen; die Angaben links suchen ihre Partner rechts.',
-          auftrag: 'Verbinde jeweils die beiden gleich großen Angaben.',
-          typ: 'zuordnen',
-          titelLinks: 'Angabe',
-          titelRechts: 'genauso groß wie',
-          codeAmEnde: true,
-          saat: 307,
-          paare: [
-            { links: '1 l', rechts: '1 dm³' },
-            { links: '1 m³', rechts: '1 000 dm³' },
-            { links: '1 cm³', rechts: '1 ml' },
-            { links: '2,5 l', rechts: '2 500 cm³' },
-            { links: '750 ml', rechts: '0,75 dm³' },
-            { links: '12 000 cm³', rechts: '12 l' },
-          ],
+          titel: 'Rätsel 3: Die Umrechnungskarten',
+          text: 'An der Wand hing die alte Umrechnungstafel aus Blech, auf der hier jeder nachgeschaut hat. Beim '
+            + 'Aufräumen ist sie zerbrochen: Acht Karten mit Angaben und acht Karten mit gleich großen Werten liegen '
+            + 'nun auf dem Packtisch. Auf der Rückseite der Karten ist eine Zahl aufgemalt.',
+          auftrag: 'Lege zu jeder Angabe die Karte mit dem <strong>gleich großen</strong> Wert. Das fertige Bild zeigt den Code.',
+          typ: 'legen',
           code: '1000',
-          codeRegel: 'Wenn alle Paare stimmen, erscheint der Code: es ist die Zahl, mit der man zwischen zwei benachbarten Volumeneinheiten umrechnet.',
-          tipps: [
-            'Zwischen zwei benachbarten Volumeneinheiten liegt immer derselbe Faktor.',
-            '1 l = 1 dm³, 1 ml = 1 cm³, 1 m³ = 1 000 dm³ und 1 dm³ = 1 000 cm³.',
-            '1 l = 1 dm³ · 1 m³ = 1 000 dm³ · 1 cm³ = 1 ml · 2,5 l = 2 500 cm³ · 750 ml = 0,75 dm³ · 12 000 cm³ = 12 l. Der Umrechnungsfaktor ist 1 000.',
+          zahlbild: '1000',
+          spalten: 4,
+          codeRegel: 'Die Zahl, die das fertige Bild zeigt – der Faktor zwischen zwei benachbarten Volumeneinheiten.',
+          karten: [
+            { rechnung: '3 l', ergebnis: '3 000 cm³' },
+            { rechnung: '5 dm³', ergebnis: '5 000 cm³' },
+            { rechnung: '2 m³', ergebnis: '2 000 dm³' },
+            { rechnung: '7 l', ergebnis: '7 000 ml' },
+            { rechnung: '4 000 cm³', ergebnis: '4 l' },
+            { rechnung: '6 000 ml', ergebnis: '6 l' },
+            { rechnung: '8 000 dm³', ergebnis: '8 m³' },
+            { rechnung: '9 000 cm³', ergebnis: '9 dm³' },
           ],
-          loesung: 'Alle sechs Paare wie angegeben; der Umrechnungsfaktor zwischen Volumeneinheiten ist 1 000.',
+          tipps: [
+            'Rechne jede Angabe in die kleinere der beiden Einheiten um – dann kannst du gut vergleichen.',
+            '1 l = 1 dm³ und 1 ml = 1 cm³. Zwischen zwei benachbarten Volumeneinheiten liegt immer derselbe Faktor: 1 m³ = 1 000 dm³ und 1 dm³ = 1 000 cm³.',
+            '3 l = 3 000 cm³; 5 dm³ = 5 000 cm³; 2 m³ = 2 000 dm³; 7 l = 7 000 ml; 4 000 cm³ = 4 l; '
+              + '6 000 ml = 6 l; 8 000 dm³ = 8 m³; 9 000 cm³ = 9 dm³. Das Bild zeigt 1000.',
+          ],
+          loesung: 'Alle acht Karten wie angegeben – das Bild zeigt 1000, den Umrechnungsfaktor zwischen zwei benachbarten Volumeneinheiten.',
         },
         {
           titel: 'Rätsel 4: Die letzte Kiste',
@@ -617,20 +925,33 @@ const GRUNDRAEUME = [
             + 'sie das Tor freigibt – vier Fragen zu Kanten, Grundflächen und Litern.',
           auftrag: 'Rechne. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
           typ: 'rechnen',
-          aufgaben: [
-            { frage: 'Ein Würfel hat das Volumen 125 cm³. Wie lang ist eine Kante in cm?', antwort: '5', einheit: 'cm', zeichen: '5' },
-            { frage: 'Ein Quader hat die Grundfläche 48 cm² und das Volumen 336 cm³. Wie hoch ist er in cm?', antwort: '7', einheit: 'cm', zeichen: '7' },
-            { frage: 'Wie viele Würfel mit 2 cm Kantenlänge passen in einen Würfel mit 6 cm Kantenlänge?', antwort: '27', einheit: 'Würfel', zeichen: '7' },
-            { frage: 'Ein Aquarium ist 50 cm lang, 30 cm breit und 24 cm hoch. Wie viele Liter passen hinein?', antwort: '36', einheit: 'l', zeichen: '6' },
-          ],
-          code: '5776',
           codeRegel: 'Die Einerziffern der vier Ergebnisse – von oben nach unten.',
           tipps: [
             'Beim Würfel ist das Volumen Kante · Kante · Kante. Beim Quader gilt V = Grundfläche · Höhe.',
-            'Für 125 suchst du die Zahl mit a · a · a = 125. Bei Aufgabe 3 passen in jede Kantenrichtung 6 : 2 = 3 Würfel. 1 Liter = 1 000 cm³.',
-            '5 · 5 · 5 = 125, also 5 cm. 336 : 48 = 7 cm. 3 · 3 · 3 = 27 Würfel. 50 · 30 · 24 = 36 000 cm³ = 36 l. Einerziffern: 5, 7, 7, 6.',
+            'Bei Aufgabe 1 suchst du die Zahl, die dreimal mit sich selbst multipliziert das Volumen ergibt. Bei Aufgabe 3 teilst du die große Kante durch die kleine – so viele Würfel passen in jede Kantenrichtung. 1 Liter = 1 000 cm³.',
           ],
-          loesung: '5 cm · 7 cm · 27 Würfel · 36 l → Einerziffern 5, 7, 7, 6.',
+          zufall: (z) => {
+            const kante = z.ganz(3, 8);
+            const grund = z.vielfach(24, 72, 4), hoehe = z.ganz(4, 9);
+            const klein = z.ganz(2, 4), fach = z.ganz(2, 4);
+            const aqL = z.vielfach(40, 60, 10), aqB = z.vielfach(20, 40, 10), aqH = z.vielfach(20, 40, 10);
+            const werte = [kante, hoehe, fach * fach * fach, aqL * aqB * aqH / 1000];
+            const ziffern = werte.map(einerziffer).join(', ');
+            return {
+              regel: 'einer',
+              aufgaben: [
+                { frage: `Ein Würfel hat das Volumen ${fmt(kante * kante * kante)} cm³. Wie lang ist eine Kante in cm?`, antwort: antw(werte[0]), einheit: 'cm' },
+                { frage: `Ein Quader hat die Grundfläche ${grund} cm² und das Volumen ${fmt(grund * hoehe)} cm³. Wie hoch ist er in cm?`, antwort: antw(werte[1]), einheit: 'cm' },
+                { frage: `Wie viele Würfel mit ${klein} cm Kantenlänge passen in einen Würfel mit ${klein * fach} cm Kantenlänge?`, antwort: antw(werte[2]), einheit: 'Würfel' },
+                { frage: `Ein Aquarium ist ${aqL} cm lang, ${aqB} cm breit und ${aqH} cm hoch. Wie viele Liter passen hinein?`, antwort: antw(werte[3]), einheit: 'l' },
+              ],
+              tipp: `${kante} · ${kante} · ${kante} = ${fmt(kante * kante * kante)}, also ${werte[0]} cm; `
+                + `${fmt(grund * hoehe)} : ${grund} = ${werte[1]} cm; `
+                + `${klein * fach} : ${klein} = ${fach}, also ${fach} · ${fach} · ${fach} = ${werte[2]} Würfel; `
+                + `${aqL} · ${aqB} · ${aqH} = ${fmt(aqL * aqB * aqH)} cm³ = ${werte[3]} l. Einerziffern: ${ziffern}.`,
+              loesung: `${werte[0]} cm; ${werte[1]} cm; ${werte[2]} Würfel; ${werte[3]} l → Einerziffern ${ziffern}.`,
+            };
+          },
         },
       ],
     },
@@ -657,72 +978,105 @@ const GRUNDRAEUME = [
             + 'natürlich in Anteilen, denn Zahlen mag er nur, wenn sie zu einer Pizza gehören.',
           auftrag: 'Rechne. Jede richtige Antwort deckt eine Codeziffer auf.',
           typ: 'rechnen',
-          aufgaben: [
-            { frage: 'Kürze <sup>42</sup>⁄<sub>56</sub> vollständig. Wie lautet der <strong>Nenner</strong>?', antwort: '4', zeichen: '1' },
-            { frage: 'Erweitere <sup>3</sup>⁄<sub>7</sub> so, dass der Nenner 63 lautet. Wie lautet der <strong>Zähler</strong>?', antwort: '27', zeichen: '9' },
-            { frage: 'Eine Pizza hat 8 gleiche Stücke, 6 davon sind gegessen. Wie viel Prozent sind gegessen?', antwort: '75', einheit: '%', zeichen: '7' },
-            { frage: 'Drei Pizzen werden gleichmäßig auf 4 Kinder verteilt. Welchen Anteil einer Pizza bekommt jedes Kind? Gib einen Bruch an.', antwort: ['3/4', '0,75'], zeichen: '5' },
-          ],
-          code: '1975',
           codeRegel: 'Die vier Ziffern von oben nach unten.',
           tipps: [
             'Kürzen heißt: Zähler und Nenner durch dieselbe Zahl teilen. Erweitern heißt: beide mit derselben Zahl multiplizieren.',
-            '42 und 56 haben den gemeinsamen Teiler 14. Für den Nenner 63 rechnest du 63 : 7 = 9 und erweiterst mit 9. Und 6 von 8 Stücken sind drei Viertel.',
-            '42/56 = 3/4, Nenner 4. 3/7 = 27/63, Zähler 27. 6/8 = 3/4 = 75 %. 3 Pizzen : 4 Kinder = 3/4 Pizza je Kind.',
+            'Suche beim Kürzen den größten gemeinsamen Teiler von Zähler und Nenner. Beim Erweitern teilst du den neuen Nenner durch den alten – mit dieser Zahl multiplizierst du dann den Zähler. Für einen Bruchteil einer Menge teilst du erst durch den Nenner und nimmst dann mal den Zähler.',
           ],
-          loesung: 'Nenner 4 · Zähler 27 · 75 % · 3/4 → Codeziffern 1, 9, 7, 5.',
+          zufall: (z) => {
+            const [kz, kn] = z.aus([[3, 4], [2, 3], [3, 5], [4, 5], [5, 6], [2, 5], [5, 8], [3, 8]]);
+            const mit = z.ganz(3, 9);
+            const [ez, en] = z.aus([[3, 7], [2, 7], [4, 7], [5, 7], [2, 5], [3, 5], [4, 5], [5, 6], [3, 8], [5, 8], [7, 8], [2, 9], [4, 9], [5, 9]]);
+            const faktor = z.ganz(4, 9);
+            const stuecke = z.aus([4, 5, 8, 10]);
+            const gegessen = stuecke === 8 ? z.aus([2, 4, 6]) : z.ganz(1, stuecke - 1);
+            const prozent = gegessen * 100 / stuecke;
+            const [az, an] = z.aus([[2, 3], [3, 4], [2, 5], [3, 5], [4, 5], [5, 6], [3, 8], [5, 8]]);
+            const menge = an * z.ganz(3, 9);
+            const werte = [kn, ez * faktor, prozent, menge / an * az];
+            const ziffern = werte.map(einerziffer).join(', ');
+            return {
+              regel: 'einer',
+              aufgaben: [
+                { frage: `Kürze <sup>${kz * mit}</sup>⁄<sub>${kn * mit}</sub> vollständig. Wie lautet der <strong>Nenner</strong>?`, antwort: antw(werte[0]) },
+                { frage: `Erweitere <sup>${ez}</sup>⁄<sub>${en}</sub> so, dass der Nenner ${en * faktor} lautet. Wie lautet der <strong>Zähler</strong>?`, antwort: antw(werte[1]) },
+                { frage: `Eine Pizza hat ${stuecke} gleiche Stücke, ${gegessen} davon sind gegessen. Wie viel Prozent sind gegessen?`, antwort: antw(werte[2]), einheit: '%' },
+                { frage: `Der Chef schneidet ${menge} Pizzastücke. <sup>${az}</sup>⁄<sub>${an}</sub> davon gehen an den großen Tisch. Wie viele Stücke sind das?`, antwort: antw(werte[3]), einheit: 'Stücke' },
+              ],
+              tipp: `${kz * mit}/${kn * mit} = ${kz}/${kn}, der Nenner ist ${werte[0]}; `
+                + `${en * faktor} : ${en} = ${faktor}, also ${ez} · ${faktor} = ${werte[1]}; `
+                + `${gegessen} von ${stuecke} Stücken sind ${gegessen}/${stuecke} = ${prozent}/100, also ${werte[2]} %; `
+                + `${menge} : ${an} = ${menge / an}, und ${menge / an} · ${az} = ${werte[3]} Stücke. Codeziffern: ${ziffern}.`,
+              loesung: `Nenner ${werte[0]}; Zähler ${werte[1]}; ${werte[2]} %; ${werte[3]} Stücke → Codeziffern ${ziffern}.`,
+            };
+          },
         },
         {
-          titel: 'Rätsel 2: Die Bestellung ordnen',
-          text: 'Auf sechs Bestellzetteln steht, welchen Anteil einer Pizza die Gäste bestellt haben. Der Chef steckt die Zettel immer '
-            + 'der Größe nach auf den Nagel neben dem Ofen – heute hängt alles durcheinander.',
-          auftrag: 'Ordne die Brüche von der <strong>kleinsten</strong> zur <strong>größten</strong> Zahl.',
-          typ: 'reihenfolge',
-          codeAmEnde: true,
-          saat: 41,
-          elemente: [
-            { text: '<sup>1</sup>⁄<sub>5</sub> Pizza' },
-            { text: '<sup>1</sup>⁄<sub>4</sub> Pizza' },
-            { text: '<sup>3</sup>⁄<sub>10</sub> Pizza' },
-            { text: '<sup>2</sup>⁄<sub>5</sub> Pizza' },
-            { text: '<sup>1</sup>⁄<sub>2</sub> Pizza' },
-            { text: '<sup>7</sup>⁄<sub>10</sub> Pizza' },
-          ],
+          titel: 'Rätsel 2: Die Säulen der Bestellungen',
+          text: 'Neben der Kasse hängt ein Säulendiagramm. Für jeden der fünf Tische zeigt eine Säule, wie viele '
+            + 'Pizzastücke dort heute Abend bestellt wurden. Eine ganze Pizza hat in der Bella Frazione immer zwölf '
+            + 'Stücke. Alle Säulen enden genau auf einer Linie – wer richtig abliest, braucht nicht zu schätzen.',
+          auftrag: 'Lies die vier Werte aus dem Säulendiagramm ab. Jede richtige Antwort deckt eine Codeziffer auf.',
+          typ: 'ablesen',
           code: '1132',
-          codeRegel: 'Der Code sind die <strong>Zähler</strong> der ersten vier Brüche in der richtigen Reihenfolge.',
-          tipps: [
-            'Mache die Brüche vergleichbar, indem du sie alle auf denselben Nenner erweiterst.',
-            'Der Nenner 20 passt für alle: 1/5 = 4/20, 1/4 = 5/20, 3/10 = 6/20, 2/5 = 8/20, 1/2 = 10/20, 7/10 = 14/20.',
-            'Richtige Reihenfolge: 1/5, 1/4, 3/10, 2/5, 1/2, 7/10. Die Zähler der ersten vier sind 1, 1, 3 und 2.',
+          codeRegel: 'Die <strong>Einerziffern</strong> der vier abgelesenen Zahlen – von oben nach unten.',
+          diagramm: {
+            art: 'saeulen',
+            yName: 'Stücke',
+            ySchritt: 1,
+            yBis: 12,
+            werte: [
+              { name: 'Tisch 1', wert: 3 }, { name: 'Tisch 2', wert: 11 }, { name: 'Tisch 3', wert: 6 },
+              { name: 'Tisch 4', wert: 12 }, { name: 'Tisch 5', wert: 9 },
+            ],
+            beschreibung: 'Säulendiagramm der bestellten Pizzastücke: Tisch 1 drei, Tisch 2 elf, Tisch 3 sechs, Tisch 4 zwölf, Tisch 5 neun',
+          },
+          aufgaben: [
+            { frage: 'Wie viele Stücke hat Tisch 2 bestellt?', antwort: '11', einheit: 'Stücke', zeichen: '1' },
+            { frage: 'Wie viele Stücke haben Tisch 4 und Tisch 5 zusammen bestellt?', antwort: '21', einheit: 'Stücke', zeichen: '1' },
+            { frage: 'Wie viele Stücke hat Tisch 3 weniger bestellt als Tisch 5?', antwort: '3', einheit: 'Stücke', zeichen: '3' },
+            { frage: 'Wie viele Stücke hat der Tisch mit der größten Bestellung bestellt?', antwort: '12', einheit: 'Stücke', zeichen: '2' },
           ],
-          loesung: '1/5 < 1/4 < 3/10 < 2/5 < 1/2 < 7/10 → Zähler der ersten vier: 1, 1, 3, 2.',
+          tipps: [
+            'Lies zuerst ab, wie viele Stücke eine Linie des Gitters wert ist – dann sind alle Säulen schnell gelesen.',
+            'Für die zweite Aufgabe addierst du zwei Säulen, für die dritte ziehst du die kleinere Säule von der größeren ab.',
+            'Tisch 2: 11 Stücke; 12 + 9 = 21 Stücke; 9 − 6 = 3 Stücke; die größte Bestellung ist eine ganze Pizza mit 12 Stücken. Einerziffern: 1, 1, 3, 2.',
+          ],
+          loesung: '11 Stücke; 21 Stücke; 3 Stücke; 12 Stücke → Einerziffern 1, 1, 3, 2.',
         },
         {
-          titel: 'Rätsel 3: Bruch und Prozent',
-          text: 'Der Chef notiert Rabatte mal als Bruch, mal in Prozent, je nachdem, was ihm zuerst einfällt. An der Kasse hängen beide '
-            + 'Sorten Zettel und wollen paarweise zusammengelegt werden.',
-          auftrag: 'Verbinde jeden Bruch mit der passenden Prozentangabe.',
-          typ: 'zuordnen',
-          titelLinks: 'Bruch',
-          titelRechts: 'Prozent',
-          codeAmEnde: true,
-          saat: 193,
-          paare: [
-            { links: '<sup>1</sup>⁄<sub>2</sub>', rechts: '50 %' },
-            { links: '<sup>1</sup>⁄<sub>4</sub>', rechts: '25 %' },
-            { links: '<sup>3</sup>⁄<sub>4</sub>', rechts: '75 %' },
-            { links: '<sup>1</sup>⁄<sub>5</sub>', rechts: '20 %' },
-            { links: '<sup>3</sup>⁄<sub>10</sub>', rechts: '30 %' },
-            { links: '<sup>7</sup>⁄<sub>20</sub>', rechts: '35 %' },
-          ],
+          titel: 'Rätsel 3: Die Bausteine an der Kasse',
+          text: 'An der Kasse klebt ein Zettel mit vier Zahlen – die Stückzahlen und Beträge, die am Ende des Abends '
+            + 'herauskommen müssen. Daneben steht ein Kästchen mit Zahlenplättchen und Rechenzeichen. Zu jeder Zahl '
+            + 'soll ein Term gelegt werden, der genau diesen Wert ergibt; jedes Plättchen darf nur einmal benutzt werden.',
+          auftrag: 'Baue zu jedem Zielwert einen passenden Term. Jeder getroffene Zielwert deckt eine Codeziffer auf.',
+          typ: 'termbauen',
           code: '2025',
-          codeRegel: 'Wenn alle Paare stimmen, erscheint der Code: die Prozentzahlen der beiden <strong>kleinsten</strong> Brüche hintereinander.',
-          tipps: [
-            'Prozent heißt Hundertstel: 1 % ist ein Hundertstel.',
-            'Erweitere jeden Bruch auf den Nenner 100. Aus 1/5 wird 20/100, also 20 %.',
-            '1/2 = 50 %, 1/4 = 25 %, 3/4 = 75 %, 1/5 = 20 %, 3/10 = 30 %, 7/20 = 35 %. Die zwei kleinsten Brüche sind 1/5 (20 %) und 1/4 (25 %).',
+          codeRegel: 'Jeder getroffene Zielwert deckt eine Codeziffer auf – von oben nach unten.',
+          aufgaben: [
+            {
+              frage: 'Der große Tisch bekommt <sup>3</sup>⁄<sub>8</sub> von 64 Stücken. Baue einen Term mit dem Wert <strong>24</strong>.',
+              ziel: 24, bausteine: ['64', '8', '3', '2', ':', '·', '+'], zeichen: '2', musterloesung: '64 : 8 · 3',
+            },
+            {
+              frage: 'Ein Viertel der 60 Gäste bestellt Salat. Baue einen Term mit dem Wert <strong>15</strong>.',
+              ziel: 15, bausteine: ['60', '4', '5', ':', '·', '+'], zeichen: '0', musterloesung: '60 : 4',
+            },
+            {
+              frage: 'Ein Tisch nimmt <sup>1</sup>⁄<sub>4</sub>, ein anderer <sup>1</sup>⁄<sub>3</sub> einer Pizza mit 24 Stücken. Baue einen Term mit dem Wert <strong>14</strong>.',
+              ziel: 14, bausteine: ['24', '24', '4', '3', '2', ':', ':', '+', '·'], zeichen: '2', musterloesung: '24 : 4 + 24 : 3',
+            },
+            {
+              frage: 'Auf eine Rechnung von 60 € gibt der Chef 25 % Rabatt. Baue einen Term mit dem Wert <strong>45</strong>.',
+              ziel: 45, bausteine: ['60', '60', '4', '3', '−', ':', '·'], zeichen: '5', musterloesung: '60 − 60 : 4',
+            },
           ],
-          loesung: '1/2 = 50 %; 1/4 = 25 %; 3/4 = 75 %; 1/5 = 20 %; 3/10 = 30 %; 7/20 = 35 % → kleinste: 20 % und 25 %.',
+          tipps: [
+            'Du musst nicht alle Plättchen benutzen. Für den Bruchteil einer Menge teilst du erst durch den Nenner und nimmst dann mit dem Zähler mal.',
+            'Bei der dritten Aufgabe brauchst du beide 24er-Plättchen: Rechne die zwei Anteile getrennt aus und addiere sie. Denke daran, dass Punkt vor Strich gilt. Und 25 % sind ein Viertel.',
+            '64 : 8 · 3 = 8 · 3 = 24; 60 : 4 = 15; 24 : 4 + 24 : 3 = 6 + 8 = 14; 60 − 60 : 4 = 60 − 15 = 45.',
+          ],
+          loesung: '64 : 8 · 3 = 24; 60 : 4 = 15; 24 : 4 + 24 : 3 = 14; 60 − 60 : 4 = 45 → Codeziffern 2, 0, 2, 5.',
         },
         {
           titel: 'Rätsel 4: Die Scheiben am Zahlenstrahl',
@@ -755,5 +1109,5 @@ const GRUNDRAEUME = [
 
 export default {
   stufe: 5,
-  raeume: [...GRUNDRAEUME, ...weitereRaeume],
+  raeume: [...GRUNDRAEUME, ...weitereRaeume, ...sportRaeume],
 };

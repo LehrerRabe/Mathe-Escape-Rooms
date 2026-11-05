@@ -8,6 +8,8 @@
    Reihenfolge der Themen wie im schulinternen Curriculum
    (Lambacher Schweizer G9, Kernlehrplan NRW 23.06.2019).                     */
 
+import { fmt, antw, einerziffer } from './zufall.js';
+
 export default {
 
   /* =============================================================
@@ -34,7 +36,7 @@ export default {
         'Beim Runden auf Tausender entscheidet die Hunderterziffer: ab 5 wird aufgerundet. 1 kg sind 1 000 g, 1 t sind 1 000 kg.',
         '1 h 20 min = 80 min. 47 499 → 47 000. 2,45 kg = 2 450 g und 0,0024 t = 2,4 kg = 2 400 g, also sind 2 500 g am größten. Von 9:45 bis 17:15 sind es 7 h 30 min.',
       ],
-      loesung: '80 min · 47 499 · 2 500 g · 7 h 30 min → T, O, U, R.',
+      loesung: '80 min; 47 499; 2 500 g; 7 h 30 min → T, O, U, R.',
     },
     {
       titel: 'Rätsel 6: Das Inventarbuch',
@@ -43,20 +45,33 @@ export default {
         + 'steht in sauberer Handschrift: „Mir genügt die letzte Ziffer."',
       auftrag: 'Rechne die vier Aufgaben. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
       typ: 'rechnen',
-      aufgaben: [
-        { frage: 'Im Juli kamen 1 248 Gäste, im August 967. Wie viele waren es zusammen?', antwort: '2215', einheit: 'Gäste', zeichen: '5' },
-        { frage: '1 020 Eintrittskarten werden auf 85 Blöcke verteilt. Wie viele Karten sind in einem Block?', antwort: '12', einheit: 'Karten', zeichen: '2' },
-        { frage: 'Das längste Exponat ist 23 m 47 cm lang. Wie viele Zentimeter sind das?', antwort: '2347', einheit: 'cm', zeichen: '7' },
-        { frage: 'Der Umbau dauerte 1 Jahr und 8 Monate. Wie viele Monate sind das?', antwort: '20', einheit: 'Monate', zeichen: '0' },
-      ],
-      code: '5270',
       codeRegel: 'Die Einerziffern der vier Ergebnisse – von oben nach unten.',
       tipps: [
         'Schreibe die Zahlen bei der Addition stellengerecht untereinander, Einer unter Einer.',
-        '1 m sind 100 cm, 1 Jahr sind 12 Monate. Bei 1 020 : 85 hilft es, zuerst 85 · 10 = 850 zu rechnen.',
-        '1 248 + 967 = 2 215; 1 020 : 85 = 12; 23 m 47 cm = 2 347 cm; 1 Jahr 8 Monate = 20 Monate. Einerziffern: 5, 2, 7, 0.',
+        '1 m sind 100 cm, 1 Jahr sind 12 Monate. Bei der Division hilft es, den Teiler erst einmal mit 10 zu multiplizieren und zu schauen, wie weit du damit kommst.',
       ],
-      loesung: '2 215 · 12 · 2 347 cm · 20 Monate → Einerziffern 5, 2, 7, 0.',
+      zufall: (z) => {
+        const juli = z.ganz(1100, 1900), august = z.ganz(700, 990);
+        const jeBlock = z.ganz(8, 19), bloecke = z.vielfach(60, 95, 5);
+        const meter = z.ganz(12, 29), zent = z.ganz(5, 95);
+        const jahre = z.ganz(1, 3), monate = z.ganz(2, 11);
+        const werte = [juli + august, jeBlock, meter * 100 + zent, jahre * 12 + monate];
+        const ziffern = werte.map(einerziffer).join(', ');
+        const jahrText = jahre === 1 ? '1 Jahr' : `${jahre} Jahre`;
+        return {
+          regel: 'einer',
+          aufgaben: [
+            { frage: `Im Juli kamen ${fmt(juli)} Gäste, im August ${fmt(august)}. Wie viele waren es zusammen?`, antwort: antw(werte[0]), einheit: 'Gäste' },
+            { frage: `${fmt(jeBlock * bloecke)} Eintrittskarten werden auf ${bloecke} Blöcke verteilt. Wie viele Karten sind in einem Block?`, antwort: antw(werte[1]), einheit: 'Karten' },
+            { frage: `Das längste Exponat ist ${meter} m ${zent} cm lang. Wie viele Zentimeter sind das?`, antwort: antw(werte[2]), einheit: 'cm' },
+            { frage: `Der Umbau dauerte ${jahrText} und ${monate} Monate. Wie viele Monate sind das?`, antwort: antw(werte[3]), einheit: 'Monate' },
+          ],
+          tipp: `${fmt(juli)} + ${fmt(august)} = ${fmt(werte[0])}; ${fmt(jeBlock * bloecke)} : ${bloecke} = ${werte[1]}; `
+            + `${meter} m ${zent} cm = ${meter} · 100 cm + ${zent} cm = ${fmt(werte[2])} cm; `
+            + `${jahrText} ${monate} Monate = ${jahre} · 12 + ${monate} = ${werte[3]} Monate. Einerziffern: ${ziffern}.`,
+          loesung: `${fmt(werte[0])} Gäste; ${werte[1]} Karten; ${fmt(werte[2])} cm; ${werte[3]} Monate → Einerziffern ${ziffern}.`,
+        };
+      },
     },
   ],
 
@@ -90,7 +105,7 @@ export default {
         'Ein Parallelogramm ist punktsymmetrisch, aber es lässt sich nicht zur Deckung falten. Beim Quadrat gibt es zwei Mittellinien und zwei Diagonalen.',
         'Parallelogramm 0, gleichschenkliges Dreieck 1, Rechteck 2, gleichseitiges Dreieck 3, Quadrat 4, Kreis unendlich viele. Der Code ist 0123.',
       ],
-      loesung: 'Parallelogramm 0 · gleichschenkliges Dreieck 1 · Rechteck 2 · gleichseitiges Dreieck 3 · Quadrat 4 · Kreis unendlich viele.',
+      loesung: 'Parallelogramm 0; gleichschenkliges Dreieck 1; Rechteck 2; gleichseitiges Dreieck 3; Quadrat 4; Kreis unendlich viele.',
     },
     {
       titel: 'Rätsel 6: Der Grundriss des Saals',
@@ -112,7 +127,7 @@ export default {
         'Beim Umfang zählst du alle vier Seiten zusammen: zweimal die Länge und zweimal die Breite. Bei der Punktspiegelung liegt M genau in der Mitte zwischen A und dem Bildpunkt.',
         'AB = 8 − 2 = 6; Umfang = 2 · (6 + 4) = 20; ein Rechteck hat 2 Achsen; von A(2|1) nach M(5|3) sind es 3 nach rechts, also liegt der Bildpunkt bei x = 5 + 3 = 8.',
       ],
-      loesung: 'AB = 6 · Umfang 20 · 2 Symmetrieachsen · Bildpunkt A′(8|5), also x = 8.',
+      loesung: 'AB = 6; Umfang 20; 2 Symmetrieachsen; Bildpunkt A′(8|5), also x = 8.',
     },
   ],
 
@@ -166,7 +181,7 @@ export default {
         'Prüfe bei 91 und 87, ob 7 bzw. 3 als Teiler passt. In einer Primfaktorzerlegung dürfen nur Primzahlen stehen – 15 und 10 sind keine.',
         '4 + 5 + 7 + 2 = 18, also ist 4 572 durch 9 teilbar. 87 = 3 · 29, 91 = 7 · 13, 97 ist prim. 2 520 : 7 = 360 und 2 520 : 9 = 280, aber 2 520 : 11 geht nicht auf. 150 = 2 · 3 · 5 · 5 = 2 · 3 · 5².',
       ],
-      loesung: '4 572 · 97 · 11 · 2 · 3 · 5² → E, S, S, E.',
+      loesung: '4 572; 97; 11; 2 · 3 · 5² → E, S, S, E.',
     },
   ],
 
@@ -200,7 +215,7 @@ export default {
         'Beim Quadrat mit dem Umfang 20 m musst du zuerst die Seitenlänge bestimmen: Umfang geteilt durch 4.',
         '9 · 4 = 36; 7 · 7 = 49; 8 · 5 : 2 = 20; 12 · 2,5 = 30; 20 : 4 = 5, also 5 · 5 = 25; 12 · 7 : 2 = 42. Der größte Inhalt ist 49 m², der zweitgrößte 42 m².',
       ],
-      loesung: '36 m² · 49 m² · 20 m² · 30 m² · 25 m² · 42 m² → größter 49, zweitgrößter 42.',
+      loesung: '36 m²; 49 m²; 20 m²; 30 m²; 25 m²; 42 m² → größter 49, zweitgrößter 42.',
     },
     {
       titel: 'Rätsel 6: Die Einheitenwand',
@@ -311,7 +326,7 @@ export default {
         'Zum Vergleichen bringst du die Brüche auf denselben Nenner oder rechnest sie in Prozent um. Vollständig gekürzt ist ein Bruch, wenn Zähler und Nenner keinen gemeinsamen Teiler mehr haben.',
         '4 von 12 ist 4/12 = 1/3. 3/5 = 60 %, 5/8 = 62,5 %, 2/3 ≈ 66,7 % – also ist 2/3 am größten. 1/8 = 12,5 %. 6/9 = 2/3 und 8/12 = 2/3 lassen sich kürzen, 7/12 nicht.',
       ],
-      loesung: '1/3 · 2/3 · 12,5 % · 7/12 → T, E, I, G.',
+      loesung: '1/3; 2/3; 12,5 %; 7/12 → T, E, I, G.',
     },
     {
       titel: 'Rätsel 6: Der Bestellblock',
@@ -320,20 +335,37 @@ export default {
         + 'die Zahlen fürs Schloss gemerkt, ohne sie jemandem zu verraten.',
       auftrag: 'Rechne die vier Aufgaben. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
       typ: 'rechnen',
-      aufgaben: [
-        { frage: 'Wie viel sind <sup>2</sup>⁄<sub>5</sub> von 60 Oliven?', antwort: '24', einheit: 'Oliven', zeichen: '4' },
-        { frage: 'Wie viel sind <sup>3</sup>⁄<sub>8</sub> von 48 Pizzastücken?', antwort: '18', einheit: 'Stücke', zeichen: '8' },
-        { frage: '35 von 50 Gästen bestellen Pizza. Wie viel Prozent sind das?', antwort: '70', einheit: '%', zeichen: '0' },
-        { frage: 'Kürze <sup>45</sup>⁄<sub>60</sub> vollständig. Welche Zahl steht dann im Nenner?', antwort: '4', zeichen: '4' },
-      ],
-      code: '4804',
       codeRegel: 'Die Einerziffern der vier Ergebnisse – von oben nach unten.',
       tipps: [
         'Für einen Bruchteil einer Menge teilst du zuerst durch den Nenner und nimmst dann mal den Zähler.',
         'Für Prozente erweiterst du den Bruch auf den Nenner 100. Beim Kürzen suchst du den größten gemeinsamen Teiler von Zähler und Nenner.',
-        '60 : 5 · 2 = 24; 48 : 8 · 3 = 18; 35/50 = 70/100 = 70 %; 45/60 = 3/4, der Nenner ist also 4. Einerziffern: 4, 8, 0, 4.',
       ],
-      loesung: '24 Oliven · 18 Stücke · 70 % · Nenner 4 → Einerziffern 4, 8, 0, 4.',
+      zufall: (z) => {
+        const [oz, on] = z.aus([[2, 3], [3, 4], [2, 5], [3, 5], [4, 5], [5, 6], [3, 8], [5, 8], [7, 8]]);
+        const oliven = on * z.ganz(6, 15);
+        const [pz, pn] = z.aus([[3, 4], [5, 6], [3, 8], [5, 8], [7, 8], [3, 10], [7, 10], [9, 10]]);
+        const stuecke = pn * z.ganz(4, 9);
+        const gaeste = z.aus([20, 50]);
+        const anteil = z.vielfach(20, 90, 10);
+        const bestellen = gaeste * anteil / 100;
+        const [kz, kn] = z.aus([[3, 4], [2, 3], [3, 5], [4, 5], [5, 6], [5, 8], [3, 8], [2, 7]]);
+        const mit = z.ganz(4, 9);
+        const werte = [oliven / on * oz, stuecke / pn * pz, anteil, kn];
+        const ziffern = werte.map(einerziffer).join(', ');
+        return {
+          regel: 'einer',
+          aufgaben: [
+            { frage: `Wie viele sind <sup>${oz}</sup>⁄<sub>${on}</sub> von ${oliven} Oliven?`, antwort: antw(werte[0]), einheit: 'Oliven' },
+            { frage: `Wie viele sind <sup>${pz}</sup>⁄<sub>${pn}</sub> von ${stuecke} Pizzastücken?`, antwort: antw(werte[1]), einheit: 'Stücke' },
+            { frage: `${bestellen} von ${gaeste} Gästen bestellen Pizza. Wie viel Prozent sind das?`, antwort: antw(werte[2]), einheit: '%' },
+            { frage: `Kürze <sup>${kz * mit}</sup>⁄<sub>${kn * mit}</sub> vollständig. Welche Zahl steht dann im Nenner?`, antwort: antw(werte[3]) },
+          ],
+          tipp: `${oliven} : ${on} · ${oz} = ${werte[0]}; ${stuecke} : ${pn} · ${pz} = ${werte[1]}; `
+            + `${bestellen}/${gaeste} = ${anteil}/100, also ${werte[2]} %; `
+            + `${kz * mit}/${kn * mit} = ${kz}/${kn}, der Nenner ist also ${werte[3]}. Einerziffern: ${ziffern}.`,
+          loesung: `${werte[0]} Oliven; ${werte[1]} Stücke; ${werte[2]} %; Nenner ${werte[3]} → Einerziffern ${ziffern}.`,
+        };
+      },
     },
   ],
 
@@ -386,7 +418,7 @@ export default {
         '1 min = 60 s, 1 km = 1 000 m, 1 m = 100 cm. Beim Rückgeld rechnest du 20,00 € − 7,45 €.',
         'Eine halbe Stunde = 30 · 60 s = 1 800 s. 0,12 km = 120 m, 1 150 cm = 11,5 m, also ist 0,12 km am größten. 20,00 − 7,45 = 12,55 €. 2 400 : 8 = 300 g.',
       ],
-      loesung: '1 800 s · 0,12 km (120 m) · 12,55 € · 300 g → L, U, P, E.',
+      loesung: '1 800 s; 0,12 km (120 m); 12,55 €; 300 g → L, U, P, E.',
     },
   ],
 
@@ -440,7 +472,7 @@ export default {
         'Ein Rechteck und eine Raute haben beide Symmetrieachsen. Beim Spiegeln steht die Verbindung von Punkt und Bildpunkt senkrecht auf der Achse.',
         'Geraden ohne Schnittpunkt in einer Ebene sind parallel. Das Parallelogramm ist nur punktsymmetrisch. Ein Kreis hat unendlich viele Achsen. Punkt und Bildpunkt sind gleich weit von der Achse entfernt.',
       ],
-      loesung: 'parallel · Parallelogramm · unendlich viele · gleich weit von der Achse → T, U, R, M.',
+      loesung: 'parallel; Parallelogramm; unendlich viele; gleich weit von der Achse → T, U, R, M.',
     },
   ],
 
@@ -474,7 +506,7 @@ export default {
         'Bei Quadratzahlen wie 16 und 36 tritt ein Teiler doppelt auf (4 · 4 bzw. 6 · 6) – er wird nur einmal gezählt. Eine Primzahl hat genau zwei Teiler.',
         '12: 1, 2, 3, 4, 6, 12 → 6. 16: 1, 2, 4, 8, 16 → 5. 17: 1, 17 → 2. 36: 1, 2, 3, 4, 6, 9, 12, 18, 36 → 9. 24 → 8, 64 → 7. Code: 6529.',
       ],
-      loesung: '12 → 6 · 16 → 5 · 17 → 2 · 36 → 9 · 24 → 8 · 64 → 7.',
+      loesung: '12 → 6; 16 → 5; 17 → 2; 36 → 9; 24 → 8; 64 → 7.',
     },
     {
       titel: 'Rätsel 6: Die Rechenbank',
@@ -553,7 +585,7 @@ export default {
         'Bei Flächen ist der Umrechnungsfaktor 100: 1 dm² = 100 cm². Beim Maßstab 1 : 100 ist die Wirklichkeit 100-mal so groß wie der Plan.',
         '8 · 8 = 64, also Seitenlänge 8 m und Umfang 4 · 8 = 32 m. 3 dm² = 300 cm². 12 cm · 100 = 1 200 cm = 12 m. Dreieck: 6 · 9 : 2 = 27 m².',
       ],
-      loesung: '32 m · 300 cm² · 12 m · 27 m² → Z, A, U, N.',
+      loesung: '32 m; 300 cm²; 12 m; 27 m² → Z, A, U, N.',
     },
   ],
 
@@ -607,7 +639,7 @@ export default {
         '1 m³ = 1 000 l. Beim Stapeln überlegst du für jede Richtung einzeln, wie viele Würfel nebeneinander passen.',
         '1 m³ = 1 000 l. 54 : 6 = 9, und 3 · 3 = 9, also ist die Kante 3 cm lang. Ein Quader hat 12 Kanten. In den Karton passen 4 · 2 · 1 = 8 Würfel.',
       ],
-      loesung: '1 000 l · 3 cm · 12 Kanten · 8 Würfel → L, A, S, T.',
+      loesung: '1 000 l; 3 cm; 12 Kanten; 8 Würfel → L, A, S, T.',
     },
   ],
 
@@ -661,7 +693,7 @@ export default {
         '1 % ist ein Hundertstel. Für 40 % von 200 g rechnest du also 200 : 100 · 40. Zum Vergleichen hilft es, die Brüche in Prozent umzurechnen.',
         '90 : 3 · 2 = 60 g. 0,75 = 75/100 = 3/4. 200 : 100 · 40 = 80 g. 1/3 ≈ 33 %, 2/5 = 40 %, 1/2 = 50 % – also liegt 2/5 dazwischen.',
       ],
-      loesung: '60 g · 3/4 · 80 g · 2/5 → M, E, H, L.',
+      loesung: '60 g; 3/4; 80 g; 2/5 → M, E, H, L.',
     },
   ],
 };

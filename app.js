@@ -1,6 +1,7 @@
 /* Mathe-Escape-Rooms – Steuerung und Ansichten */
 
-import { TITEL, UNTERTITEL, VERSION, STUFEN, ladeStufe, PASSWORT_PRUEFSUMME, PASSWORT_PRUEFSUMME_KLEIN } from './config.js';
+import { TITEL, UNTERTITEL, VERSION, STUFEN, ladeStufe, PASSWORT_PRUEFSUMME, PASSWORT_PRUEFSUMME_KLEIN, MELDEN_FUER_SCHUELER,
+  istGruppenraum, schlusscode, gruppenRaetsel } from './config.js';
 import { h, leer, svgIcon, ICON, lade, speichere, entferne, sitzungLade, sitzungSetze, pruefsumme, zeitText, zeitLang } from './util.js';
 import { bandSvg } from './motive.js';
 import { baueRaetsel } from './engine.js';
@@ -8,6 +9,16 @@ import { qrSvg, qrModule } from './qr.js';
 import { freigabeAdresse, freigabeLesen, freigabeAufnehmen, freigegebene, istFreigegeben, freigabenZuruecksetzen } from './freigabe.js';
 import { urkundeLeinwand, urkundeHerunterladen } from './urkunde.js';
 import { klangFuerRaum, musikAn, setzeMusik, musikFortsetzen, musikAnhalten } from './musik.js';
+import { druckBlock } from './drucken.js';
+import { hatRechner, istWissenschaftlich, rechnerLeiste } from './rechner.js';
+import {
+  neuerZahlensatz, zahlensatzLesen, baueZufall, raumMitZahlensatz, hatZufall, istZufall,
+} from './zufall.js';
+import {
+  KATEGORIEN, TEXT_MAX, kategorieText, neueMeldung, aufnehmen, dekodiere, meldungAdresse,
+  meldungen, meldungLoeschen, alleMeldungenLoeschen, meldungText, meldungenText,
+  mailAdresse, mailVorhanden, mailZiel,
+} from './meldungen.js';
 
 const kopf = document.getElementById('kopf');
 const inhalt = document.getElementById('inhalt');
@@ -30,11 +41,76 @@ async function stufeDaten(stufe) {
 }
 
 async function findeRaum(raumId) {
-  const stufe = Number(String(raumId).split('-')[0]);
+  // „5-19@A" heißt: Gruppenraum 5-19, gespielt von Gruppe A. Daraus wird ein
+  // ganz normaler Raum gebaut – mit den Rätseln dieser Gruppe und dem
+  // gemeinsamen Schlussrätsel. So funktioniert die ganze Spielansicht
+  // unverändert weiter, samt Spielstand, Tippkarten und Urkunde.
+  const [basisId, kennung] = String(raumId).split('@');
+  const stufe = Number(basisId.split('-')[0]);
   const daten = await stufeDaten(stufe);
   if (!daten) return null;
-  const raum = daten.raeume.find(r => r.id === raumId);
-  return raum ? { raum, stufe: daten.stufe } : null;
+  const raum = daten.raeume.find(r => r.id === basisId);
+  if (!raum) return null;
+  if (!kennung) return { raum, stufe: daten.stufe };
+
+  const gruppe = (raum.gruppen || []).find(g => g.kennung === kennung);
+  if (!gruppe) return null;
+  return {
+    stufe: daten.stufe,
+    raum: {
+      ...raum,
+      id: raumId,
+      basisId,
+      titel: `${raum.titel} – Gruppe ${gruppe.kennung}`,
+      kurz: gruppe.name,
+      gruppe,
+      raetsel: gruppenRaetsel(raum, gruppe),
+      zeige: undefined,      // im Gruppenraum wird nicht aus einem Pool gezogen
+    },
+  };
+}
+
+/* ---------- Rätselpool ----------
+   Räume mit dem Feld `zeige` haben mehr Rätsel, als gespielt werden. Beim Start
+   eines Durchgangs werden daraus `zeige` Stück gezogen – jede Gruppe bekommt also
+   eine andere Mischung, und abschreiben lohnt sich nicht. Die Ziehung wird im
+   Spielstand gespeichert, damit „Fortsetzen" dieselben Rätsel zeigt. */
+
+function anzahlProDurchgang(raum) {
+  // Ein Gruppenraum hat keine eigene Rätselliste: Jede Gruppe spielt ihre
+  // eigenen Rätsel und das gemeinsame Schlussrätsel.
+  if (istGruppenraum(raum)) return (raum.gruppen[0]?.raetsel?.length || 0) + 1;
+  const vorhanden = raum.raetsel.length;
+  const gewuenscht = Number(raum.zeige) || vorhanden;
+  return Math.max(1, Math.min(gewuenscht, vorhanden));
+}
+
+/** Zusatzräume zur Differenzierung: anspruchsvoller, mit Bezug zum Sportunterricht. */
+export function istSchwer(raum) { return raum?.niveau === 'schwer'; }
+
+export function hatPool(raum) {
+  if (!Array.isArray(raum?.raetsel)) return false;
+  return anzahlProDurchgang(raum) < raum.raetsel.length;
+}
+
+function ziehen(raum) {
+  const anzahl = anzahlProDurchgang(raum);
+  const topf = raum.raetsel.map((_, i) => i);
+  if (anzahl >= topf.length) return topf;
+  const gezogen = [];
+  while (gezogen.length < anzahl) {
+    gezogen.push(topf.splice(Math.floor(Math.random() * topf.length), 1)[0]);
+  }
+  return gezogen.sort((a, b) => a - b);   // Dateireihenfolge bleibt erhalten
+}
+
+/** Prüft eine gespeicherte Ziehung; bei Unstimmigkeiten wird neu gezogen. */
+function auswahlPruefen(raum, auswahl) {
+  const anzahl = anzahlProDurchgang(raum);
+  if (!Array.isArray(auswahl) || auswahl.length !== anzahl) return null;
+  const sauber = auswahl.every(i => Number.isInteger(i) && i >= 0 && i < raum.raetsel.length);
+  if (!sauber || new Set(auswahl).size !== auswahl.length) return null;
+  return auswahl;
 }
 
 /* ---------- Fortschritt ---------- */
@@ -185,9 +261,11 @@ async function ansichtStufe(ziel, stufe) {
           h('div', { class: 'thema', text: `${r.kapitel} · ${r.thema}` }),
           h('p', { style: 'font-size:.9rem;color:var(--text-leise);margin:.3rem 0 0', text: r.kurz || '' }),
           h('div', { class: 'fuss' },
-            h('span', { class: 'etikett', text: `${r.raetsel.length} Rätsel` }),
+            h('span', { class: 'etikett', text: `${anzahlProDurchgang(r)} Rätsel` }),
+            istGruppenraum(r) ? h('span', { class: 'etikett gruppe', text: `${r.gruppen.length} Gruppen` }) : null,
+            istSchwer(r) ? h('span', { class: 'etikett schwer', text: 'schwer · Sport' }) : null,
             f?.fertig ? h('span', { class: 'etikett fertig', text: 'gelöst' })
-              : (f ? h('span', { class: 'etikett laeuft', text: `bei Rätsel ${Math.min(f.index + 1, r.raetsel.length)}` }) : null),
+              : (f ? h('span', { class: 'etikett laeuft', text: `bei Rätsel ${Math.min(f.index + 1, anzahlProDurchgang(r))}` }) : null),
             h('a', { class: 'knopf knopf-haupt klein', href: `#/raum/${r.id}`, style: 'margin-left:auto' },
               f && !f.fertig ? 'fortsetzen' : 'starten'),
           ),
@@ -250,14 +328,32 @@ async function ansichtRaum(ziel, raumId) {
     h('div', { class: 'kopfband', style: 'height:210px;margin:-1.1rem -1.2rem 1.1rem;border-radius:14px 14px 0 0;overflow:hidden', html: bandSvg(raum.motiv, raum.farbe) }),
     h('h1', { text: raum.titel }),
     h('p', { class: 'thema', style: 'color:var(--text-leise);margin-top:-.3rem', text: `${raum.kapitel} · ${raum.thema}` }),
+    istSchwer(raum)
+      ? h('p', { class: 'schwerhinweis' },
+        'Zusatzraum zur Differenzierung: Die Aufgaben sind mehrschrittiger als in den beiden '
+        + 'Räumen des Kapitels, und alle Geschichten kommen aus dem Sport.')
+      : null,
     h('p', { html: raum.intro }),
     h('p', { style: 'color:var(--text-leise);font-size:.92rem' },
-      `${raum.raetsel.length} Rätsel · empfohlene Zeit: ${raum.dauer || '35–45 Minuten'} · `,
+      `${anzahlProDurchgang(raum)} Rätsel${istGruppenraum(raum) ? ' je Gruppe' : ''} · `
+      + `empfohlene Zeit: ${raum.dauer || '35–45 Minuten'} · `,
       'Jedes Rätsel endet mit einem vierstelligen Code für das digitale Schloss.'),
-    h('div', { class: 'knopfzeile', style: 'margin-top:1rem' },
+    hatPool(raum)
+      ? h('p', { class: 'poolhinweis' },
+        `Dieser Raum hat einen Rätselpool: Aus ${raum.raetsel.length} Rätseln werden bei jedem `
+        + `Start ${anzahlProDurchgang(raum)} zufällig gezogen. Jede Gruppe bekommt also eine `
+        + 'andere Mischung – und wer noch einmal spielt, bekommt neue Aufgaben.')
+      : null,
+    hatZufall(raum)
+      ? h('p', { class: 'poolhinweis' },
+        'In diesem Raum werden die Zahlen einiger Rätsel beim Start gewürfelt. Jede Gruppe rechnet '
+        + 'damit eigene Aufgaben – und eigene Codes. Der vierstellige Zahlensatz steht oben in der '
+        + 'Kopfzeile; mit ihm kann die Lehrkraft genau diese Aufgaben anzeigen.')
+      : null,
+    istGruppenraum(raum) ? gruppenWahl(raum) : h('div', { class: 'knopfzeile', style: 'margin-top:1rem' },
       f && !f.fertig
         ? h('a', { class: 'knopf knopf-haupt', href: `#/spiel/${raum.id}` },
-          `Fortsetzen (Rätsel ${Math.min(f.index + 1, raum.raetsel.length)}, ${zeitText(f.verstrichen || 0)})`)
+          `Fortsetzen (Rätsel ${Math.min(f.index + 1, anzahlProDurchgang(raum))}, ${zeitText(f.verstrichen || 0)})`)
         : h('a', { class: 'knopf knopf-haupt', href: `#/spiel/${raum.id}` }, 'Escape Room starten'),
       f && !f.fertig ? knopfNeustart(raum.id) : null,
       f?.fertig ? h('a', { class: 'knopf', href: `#/urkunde/${raum.id}` }, 'Urkunde anzeigen') : null,
@@ -266,6 +362,30 @@ async function ansichtRaum(ziel, raumId) {
   ));
 
   if (istLehrer()) ziel.append(loesungsKarte(raum));
+}
+
+/* Im Gruppenraum wählt jedes Gerät zuerst seine Gruppe. Danach spielt es einen
+   ganz normalen Raum – nur eben den Teil dieser Gruppe. */
+function gruppenWahl(raum) {
+  const karten = (raum.gruppen || []).map((g) => {
+    const id = `${raum.id}@${g.kennung}`;
+    const f = fortschritt(id);
+    const stand = f?.fertig ? 'fertig'
+      : f ? `Rätsel ${Math.min(f.index + 1, (g.raetsel?.length || 0) + 1)}`
+      : `${(g.raetsel?.length || 0) + 1} Rätsel`;
+    return h('a', { class: 'gruppenkarte', href: `#/spiel/${id}` },
+      h('span', { class: 'gruppenkennung', text: g.kennung }),
+      h('span', { class: 'gruppenname', text: g.name }),
+      h('span', { class: 'gruppenstand', text: stand }));
+  });
+  return h('div', { class: 'gruppenwahl' },
+    h('p', { class: 'poolhinweis' },
+      `Dieser Raum wird von ${raum.gruppen.length} Gruppen gleichzeitig gespielt – jede auf ihrem `
+      + 'eigenen Gerät. Jede Gruppe hat ein Datenblatt mit Zahlen, die den anderen fehlen. '
+      + 'Ohne miteinander zu reden kommt keine Gruppe durch. Am Ende steuert jede Gruppe eine '
+      + 'Ziffer zum gemeinsamen Schlusscode bei.'),
+    h('p', { class: 'gruppenfrage', text: 'Welche Gruppe seid ihr?' }),
+    h('div', { class: 'gruppenreihe' }, ...karten));
 }
 
 function knopfNeustart(raumId, text = 'Von vorn beginnen') {
@@ -283,14 +403,103 @@ function knopfNeustart(raumId, text = 'Von vorn beginnen') {
   return b;
 }
 
-function loesungsKarte(raum) {
-  const karte = h('div', { class: 'karte' }, h('h2', {}, 'Lösungen (nur Lehreransicht)'));
-  raum.raetsel.forEach((r, i) => {
-    karte.append(h('div', { class: 'loesungsblock' },
-      h('div', { class: 'kopf' }, `Rätsel ${i + 1}: ${r.titel} – Code `, h('span', { class: 'code', text: r.code })),
-      h('div', { html: r.loesung || '' }),
-    ));
+/* Die Lehreransicht eines Gruppenraums: alle vier Gruppen untereinander, mit
+   Datenblatt, Codes und dem Schlusscode – das ist das Blatt für den Pult. */
+function gruppenLoesungsKarte(raum) {
+  const karte = h('div', { class: 'karte' },
+    h('h2', {}, 'Lösungen (nur Lehreransicht)'),
+    h('p', { style: 'color:var(--text-leise);font-size:.92rem;margin-top:-.4rem' },
+      `Gruppenraum mit ${raum.gruppen.length} Gruppen. Schlusscode: `,
+      h('span', { class: 'code', text: schlusscode(raum) }),
+      ' – er entsteht aus den Teilcodes der Gruppen.'));
+
+  raum.gruppen.forEach((g) => {
+    const block = h('div', { class: 'loesungsblock' },
+      h('div', { class: 'kopf' },
+        `Gruppe ${g.kennung} · ${g.name} – Teilcode `,
+        h('span', { class: 'code', text: g.teilcode })),
+      h('div', { class: 'blattfeld', html: g.blatt || '' }));
+    gruppenRaetsel(raum, g).forEach((r, i) => {
+      const melden = h('button', { class: 'klein', type: 'button' }, 'Fehler melden');
+      melden.addEventListener('click', () => meldeDialog({ ...raum, raetsel: gruppenRaetsel(raum, g) }, i + 1, i + 1));
+      block.append(h('div', { class: 'loesungszeile' },
+        h('div', { class: 'kopf' },
+          `Rätsel ${i + 1}: ${String(r.titel || '').replace(/^Rätsel\s*\d+\s*:\s*/, '')} – Code `,
+          h('span', { class: 'code', text: r.code }), ' ', melden),
+        h('div', { html: r.loesung || '' })));
+    });
+    karte.append(block);
   });
+  return karte;
+}
+
+function loesungsKarte(raum) {
+  if (istGruppenraum(raum)) return gruppenLoesungsKarte(raum);
+  const karte = h('div', { class: 'karte' }, h('h2', {}, 'Lösungen (nur Lehreransicht)'));
+  if (hatPool(raum)) {
+    karte.append(h('p', { style: 'color:var(--text-leise);font-size:.92rem;margin-top:-.4rem' },
+      `Pool mit ${raum.raetsel.length} Rätseln – gespielt werden davon ${anzahlProDurchgang(raum)}. `
+      + 'Hier stehen alle, in der Reihenfolge der Datei.'));
+  }
+
+  const liste = h('div');
+
+  const zeichne = (satz) => {
+    leer(liste);
+    const gezeigt = satz ? raumMitZahlensatz(raum, satz) : raum;
+    gezeigt.raetsel.forEach((r, i) => {
+      const melden = h('button', { class: 'klein', type: 'button' }, 'Fehler melden');
+      melden.addEventListener('click', () => meldeDialog(raum, i + 1, i + 1));
+      liste.append(h('div', { class: 'loesungsblock' },
+        h('div', { class: 'kopf' },
+          `Rätsel ${i + 1}: ${String(r.titel || '').replace(/^Rätsel\s*\d+\s*:\s*/, '')} – Code `,
+          h('span', { class: 'code', text: r.code }),
+          istZufall(raum.raetsel[i]) ? h('span', { class: 'zufallsmarke', text: 'Zufallszahlen' }) : null,
+          ' ', melden),
+        h('div', { html: r.loesung || '' }),
+        // Bei gewürfelten Zahlen stehen die Aufgaben nicht in der Datei – hier mit dazu.
+        istZufall(raum.raetsel[i]) && Array.isArray(r.aufgaben)
+          ? h('ol', { class: 'zufallsaufgaben' },
+            ...r.aufgaben.map(a => h('li', {},
+              h('span', { html: a.frage }),
+              h('strong', { text: ` → ${Array.isArray(a.antwort) ? a.antwort[0] : a.antwort}${a.einheit ? ' ' + a.einheit : ''}` }))))
+          : null,
+      ));
+    });
+  };
+
+  const gespeichert = zahlensatzLesen(fortschritt(raum.id)?.satz);
+  let satz = hatZufall(raum) ? (gespeichert || neuerZahlensatz()) : null;
+
+  if (hatZufall(raum)) {
+    const feld = h('input', {
+      class: 'satzfeld', type: 'text', inputmode: 'numeric', maxlength: '4',
+      value: String(satz), 'aria-label': 'Zahlensatz',
+    });
+    const zeigen = h('button', { class: 'klein', type: 'button' }, 'anzeigen');
+    const melde = h('span', { role: 'status', style: 'color:var(--text-leise);font-size:.88rem' });
+    const uebernehmen = () => {
+      const neu = zahlensatzLesen(feld.value);
+      if (!neu) { melde.textContent = 'Bitte eine vierstellige Zahl eintippen.'; return; }
+      satz = neu; feld.value = String(neu); melde.textContent = '';
+      zeichne(satz);
+    };
+    zeigen.addEventListener('click', uebernehmen);
+    feld.addEventListener('keydown', (e) => { if (e.key === 'Enter') uebernehmen(); });
+    const wuerfeln = h('button', { class: 'klein', type: 'button' }, 'anderer Satz');
+    wuerfeln.addEventListener('click', () => { feld.value = String(neuerZahlensatz()); uebernehmen(); });
+
+    karte.append(h('p', { class: 'poolhinweis' },
+      'Einige Rätsel dieses Raums würfeln ihre Zahlen. Unten stehen die Aufgaben zu einem '
+      + 'Zahlensatz. Lass dir die vierstellige Zahl aus der Kopfzeile des Schülergeräts vorlesen '
+      + 'und tippe sie hier ein – dann siehst du genau deren Aufgaben und Codes.'
+      + (gespeichert ? ' Vorbelegt ist der Zahlensatz des Spielstands auf diesem Gerät.' : '')));
+    karte.append(h('div', { class: 'knopfzeile', style: 'margin:.6rem 0 .2rem' },
+      h('label', { class: 'satzzeile' }, 'Zahlensatz ', feld), zeigen, wuerfeln, melde));
+  }
+
+  karte.append(liste);
+  zeichne(satz);
   return karte;
 }
 
@@ -304,7 +513,7 @@ async function ansichtSpiel(ziel, raumId) {
   if (!treffer) { ziel.append(h('p', {}, 'Dieser Raum wurde nicht gefunden.')); return; }
   const { raum, stufe } = treffer;
 
-  if (!istLehrer() && !istFreigegeben(raum.id)) {
+  if (!istLehrer() && !istFreigegeben(raum.basisId || raum.id)) {
     location.hash = '#/'; return;
   }
 
@@ -312,7 +521,12 @@ async function ansichtSpiel(ziel, raumId) {
   if (!f || f.fertig) {
     f = { index: 0, verstrichen: 0, tipps: {}, zustaende: {}, fertig: false };
   }
-  if (f.index >= raum.raetsel.length) f.index = raum.raetsel.length - 1;
+  // Ziehung aus dem Pool: beim ersten Start neu, beim Fortsetzen die gespeicherte.
+  f.auswahl = auswahlPruefen(raum, f.auswahl) || ziehen(raum);
+  // Zahlensatz für Aufgaben mit Zufallszahlen – ebenfalls nur beim ersten Start neu.
+  if (!zahlensatzLesen(f.satz)) f.satz = neuerZahlensatz();
+  const raetselListe = f.auswahl.map(i => baueZufall(raum.raetsel[i], f.satz, i));
+  if (f.index >= raetselListe.length) f.index = raetselListe.length - 1;
 
   const startZeit = Date.now();
   const basis = f.verstrichen || 0;
@@ -330,7 +544,7 @@ async function ansichtSpiel(ziel, raumId) {
 
   const zeichnePunkte = () => {
     leer(punkte);
-    raum.raetsel.forEach((_, i) => {
+    raetselListe.forEach((_, i) => {
       punkte.append(h('span', {
         class: 'punkt' + (i < f.index ? ' fertig' : (i === f.index ? ' aktiv' : '')),
         title: `Rätsel ${i + 1}`,
@@ -365,7 +579,11 @@ async function ansichtSpiel(ziel, raumId) {
 
   ziel.append(h('div', { class: 'spielkopf' },
     h('strong', { text: raum.titel }),
-    timer, menueKnopf, musikKnopf, punkte,
+    timer, menueKnopf, musikKnopf,
+    // Der Zahlensatz steht sichtbar da: Die Gruppe liest ihn vor, dann sieht die
+    // Lehrkraft in der Lehreransicht genau diese Zahlen und Codes.
+    hatZufall(raum) ? h('span', { class: 'zahlensatz', title: 'Zahlensatz dieses Durchgangs' }, 'Zahlensatz ', h('strong', { text: String(f.satz) })) : null,
+    punkte,
   ));
   zeichnePunkte();
 
@@ -381,17 +599,22 @@ async function ansichtSpiel(ziel, raumId) {
   const zeigeRaetsel = () => {
     leer(buehne);
     zeichnePunkte();
-    const r = raum.raetsel[f.index];
-    buehne.append(h('p', { style: 'color:var(--text-leise);font-size:.9rem;margin-bottom:.3rem', text: `Rätsel ${f.index + 1} von ${raum.raetsel.length}` }));
+    const r = raetselListe[f.index];
+    buehne.append(h('p', { style: 'color:var(--text-leise);font-size:.9rem;margin-bottom:.3rem', text: `Rätsel ${f.index + 1} von ${raetselListe.length}` }));
 
-    const aufbau = baueRaetsel(r, {
+    // Die Nummer im Titel richtet sich nach der Position im Durchgang, nicht nach
+    // der Stelle in der Datei – sonst springen die Nummern bei gezogenen Rätseln.
+    const name = String(r.titel || '').replace(/^Rätsel\s*\d+\s*:\s*/, '');
+    const angezeigt = { ...r, titel: `Rätsel ${f.index + 1}: ${name}` };
+
+    const aufbau = baueRaetsel(angezeigt, {
       zustand: f.zustaende?.[f.index],
       tippsGenutzt: f.tipps?.[f.index] || [],
       aufZustand: (z) => { (f.zustaende ||= {})[f.index] = z; sichern(); },
       aufTipps: (g) => { (f.tipps ||= {})[f.index] = g; sichern(); },
       aufGeloest: () => {
         f.index += 1;
-        if (f.index >= raum.raetsel.length) {
+        if (f.index >= raetselListe.length) {
           f.fertig = true;
           f.zeitMs = jetztVerstrichen();
           f.verstrichen = f.zeitMs;
@@ -407,6 +630,17 @@ async function ansichtSpiel(ziel, raumId) {
       },
     });
     buehne.append(aufbau.element);
+    // Im Gruppenraum liegt das eigene Datenblatt immer griffbereit darunter: Die
+    // Gruppe muss daraus vorlesen können, wenn eine andere Gruppe danach fragt.
+    if (raum.gruppe) buehne.append(datenblattLeiste(raum.gruppe));
+    // Rätsel, die eine Division durch einen Dezimalfaktor verlangen, bringen einen
+    // eigenen Taschenrechner mit – im Escape Room liegt selten einer auf dem Tisch.
+    if (hatRechner(r)) buehne.append(rechnerLeiste(istWissenschaftlich(r)));
+    // Melden ist nur sinnvoll, wenn das Rätsel auch wiederzufinden ist: gemeldet wird
+    // die Nummer in der Datei, nicht die Position im Durchgang.
+    if (MELDEN_FUER_SCHUELER || istLehrer()) {
+      buehne.append(meldeLeiste(raum, f.auswahl[f.index] + 1, f.index + 1));
+    }
   };
 
   zeigeRaetsel();
@@ -419,7 +653,7 @@ function spielMenue(raum, f, jetztVerstrichen, stufe) {
     k.append(
       h('h2', {}, 'Menü'),
       h('p', { style: 'color:var(--text-leise)' },
-        `Verstrichene Zeit: ${zeitText(jetztVerstrichen())} · Rätsel ${f.index + 1} von ${raum.raetsel.length}`),
+        `Verstrichene Zeit: ${zeitText(jetztVerstrichen())} · Rätsel ${f.index + 1} von ${anzahlProDurchgang(raum)}`),
       h('div', { class: 'aktionen' },
         h('button', { class: 'haupt', type: 'button', onclick: zu }, 'Weiterspielen'),
         h('button', {
@@ -470,7 +704,7 @@ async function ansichtUrkunde(ziel, raumId) {
   ziel.append(h('div', { class: 'karte' },
     h('div', { class: 'erfolg' },
       h('div', { class: 'gross' }, 'Geschafft!'),
-      h('p', {}, `Du hast alle ${raum.raetsel.length} Rätsel von »${raum.titel}« gelöst.`),
+      h('p', {}, `Du hast alle ${anzahlProDurchgang(raum)} Rätsel von »${raum.titel}« gelöst.`),
       h('p', { class: 'zeit' }, h('strong', {}, `Zeit: ${zeitLang(f.zeitMs || f.verstrichen || 0)}`),
         tippAnzahl ? ` · genutzte Tippkarten: ${tippAnzahl}` : ' · ohne Tippkarten'),
     ),
@@ -488,7 +722,7 @@ async function ansichtUrkunde(ziel, raumId) {
   const daten = () => ({
     raumTitel: raum.titel, thema: raum.thema, stufe,
     name: name.value.trim(), zeitMs: f.zeitMs || f.verstrichen || 0,
-    raetselAnzahl: raum.raetsel.length, motiv: raum.motiv, farbe: raum.farbe,
+    raetselAnzahl: anzahlProDurchgang(raum), motiv: raum.motiv, farbe: raum.farbe,
     tipps: tippAnzahl,
   });
 
@@ -586,8 +820,11 @@ async function ansichtLehrer(ziel) {
     'Wähle die Räume aus, die die Klasse bearbeiten soll, und erzeuge einen QR-Code. '
     + 'Die Schülergeräte speichern die Freigabe im Browser; es werden keine Daten übertragen.'));
 
+  const alleRaeume = new Map();
+
   for (const s of STUFEN) {
     const daten = await stufeDaten(s.stufe);
+    if (daten) daten.raeume.forEach(r => alleRaeume.set(r.id, r));
     const karte = h('div', { class: 'karte' });
     karte.append(h('h2', {}, s.titel, ' ', h('span', { style: 'font-weight:400;color:var(--text-leise);font-size:.9rem', text: s.zusatz })));
 
@@ -616,8 +853,9 @@ async function ansichtLehrer(ziel) {
         box,
         h('div', { class: 'titelteil' },
           h('strong', { text: r.titel }),
-          h('div', { class: 'thema', text: `${r.kapitel} · ${r.thema} · ${r.raetsel.length} Rätsel` })),
+          h('div', { class: 'thema', text: `${r.kapitel} · ${r.thema} · ${anzahlProDurchgang(r)} Rätsel` + (hatPool(r) ? ` aus ${r.raetsel.length}` : '') + (istSchwer(r) ? ' · schwer · Sport' : '') + (istGruppenraum(r) ? ` · ${r.gruppen.length} Gruppen · Schlusscode ${schlusscode(r)}` : '') })),
         h('a', { class: 'knopf klein', href: `#/raum/${r.id}` }, 'ansehen'),
+        h('a', { class: 'knopf klein', href: `#/drucken/${r.id}` }, 'drucken'),
         qr,
       ));
     }
@@ -634,9 +872,22 @@ async function ansichtLehrer(ziel) {
       const an = !kaestchen.every(b => b.checked);
       kaestchen.forEach(b => { b.checked = an; });
     });
-    karte.append(h('div', { class: 'knopfzeile', style: 'margin-top:.9rem' }, sammelQr, alle));
+    const druckAuswahlKnopf = h('button', { class: 'klein', type: 'button' }, 'Auswahl drucken');
+    druckAuswahlKnopf.addEventListener('click', () => {
+      const gewaehlt = kaestchen.filter(b => b.checked).map(b => b.dataset.raum);
+      if (!gewaehlt.length) { alert('Bitte zuerst mindestens einen Raum auswählen.'); return; }
+      location.hash = '#/drucken/' + gewaehlt.join('.');
+    });
+    karte.append(h('div', { class: 'knopfzeile', style: 'margin-top:.9rem' },
+      sammelQr, alle, druckAuswahlKnopf,
+      h('a', { class: 'knopf klein', href: `#/drucken/stufe${s.stufe}` }, 'ganze Stufe drucken')));
     ziel.append(karte);
   }
+
+  ziel.append(meldungenKarte((m) => {
+    const raum = alleRaeume.get(m.raum) || null;
+    return { raum, raetsel: raum?.raetsel?.[m.nr - 1] || null };
+  }));
 
   const zuruecksetzen = h('button', { type: 'button' }, 'Freigaben auf diesem Gerät löschen');
   zuruecksetzen.addEventListener('click', () => {
@@ -688,6 +939,369 @@ function qrDialog(raumIds, titel) {
         kopieren, drucken),
     );
   }, { breit: true });
+}
+
+/* =====================================================================
+   Fehler melden
+   ===================================================================== */
+
+/* Das Datenblatt der eigenen Gruppe im Gruppenraum. Es steht offen da, weil es
+   ständig gebraucht wird – die anderen Gruppen fragen danach. */
+function datenblattLeiste(gruppe) {
+  const feld = h('div', { class: 'blattfeld', html: gruppe.blatt || '' });
+  const knopf = h('button', { class: 'klein', type: 'button', 'aria-expanded': 'true' }, 'Einklappen');
+  knopf.addEventListener('click', () => {
+    const zu = !feld.hidden;
+    feld.hidden = zu;
+    knopf.textContent = zu ? 'Anzeigen' : 'Einklappen';
+    knopf.setAttribute('aria-expanded', zu ? 'false' : 'true');
+  });
+  return h('div', { class: 'blattleiste' },
+    h('div', { class: 'blattkopf' },
+      h('strong', { text: `Datenblatt Gruppe ${gruppe.kennung} · ${gruppe.name}` }),
+      h('span', { class: 'blatthinweis', text: 'Diese Zahlen brauchen auch die anderen Gruppen.' }),
+      knopf),
+    feld);
+}
+
+/** Kurze Zeile unter einem Rätsel: „Stimmt hier etwas nicht?" */
+function meldeLeiste(raum, nr, anzeigeNr) {
+  const knopf = h('button', { class: 'klein', type: 'button' }, svgIcon(ICON.hinweis, 15), 'Fehler melden');
+  knopf.addEventListener('click', () => meldeDialog(raum, nr, anzeigeNr));
+  return h('div', { class: 'meldeleiste' },
+    h('span', { text: 'Stimmt hier etwas nicht?' }), knopf);
+}
+
+/** Schritt 1: Art des Fehlers und kurze Beschreibung. */
+function meldeDialog(raum, nr, anzeigeNr = nr) {
+  const r = raum.raetsel[nr - 1];
+  const name = String(r?.titel || '').replace(/^Rätsel\s*\d+\s*:\s*/, '');
+  dialog((k, zu) => {
+    let gewaehlt = null;
+    const senden = h('button', { class: 'haupt', type: 'button', disabled: true }, 'Meldung erzeugen');
+    const knoepfe = KATEGORIEN.map(kat => {
+      const b = h('button', { class: 'katknopf', type: 'button', 'aria-pressed': 'false' }, kat.text);
+      b.addEventListener('click', () => {
+        gewaehlt = kat.id;
+        knoepfe.forEach(x => {
+          const an = x === b;
+          x.classList.toggle('aktiv', an);
+          x.setAttribute('aria-pressed', an ? 'true' : 'false');
+        });
+        senden.disabled = false;
+      });
+      return b;
+    });
+    const text = h('textarea', {
+      class: 'meldetext', rows: '3', maxlength: String(TEXT_MAX),
+      placeholder: 'Was stimmt nicht? Zum Beispiel: „Bei Aufgabe 2 kommt 24 heraus, nicht 42."',
+      'aria-label': 'Beschreibung',
+    });
+    const zaehler = h('div', { class: 'zeichenzahl', text: `0 von ${TEXT_MAX} Zeichen` });
+    text.addEventListener('input', () => { zaehler.textContent = `${text.value.length} von ${TEXT_MAX} Zeichen`; });
+    senden.addEventListener('click', () => {
+      const m = neueMeldung({ raum: raum.id, nr, kategorie: gewaehlt, text: text.value });
+      aufnehmen(m);
+      zu();
+      meldungFertig(m, raum, r);
+    });
+
+    k.append(
+      h('h2', {}, 'Fehler melden'),
+      h('p', { style: 'color:var(--text-leise);margin-top:-.4rem' },
+        `${raum.titel} · Rätsel ${anzeigeNr}${name ? `: ${name}` : ''}`),
+      h('p', { style: 'font-weight:600;margin-bottom:.2rem' }, 'Worum geht es?'),
+      h('div', { class: 'katreihe' }, ...knoepfe),
+      h('p', { style: 'font-weight:600;margin:.8rem 0 .2rem' }, 'Beschreibung (freiwillig)'),
+      text, zaehler,
+      h('p', { class: 'meldehinweis' },
+        'Bitte keine Namen hineinschreiben. Raum, Rätsel und Zeitpunkt trägt die App selbst ein.'),
+      h('div', { class: 'aktionen' }, senden, h('button', { type: 'button', onclick: zu }, 'Abbrechen')),
+    );
+  }, { breit: true });
+}
+
+/** Schritt 2: QR-Code für die Lehrkraft, Text zum Kopieren, E-Mail (nur Lehreransicht). */
+function meldungFertig(m, raum, r) {
+  const adresse = meldungAdresse(m);
+  const module = qrModule(adresse, 'L');
+  const text = meldungText(m, raum, r);
+  dialog((k, zu) => {
+    const kopieren = h('button', { type: 'button' }, 'Text kopieren');
+    kopieren.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(text); kopieren.textContent = 'Text kopiert'; }
+      catch { kopieren.textContent = 'Kopieren nicht möglich'; }
+    });
+    k.append(
+      h('h2', {}, 'Danke – die Meldung ist fertig'),
+      h('p', { style: 'color:var(--text-leise);margin-top:-.4rem' },
+        istLehrer()
+          ? 'Die Meldung liegt jetzt in der Lehreransicht unter „Meldungen".'
+          : 'Zeig diesen QR-Code deiner Lehrerin oder deinem Lehrer. Sie oder er scannt ihn mit dem Handy – dann ist die Meldung angekommen.'),
+      h('div', { class: 'qrbox', html: qrSvg(adresse, { rand: 2, fehlerkorrektur: 'L' }) }),
+      h('p', { style: 'color:var(--text-leise);font-size:.82rem;text-align:center;margin-top:.4rem' },
+        `${module}×${module} Module · die Meldung ist auch auf diesem Gerät gespeichert`),
+      h('pre', { class: 'meldungblock', text }),
+      h('div', { class: 'aktionen' },
+        h('button', { class: 'haupt', type: 'button', onclick: zu }, 'Fertig'),
+        kopieren,
+        istLehrer() && mailVorhanden()
+          ? h('a', { class: 'knopf', href: mailAdresse([m], () => ({ raum, raetsel: r })) }, 'Als E-Mail senden')
+          : null,
+      ),
+    );
+  }, { breit: true });
+}
+
+/** Ansicht für eine gescannte Meldung: `#/m/<daten>` */
+async function ansichtMeldung(ziel, daten) {
+  leer(ziel);
+  const m = dekodiere(daten);
+  if (!m) {
+    ziel.append(h('div', { class: 'hinweisbox warn' },
+      'Diese Meldung ist nicht lesbar. Vielleicht wurde der QR-Code nur halb erfasst – bitte noch einmal scannen.'));
+    ziel.append(h('a', { class: 'knopf', href: '#/' }, 'Zur Übersicht'));
+    return;
+  }
+  const treffer = await findeRaum(m.raum);
+  const raum = treffer?.raum || null;
+  const r = raum?.raetsel?.[m.nr - 1] || null;
+  const text = meldungText(m, raum, r);
+
+  const status = h('p', { role: 'status', style: 'min-height:1.4rem;font-weight:600' });
+  const uebernehmen = h('button', { class: 'haupt', type: 'button' }, 'Meldung übernehmen');
+  uebernehmen.addEventListener('click', () => {
+    const neu = aufnehmen(m);
+    status.textContent = neu
+      ? 'Übernommen – gesammelt in der Lehreransicht unter „Meldungen".'
+      : 'Diese Meldung liegt auf diesem Gerät schon vor.';
+    uebernehmen.disabled = true;
+  });
+  const kopieren = h('button', { type: 'button' }, 'Text kopieren');
+  kopieren.addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(text); kopieren.textContent = 'Text kopiert'; }
+    catch { kopieren.textContent = 'Kopieren nicht möglich'; }
+  });
+
+  ziel.append(h('div', { class: 'karte', style: 'max-width:40rem;margin:1.5rem auto' },
+    h('h1', {}, 'Gemeldeter Fehler'),
+    h('p', { style: 'color:var(--text-leise)' },
+      'Diese Meldung kommt von einem Schülergerät. Sie enthält keine Namen.'),
+    h('p', {}, h('span', { class: 'katmarke', text: kategorieText(m.kat) })),
+    h('pre', { class: 'meldungblock', text }),
+    raum ? null : h('div', { class: 'hinweisbox warn' },
+      `Den Raum „${m.raum}" gibt es in dieser Fassung der App nicht – vielleicht ist sie älter als das Schülergerät.`),
+    h('div', { class: 'knopfzeile' },
+      uebernehmen, kopieren,
+      mailVorhanden()
+        ? h('a', { class: 'knopf', href: mailAdresse([m], () => ({ raum, raetsel: r })) }, 'An die Entwicklung mailen')
+        : null,
+      h('a', { class: 'knopf', href: '#/lehrer' }, 'Lehreransicht'),
+    ),
+    status,
+  ));
+}
+
+/** Karte „Meldungen" in der Lehreransicht. `suche(m)` liefert { raum, raetsel }. */
+function meldungenKarte(suche) {
+  const karte = h('div', { class: 'karte' });
+  const liste = meldungen();
+  karte.append(h('h2', {}, `Meldungen (${liste.length})`));
+
+  if (!liste.length) {
+    karte.append(h('p', { style: 'color:var(--text-leise);font-size:.92rem' },
+      'Auf diesem Gerät liegen keine Meldungen. Schülergeräte zeigen ihre Meldung als QR-Code – '
+      + 'einmal mit dem Handy scannen, dann steht sie hier.'));
+    return karte;
+  }
+
+  karte.append(h('p', { style: 'color:var(--text-leise);font-size:.92rem;margin-top:-.4rem' },
+    'Gesammelt auf diesem Gerät. Weitergeben per E-Mail, kopieren oder als Textdatei speichern.'));
+
+  const zeichne = () => {
+    [...karte.querySelectorAll('.meldungsliste, .meldungsaktionen')].forEach(el => el.remove());
+    const aktuell = meldungen();
+    const box = h('div', { class: 'meldungsliste' });
+    aktuell.forEach(m => {
+      const t = suche(m);
+      const name = String(t?.raetsel?.titel || '').replace(/^Rätsel\s*\d+\s*:\s*/, '');
+      const weg = h('button', { class: 'klein', type: 'button' }, 'löschen');
+      weg.addEventListener('click', () => { meldungLoeschen(m.id); zeichne(); });
+      box.append(h('div', { class: 'meldungszeile' },
+        h('span', { class: 'katmarke', text: kategorieText(m.kat) }),
+        h('div', { class: 'titelteil' },
+          h('strong', { text: `${m.raum} · Rätsel ${m.nr}${name ? `: ${name}` : ''}` }),
+          m.text ? h('div', { class: 'thema', text: m.text }) : null,
+          h('div', { class: 'thema', text: new Date(m.zeit * 1000).toLocaleString('de-DE') })),
+        t?.raum ? h('a', { class: 'knopf klein', href: `#/raum/${m.raum}` }, 'ansehen') : null,
+        weg,
+      ));
+    });
+    karte.append(box);
+
+    const kopieren = h('button', { type: 'button' }, 'Alle kopieren');
+    kopieren.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(meldungenText(aktuell, suche)); kopieren.textContent = 'Kopiert'; }
+      catch { kopieren.textContent = 'Kopieren nicht möglich'; }
+    });
+    const datei = h('button', { type: 'button' }, 'Als Textdatei speichern');
+    datei.addEventListener('click', () => {
+      const blob = new Blob([meldungenText(aktuell, suche)], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = h('a', { href: url, download: 'escape-meldungen.txt' });
+      document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    });
+    const alleWeg = h('button', { type: 'button' }, 'Alle löschen');
+    alleWeg.addEventListener('click', () => {
+      dialog((k, zu) => {
+        k.append(h('h2', {}, 'Alle Meldungen löschen?'),
+          h('p', {}, 'Die Meldungen auf diesem Gerät werden entfernt. Weitergegebene Meldungen bleiben erhalten.'),
+          h('div', { class: 'aktionen' },
+            h('button', { class: 'haupt', type: 'button', onclick: () => { alleMeldungenLoeschen(); zu(); zeichne(); } }, 'Ja, löschen'),
+            h('button', { type: 'button', onclick: zu }, 'Abbrechen')));
+      });
+    });
+
+    karte.append(h('div', { class: 'knopfzeile meldungsaktionen', style: 'margin-top:.9rem' },
+      mailVorhanden()
+        ? h('a', { class: 'knopf knopf-haupt', href: mailAdresse(aktuell, suche) }, `Alle per E-Mail an ${mailZiel()}`)
+        : h('span', { style: 'color:var(--text-leise);font-size:.88rem' },
+          'Für den E-Mail-Knopf in config.js MELDUNG_EMAIL eintragen.'),
+      kopieren, datei, alleWeg,
+    ));
+  };
+  zeichne();
+  return karte;
+}
+
+/* =====================================================================
+   Ansicht: Drucken
+   ===================================================================== */
+
+/** Zeile zum Einstellen des Zahlensatzes in der Druckansicht. */
+function druckZahlensatz(holen, setzen) {
+  const feld = h('input', {
+    class: 'satzfeld', type: 'text', inputmode: 'numeric', maxlength: '4',
+    value: String(holen()), 'aria-label': 'Zahlensatz',
+  });
+  const melde = h('span', { role: 'status', style: 'color:var(--text-leise);font-size:.88rem' });
+  const uebernehmen = () => {
+    const neu = zahlensatzLesen(feld.value);
+    if (!neu) { melde.textContent = 'Bitte eine vierstellige Zahl eintippen.'; return; }
+    feld.value = String(neu); melde.textContent = ''; setzen(neu);
+  };
+  const zeigen = h('button', { class: 'klein', type: 'button' }, 'übernehmen');
+  zeigen.addEventListener('click', uebernehmen);
+  feld.addEventListener('keydown', (e) => { if (e.key === 'Enter') uebernehmen(); });
+  const wuerfeln = h('button', { class: 'klein', type: 'button' }, 'neu würfeln');
+  wuerfeln.addEventListener('click', () => { feld.value = String(neuerZahlensatz()); uebernehmen(); });
+
+  return h('div', { style: 'margin-top:.7rem' },
+    h('p', { style: 'color:var(--text-leise);font-size:.88rem;margin:0 0 .4rem' },
+      'In der Auswahl sind Rätsel mit gewürfelten Zahlen. Der Zahlensatz steht auf jedem Blatt – '
+      + 'so passen Arbeitsblatt und Lösungsblatt zusammen.'),
+    h('div', { class: 'knopfzeile' },
+      h('label', { class: 'satzzeile' }, 'Zahlensatz ', feld), zeigen, wuerfeln, melde));
+}
+
+/** Löst die Auswahl aus der Adresse auf: "6-8.6-9", "stufe6" oder "alle". */
+async function druckAuswahl(auswahl) {
+  if (!auswahl) return [];
+  if (auswahl === 'alle') {
+    const alle = [];
+    for (const s of STUFEN) {
+      const daten = await stufeDaten(s.stufe);
+      if (daten) alle.push(...sortiereRaeume(daten.raeume));
+    }
+    return alle;
+  }
+  const stufe = /^stufe(\d+)$/.exec(auswahl);
+  if (stufe) {
+    const daten = await stufeDaten(Number(stufe[1]));
+    return daten ? sortiereRaeume(daten.raeume) : [];
+  }
+  const raeume = [];
+  for (const id of auswahl.split('.').filter(Boolean)) {
+    const treffer = await findeRaum(id);
+    if (treffer) raeume.push(treffer.raum);
+  }
+  return raeume;
+}
+
+function sortiereRaeume(raeume) {
+  return raeume.slice().sort((a, b) => kapitelNummer(a.kapitel) - kapitelNummer(b.kapitel)
+    || a.id.localeCompare(b.id, 'de', { numeric: true }));
+}
+
+async function ansichtDrucken(ziel, auswahl) {
+  leer(ziel);
+
+  if (!istLehrer()) {
+    ziel.append(h('div', { class: 'hinweisbox warn' },
+      'Die Druckansicht enthält auch die Lösungen und ist deshalb nur in der Lehreransicht erreichbar.'));
+    ziel.append(h('a', { class: 'knopf haupt', href: '#/lehrer' }, 'Zur Lehreransicht'));
+    return;
+  }
+
+  const raeume = await druckAuswahl(auswahl);
+  if (!raeume.length) {
+    ziel.append(h('div', { class: 'hinweisbox warn' }, 'Zu dieser Auswahl wurden keine Räume gefunden.'));
+    ziel.append(h('a', { class: 'knopf', href: '#/lehrer' }, 'Zurück zur Lehreransicht'));
+    return;
+  }
+
+  const gespeichert = lade('druckoptionen', { arbeitsblatt: true, loesungen: true, tipps: false });
+  const felder = {};
+  const behaelter = h('div', { class: 'druckziel' });
+  const zufallDabei = raeume.some(hatZufall);
+  let satz = neuerZahlensatz();
+
+  const neuZeichnen = () => {
+    const opt = {
+      arbeitsblatt: felder.arbeitsblatt.checked,
+      loesungen: felder.loesungen.checked,
+      tipps: felder.tipps.checked,
+    };
+    speichere('druckoptionen', opt);
+    // Für das Papier wird ein Zahlensatz gewürfelt; er steht auf jedem Blatt,
+    // damit Arbeitsblatt und Lösungsblatt zusammenpassen.
+    const fertige = raeume.map(r => (hatZufall(r) ? raumMitZahlensatz(r, satz) : r));
+    leer(behaelter).append(druckBlock(fertige, opt));
+  };
+
+  const schalter = (name, beschriftung) => {
+    const box = h('input', { type: 'checkbox' });
+    box.checked = !!gespeichert[name];
+    box.addEventListener('change', neuZeichnen);
+    felder[name] = box;
+    return h('label', { class: 'druckschalter' }, box, h('span', { text: beschriftung }));
+  };
+
+  const drucken = h('button', { class: 'haupt', type: 'button' }, 'Drucken / als PDF sichern');
+  drucken.addEventListener('click', () => window.print());
+
+  ziel.append(brotkrume({ text: 'Lehreransicht', href: '#/lehrer' }, { text: 'Drucken' }));
+  ziel.append(h('div', { class: 'karte keindruck' },
+    h('h1', {}, 'Drucken'),
+    h('p', { style: 'color:var(--text-leise)' },
+      raeume.length === 1
+        ? `Ein Raum: ${raeume[0].titel}`
+        : `${raeume.length} Räume – ${raeume[0].titel} bis ${raeume[raeume.length - 1].titel}`),
+    h('div', { class: 'druckschalter-reihe' },
+      schalter('arbeitsblatt', 'Arbeitsblatt für die Klasse'),
+      schalter('loesungen', 'Lösungsblatt für die Lehrkraft'),
+      schalter('tipps', 'Tippkarten mitdrucken')),
+    zufallDabei ? druckZahlensatz(() => satz, (neu) => { satz = neu; neuZeichnen(); }) : null,
+    h('div', { class: 'knopfzeile', style: 'margin-top:.9rem' },
+      drucken,
+      h('a', { class: 'knopf', href: '#/lehrer' }, 'Zurück')),
+    h('p', { style: 'color:var(--text-leise);font-size:.88rem;margin-top:.7rem' },
+      'Im Druckdialog lässt sich als Ziel auch „Als PDF speichern" wählen. '
+      + 'Jeder Raum beginnt auf einer neuen Seite.'),
+  ));
+  ziel.append(behaelter);
+  neuZeichnen();
 }
 
 /* =====================================================================
@@ -757,7 +1371,9 @@ async function route() {
       case 'spiel':    return await ansichtSpiel(ziel, teile.slice(1).join('/'));
       case 'urkunde':  return await ansichtUrkunde(ziel, teile.slice(1).join('/'));
       case 'lehrer':   return await ansichtLehrer(ziel);
+      case 'drucken':  return await ansichtDrucken(ziel, decodeURIComponent(teile.slice(1).join('/')));
       case 'f':        return await ansichtFreigabe(ziel, decodeURIComponent(teile.slice(1).join('/')));
+      case 'm':        return await ansichtMeldung(ziel, decodeURIComponent(teile.slice(1).join('/')));
       default:
         leer(ziel);
         ziel.append(h('h1', {}, 'Seite nicht gefunden'),

@@ -51,6 +51,8 @@ export const ICON = {
   ton: 'M11 5L6 9H2v6h4l5 4V5zM15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13',
   tonAus: 'M11 5L6 9H2v6h4l5 4V5zM22 9l-6 6M16 9l6 6',
   stern: 'M12 3l2.7 5.6 6.3.9-4.5 4.4 1 6.1L12 17.1 6.5 20l1-6.1L3 9.5l6.3-.9z',
+  hinweis: 'M12 9v5M12 17h.01M12 3l9 16H3z',
+  rechner: 'M6 3h12v18H6zM9 7h6M9 11h.01M12 11h.01M15 11h.01M9 14h.01M12 14h.01M15 14h.01M9 17h3M15 17h.01',
 };
 
 /* ---------- Speicher ---------- */
@@ -152,6 +154,9 @@ export function normalisiere(x) {
 export function zahl(x) {
   let s = String(x ?? '').trim().replace(/\s/g, '');
   if (!s) return null;
+  // Typografische Minuszeichen zuerst in ein echtes Minus wandeln – sonst
+  // würden sie beim Filtern wegfallen und „−12" würde zu 12.
+  s = s.replace(/[−–—]/g, '-');
   s = s.replace(/[^0-9.,/\-+]/g, '');
   if (!s) return null;
   const bruch = s.match(/^(-?\d+(?:[.,]\d+)?)\/(-?\d+(?:[.,]\d+)?)$/);

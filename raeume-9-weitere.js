@@ -2,6 +2,56 @@
    Dieselben Kapitel wie in `raeume-9.js`, aber andere Geschichten und andere Aufgaben –
    für Parallelgruppen, eine zweite Runde oder zur Differenzierung.                        */
 
+import { fmt, antw, einerziffer } from './zufall.js';
+
+/* ---------- Helfer für die Zufallsaufgaben ---------- */
+
+/** Die Einerziffern einer Ergebnisliste, durch Komma getrennt – für Tipp 3 und Lösung. */
+const ziffern = (werte) => werte.map(einerziffer).join(', ');
+
+/** Hochgestellte Ziffern für Potenzen: hoch(12) → „¹²". */
+const HOCH = ['⁰', '¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '⁸', '⁹'];
+const hoch = (n) => String(n).split('').map(c => HOCH[Number(c)]).join('');
+
+/** Zahl mit π, auf ganze Zahlen gerundet. */
+const rund = (x) => Math.round(x);
+
+/** Rückmeldung für die Form `probieren`, wenn nur ganze Zahlen sinnvoll sind. */
+const nurGanz = (x, rechnung) => (Number.isInteger(x) ? rechnung : 'Probiere eine ganze Zahl.');
+
+/** Zahl mit höchstens einer Nachkommastelle – für die Wirkung der Schieberegler. */
+const eine = (x) => fmt(Math.round(x * 10) / 10);
+
+/**
+ * Liegt ein Ergebnis weit genug von der Rundungsgrenze? Nur dann ist die
+ * Rundung über alle Zahlensätze eindeutig – auch wenn jemand mit 3,14159
+ * statt mit der π-Taste rechnet oder ein Zwischenergebnis auf zwei
+ * Nachkommastellen rundet und erst danach weitermultipliziert.
+ * Sonst wird neu gewürfelt.
+ */
+const klar = (x) => Math.abs((x % 1) - 0.5) > 0.12;
+
+/** „452,4 → 452" für den Lösungsweg – und nur „452", wenn die Zahl schon ganz ist. */
+const mitRundung = (x) => {
+  const eine = Math.round(x * 10) / 10;
+  const ganz = Math.round(x);
+  return eine === ganz ? fmt(ganz) : `${fmt(eine)} → ${fmt(ganz)}`;
+};
+
+/**
+ * Würfelt einen ganzen Aufgabensatz so lange neu, bis alle vier Antworten
+ * verschieden sind und `ok` nicht false ist (höchstens 50 Versuche).
+ * `wurf(g)` liefert ein Objekt mit dem Feld `erg` (die vier Antworten).
+ */
+function satz(z, wurf) {
+  let w = wurf(z);
+  for (let i = 0; i < 50; i++) {
+    if (w.ok !== false && new Set(w.erg).size === w.erg.length) break;
+    w = wurf(z);
+  }
+  return w;
+}
+
 const INDIGO = '#4338ca';
 const TUERKIS = '#0891b2';
 const OCKER = '#b45309';
@@ -49,7 +99,7 @@ export default [
           'Beim teilweisen Wurzelziehen gilt 2 · √5 = √4 · √5 = √20. Und 3² = 9, 4² = 16.',
           '√36 = 6; irrationale Zahlen laufen ohne Periode weiter; 2√5 = √20; 9 < 10 < 16, also liegt √10 zwischen 3 und 4.',
         ],
-        loesung: '√36 · ohne Periode · √20 · √10 → B, U, N, D.',
+        loesung: '√36; ohne Periode; √20; √10 → B, U, N, D.',
       },
       {
         titel: 'Rätsel 2: Die Zahlen an der Wand',
@@ -58,20 +108,44 @@ export default [
           + 'erste Schloss der Kammer.',
         auftrag: 'Berechne die vier Wurzeln. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Berechne √121.', antwort: '11', zeichen: '1' },
-          { frage: 'Berechne √169.', antwort: '13', zeichen: '3' },
-          { frage: 'Berechne 2 · √81.', antwort: '18', zeichen: '8' },
-          { frage: 'Berechne √(36 · 25).', antwort: '30', zeichen: '0' },
-        ],
-        code: '1380',
         codeRegel: 'Die Einerziffern der vier Ergebnisse – von oben nach unten.',
         tipps: [
-          'Denke an die Quadratzahlen bis 400: 11² = 121, 13² = 169.',
-          'Bei √(36 · 25) darfst du die Wurzel auf beide Faktoren verteilen.',
-          '√121 = 11; √169 = 13; 2 · 9 = 18; √36 · √25 = 6 · 5 = 30.',
+          'Suche zu jeder Zahl unter dem Wurzelzeichen die Zahl, die mit sich selbst multipliziert sie ergibt. Schreibe dir dafür die Quadratzahlen der Reihe nach auf.',
+          'Steht vor der Wurzel ein Faktor, ziehst du erst die Wurzel und multiplizierst danach. Ein Produkt unter der Wurzel darfst du auf zwei Wurzeln verteilen, und zwei Wurzeln, die durcheinander geteilt werden, darfst du unter einer gemeinsamen Wurzel zusammenfassen.',
         ],
-        loesung: '11 · 13 · 18 · 30 → Einerziffern 1, 3, 8, 0.',
+        zufall: (z) => {
+          const w = satz(z, (g) => {
+            // 1) reine Quadratwurzel
+            const a = g.ganz(11, 29);
+            // 2) Faktor vor der Wurzel
+            const k = g.ganz(2, 5);
+            const b = g.ganz(3, 9);
+            // 3) Produkt unter der Wurzel
+            const c = g.ganz(2, 9);
+            let d = g.ganz(2, 9);
+            for (let i = 0; i < 20 && d === c; i++) d = g.ganz(2, 9);
+            // 4) Quotient zweier Wurzeln
+            const q = g.ganz(2, 5);
+            const m = g.ganz(2, 12);
+            const e = q * m;
+            return { a, k, b, c, d, q, m, e, erg: [a, k * b, c * d, m] };
+          });
+          return {
+            regel: 'einer',
+            aufgaben: [
+              { frage: `Berechne √${fmt(w.a * w.a)}.`, antwort: antw(w.a) },
+              { frage: `Berechne ${w.k} · √${fmt(w.b * w.b)}.`, antwort: antw(w.k * w.b) },
+              { frage: `Berechne √(${fmt(w.c * w.c)} · ${fmt(w.d * w.d)}).`, antwort: antw(w.c * w.d) },
+              { frage: `Berechne √${fmt(w.e * w.e)} : √${fmt(w.q * w.q)}.`, antwort: antw(w.m) },
+            ],
+            tipp: `√${fmt(w.a * w.a)} = ${w.a}; `
+              + `√${fmt(w.b * w.b)} = ${w.b}, also ${w.k} · ${w.b} = ${fmt(w.k * w.b)}; `
+              + `√${fmt(w.c * w.c)} · √${fmt(w.d * w.d)} = ${w.c} · ${w.d} = ${fmt(w.c * w.d)}; `
+              + `√${fmt(w.e * w.e)} : √${fmt(w.q * w.q)} = ${w.e} : ${w.q} = ${w.m}. `
+              + `Einerziffern: ${ziffern(w.erg)}.`,
+            loesung: `${w.a}; ${fmt(w.k * w.b)}; ${fmt(w.c * w.d)}; ${w.m} → Einerziffern ${ziffern(w.erg)}.`,
+          };
+        },
       },
       {
         titel: 'Rätsel 3: Die Kiste der rationalen Zahlen',
@@ -99,80 +173,129 @@ export default [
         loesung: 'Rational: √49, 0,75, 3/8, √0,04, −5, 2,333…. Irrational: √5, √12, π, √0,3, √2 + 1, 0,101001…',
       },
       {
-        titel: 'Rätsel 4: Die Wurzelsteine',
-        text: 'Auf einem Sims liegen zwölf Steine: sechs mit Wurzeln großer Zahlen, sechs mit derselben '
-          + 'Wurzel in zerlegter Form. Der Bund hat so gerechnet, weil sich zerlegte Wurzeln viel leichter '
-          + 'vergleichen lassen.',
-        auftrag: 'Ordne jeder Wurzel ihre <strong>vereinfachte Form</strong> zu.',
-        typ: 'zuordnen',
-        titelLinks: 'Wurzel',
-        titelRechts: 'vereinfacht',
-        codeAmEnde: true,
-        saat: 5227,
-        paare: [
-          { links: '√50', rechts: '5 · √2' },
-          { links: '√75', rechts: '5 · √3' },
-          { links: '√32', rechts: '4 · √2' },
-          { links: '√27', rechts: '3 · √3' },
-          { links: '√200', rechts: '10 · √2' },
-          { links: '√48', rechts: '4 · √3' },
-        ],
+        titel: 'Rätsel 4: Die Nische der Wurzelsteine',
+        text: 'In einer Nische stehen vier Steinschalen, in jede ist eine große Zahl gemeißelt. Der Bund '
+          + 'hat Wurzeln nicht ausgerechnet, sondern eingekreist: Man legt eine Zahl hinein, sieht, ob sie '
+          + 'zu klein oder zu groß ist, und kommt so Schritt für Schritt näher heran.',
+        auftrag: 'Gib eine Zahl ein und tippe auf „Probieren". Jeder Versuch bleibt stehen und meldet, ob '
+          + 'er <strong>zu klein</strong> oder <strong>zu groß</strong> ist. Alle gesuchten Zahlen sind ganze Zahlen.',
+        typ: 'probieren',
         code: '0510',
-        codeRegel: 'Wenn alle Paare stimmen, erscheint der Code: die <strong>Vorfaktoren von √50 und √200</strong> – jeweils zweistellig.',
-        tipps: [
-          'Zerlege die Zahl unter der Wurzel in eine Quadratzahl mal einen Rest.',
-          '50 = 25 · 2, also √50 = √25 · √2 = 5√2. Ebenso 200 = 100 · 2.',
-          '√50 = 5√2 und √200 = 10√2. Die Vorfaktoren sind 5 und 10 – der Code lautet 0510.',
+        codeRegel: 'Die <strong>Einerziffern</strong> der vier gefundenen Zahlen – von oben nach unten.',
+        aufgaben: [
+          {
+            frage: 'Welche Zahl ergibt mit sich selbst malgenommen 2 500?',
+            antwort: '50', von: 1, bis: 99, zeichen: '0',
+            pruefe: (x) => nurGanz(x, `${x} · ${x} = ${fmt(x * x)}`),
+          },
+          {
+            frage: 'Welche Zahl ergibt mit sich selbst malgenommen 1 225?',
+            antwort: '35', von: 1, bis: 99, zeichen: '5',
+            pruefe: (x) => nurGanz(x, `${x} · ${x} = ${fmt(x * x)}`),
+          },
+          {
+            frage: 'Beim teilweisen Wurzelziehen gilt √2 205 = n · √5. Welchen Wert hat n?',
+            antwort: '21', von: 1, bis: 40, zeichen: '1',
+            pruefe: (x) => nurGanz(x, `${x} · √5 = √(${fmt(x * x)} · 5) = √${fmt(x * x * 5)}`),
+          },
+          {
+            frage: 'Welche ist die größte ganze Zahl, deren Quadrat noch kleiner als 3 700 ist?',
+            antwort: '60', von: 1, bis: 99, zeichen: '0',
+            pruefe: (x) => nurGanz(x, `${x}² = ${fmt(x * x)}`),
+          },
         ],
-        loesung: '√50 = 5√2; √75 = 5√3; √32 = 4√2; √27 = 3√3; √200 = 10√2; √48 = 4√3.',
+        tipps: [
+          'Fang mit einem Versuch mitten im Bereich an. Jede Rückmeldung halbiert den Bereich, in dem die Zahl noch liegen kann.',
+          'Die ersten beiden Zahlen sind Quadratwurzeln – 2 500 und 1 225 sind Quadratzahlen. Bei der dritten '
+            + 'Aufgabe gilt n · √5 = √(n² · 5); du suchst also die Zahl, deren Quadrat 2 205 : 5 ergibt. Bei der '
+            + 'letzten Aufgabe liegt die gesuchte Zahl zwischen den beiden Quadratzahlen, die 3 700 einschließen.',
+          '50 · 50 = 2 500; 35 · 35 = 1 225; 2 205 : 5 = 441 und 21 · 21 = 441, also n = 21; 60² = 3 600 liegt noch '
+            + 'unter 3 700, 61² = 3 721 schon darüber – also 60. Einerziffern: 0, 5, 1, 0.',
+        ],
+        loesung: '50; 35; n = 21; 60 → Einerziffern 0, 5, 1, 0.',
       },
       {
-        titel: 'Rätsel 5: Die Reihe der Längen',
-        text: 'Sechs Maßstäbe lehnen an der Wand, beschriftet teils mit Wurzeln, teils mit gewöhnlichen '
-          + 'Zahlen. Der Bund stellte sie stets der Größe nach auf – auch das war ein Streitpunkt, '
-          + 'denn manche Längen passten in keine Bruchzahl.',
-        auftrag: 'Ordne die Zahlen nach ihrer <strong>Größe</strong> – von der kleinsten zur größten.',
-        typ: 'reihenfolge',
-        codeAmEnde: true,
-        saat: 5333,
-        elemente: [
-          { text: '√15' },
-          { text: '4' },
-          { text: '√18' },
-          { text: '√24' },
-          { text: '5,1' },
-          { text: '√30' },
-        ],
+        titel: 'Rätsel 5: Die Wurzelkarten',
+        text: 'Auf einem Sims liegen acht Rechenkarten und acht Ergebniskarten durcheinander – '
+          + 'Wurzelaufgaben, wie der Bund sie seinen Schülern vorlegte. Auf den Rückseiten ist eine große '
+          + 'Zahl aufgemalt; sie wird erst sichtbar, wenn alle Karten richtig beieinanderliegen.',
+        auftrag: 'Tippe eine Rechenkarte an und danach die passende Ergebniskarte. Jede richtig gelegte '
+          + 'Karte deckt ein Stück des Bildes auf; am Ende steht dort der Code.',
+        typ: 'legen',
         code: '0451',
-        codeRegel: 'Der Code: die <strong>beiden Zahlen ohne Wurzelzeichen</strong>, in der Reihenfolge, in der sie vorkommen – jeweils zweistellig und ohne Komma.',
-        tipps: [
-          'Schreibe auch die Zahlen ohne Wurzel als Wurzel: 4 = √16 und 5,1 = √26,01.',
-          'Dann musst du nur noch die Zahlen unter den Wurzeln vergleichen.',
-          '√15 < √16 (= 4) < √18 < √24 < √26,01 (= 5,1) < √30. Die beiden Zahlen ohne Wurzel sind 4 und 5,1 → 04 und 51.',
+        zahlbild: '0451',
+        spalten: 4,
+        saat: 5333,
+        titelLinks: 'Wurzelaufgabe',
+        titelRechts: 'Ergebnis',
+        codeRegel: 'Die Zahl, die das fertige Bild zeigt.',
+        karten: [
+          { rechnung: '√196', ergebnis: '14' },
+          { rechnung: '√225', ergebnis: '15' },
+          { rechnung: '3 · √49', ergebnis: '21' },
+          { rechnung: '√(16 · 25)', ergebnis: '20' },
+          { rechnung: '√1 024 : √4', ergebnis: '16' },
+          { rechnung: '√12 · √3', ergebnis: '6' },
+          { rechnung: '(√17)²', ergebnis: '17' },
+          { rechnung: '√0,64', ergebnis: '0,8' },
         ],
-        loesung: '√15 ≈ 3,87 < 4 < √18 ≈ 4,24 < √24 ≈ 4,90 < 5,1 < √30 ≈ 5,48.',
+        tipps: [
+          'Schreibe dir die Quadratzahlen bis 400 der Reihe nach auf – damit sind die ersten Karten schnell gelegt. '
+            + 'Fang mit den Karten an, bei denen du sicher bist.',
+          'Zwei Wurzeln, die multipliziert oder dividiert werden, darfst du unter einer gemeinsamen Wurzel '
+            + 'zusammenfassen. Quadrieren hebt das Wurzelziehen auf. Und 0,8 · 0,8 = 0,64.',
+          '√196 = 14; √225 = 15; 3 · √49 = 3 · 7 = 21; √(16 · 25) = √400 = 20; √1 024 : √4 = 32 : 2 = 16; '
+            + '√12 · √3 = √36 = 6; (√17)² = 17; √0,64 = 0,8. Das Bild zeigt 0451.',
+        ],
+        loesung: '14; 15; 21; 20; 16; 6; 17; 0,8 – das Bild zeigt 0451.',
       },
       {
         titel: 'Rätsel 6: Das Zeichen des Bundes',
         text: 'Am Ausgang ist das Zeichen des Bundes in den Stein geschlagen: ein Fünfstern. Daneben stehen '
-          + 'vier letzte Fragen – über das Zeichen selbst, über das Multiplizieren und Dividieren von '
-          + 'Wurzeln und über das Quadrieren.',
+          + 'vier letzte Fragen – über das Multiplizieren und Dividieren von Wurzeln, über das Quadrieren '
+          + 'und über das teilweise Wurzelziehen.',
         auftrag: 'Beantworte die vier Fragen. Jede richtige Antwort deckt einen Buchstaben auf.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Wie viele Zacken hat das Zeichen des Bundes, ein Pentagramm?', antwort: '5', einheit: 'Zacken', zeichen: 'P' },
-          { frage: 'Berechne √2 · √8.', antwort: '4', zeichen: 'E' },
-          { frage: 'Berechne (√7)².', antwort: '7', zeichen: 'N' },
-          { frage: 'Berechne √144 : √4.', antwort: '6', zeichen: 'T' },
-        ],
         code: 'PENT',
         codeRegel: 'Jede richtige Antwort deckt einen Buchstaben auf – von oben nach unten.',
         tipps: [
-          'Zwei Wurzeln darfst du unter einer Wurzel zusammenfassen: √2 · √8 = √16.',
-          'Quadrieren hebt die Wurzel auf – und umgekehrt.',
-          '5 Zacken; √16 = 4; (√7)² = 7; √144 : √4 = 12 : 2 = 6.',
+          'Zwei Wurzeln darfst du unter einer gemeinsamen Wurzel zusammenfassen – beim Multiplizieren wie beim Dividieren.',
+          'Quadrieren hebt das Wurzelziehen auf. Beim teilweisen Wurzelziehen zerlegst du die Zahl unter der Wurzel in eine Quadratzahl mal einen Rest; die Wurzel der Quadratzahl wandert dann als Faktor vor das Wurzelzeichen.',
         ],
-        loesung: '5 · 4 · 7 · 6 → P, E, N, T.',
+        zufall: (z) => {
+          const OHNE_QUADRAT = [2, 3, 5, 6, 7, 8, 10];
+          const w = satz(z, (g) => {
+            // 1) zwei Wurzeln multiplizieren
+            const c = g.aus(OHNE_QUADRAT);
+            const d = g.ganz(2, 6);
+            // 2) zwei Wurzeln dividieren
+            const p = g.ganz(2, 15);
+            const s = g.aus(OHNE_QUADRAT);
+            // 3) quadrieren und danach weiterrechnen
+            const t = g.ganz(12, 90);
+            const tf = g.ganz(2, 9);
+            // 4) teilweise Wurzel ziehen
+            const f = g.ganz(2, 10);
+            const u = g.aus(OHNE_QUADRAT);
+            return { c, d, p, s, t, tf, f, u, erg: [c * d, p, t * tf, f] };
+          });
+          return {
+            regel: 'buchstaben',
+            code: 'PENT',
+            aufgaben: [
+              { frage: `Berechne √${w.c} · √${fmt(w.c * w.d * w.d)}.`, antwort: antw(w.c * w.d) },
+              { frage: `Berechne √${fmt(w.p * w.p * w.s)} : √${w.s}.`, antwort: antw(w.p) },
+              { frage: `Berechne (√${w.t})² · ${w.tf}.`, antwort: antw(w.t * w.tf) },
+              { frage: `Beim teilweisen Wurzelziehen gilt √${fmt(w.f * w.f * w.u)} = n · √${w.u}. Welchen Wert hat n?`, antwort: antw(w.f) },
+            ],
+            tipp: `√${w.c} · √${fmt(w.c * w.d * w.d)} = √${fmt(w.c * w.c * w.d * w.d)} = ${fmt(w.c * w.d)}; `
+              + `√${fmt(w.p * w.p * w.s)} : √${w.s} = √${fmt(w.p * w.p)} = ${w.p}; `
+              + `(√${w.t})² = ${w.t}, also ${w.t} · ${w.tf} = ${fmt(w.t * w.tf)}; `
+              + `${fmt(w.f * w.f * w.u)} = ${fmt(w.f * w.f)} · ${w.u}, also √${fmt(w.f * w.f * w.u)} = ${w.f} · √${w.u} und n = ${w.f}. `
+              + `Die vier Buchstaben lauten P, E, N, T.`,
+            loesung: `${fmt(w.c * w.d)}; ${w.p}; ${fmt(w.t * w.tf)}; ${w.f} → P, E, N, T.`,
+          };
+        },
       },
     ],
   },
@@ -216,7 +339,7 @@ export default [
           'Für die Nullstellen setzt du y = 0: x² = 9 hat zwei Lösungen.',
           'y = x² ist die Normalparabel; x² = 9 → x = 3 und x = −3; y = 3x² ist enger; S(1 | 4) ist der tiefste Punkt.',
         ],
-        loesung: 'y = x² · zwei Nullstellen · y = 3x² · (1 | 4) → S, T, R, A.',
+        loesung: 'y = x²; zwei Nullstellen; y = 3x²; (1 | 4) → S, T, R, A.',
       },
       {
         titel: 'Rätsel 2: Die Einstellwerte',
@@ -225,48 +348,86 @@ export default [
           + 'jeweils nur die letzte Ziffer.',
         auftrag: 'Rechne die vier Aufgaben. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Für f(x) = x² + 2x − 3: Welchen Wert hat f(4)?', antwort: '21', zeichen: '1' },
-          { frage: 'Welche positive Nullstelle hat y = x² − 49?', antwort: '7', zeichen: '7' },
-          { frage: 'Welche x-Koordinate hat der Scheitelpunkt von y = (x + 5)² − 1?', antwort: ['-5', '−5'], zeichen: '5' },
-          { frage: 'Für f(x) = 0,5x²: Welchen Wert hat f(6)?', antwort: '18', zeichen: '8' },
-        ],
-        code: '1758',
         codeRegel: 'Die Einerziffern der vier Ergebnisse – von oben nach unten. Das Vorzeichen zählt nicht mit.',
         tipps: [
-          'Setze bei f(4) die 4 für x ein und rechne Punkt vor Strich.',
-          'In y = (x + 5)² − 1 liegt der Scheitel bei x = −5, weil x + 5 = x − (−5) ist.',
-          '16 + 8 − 3 = 21; x² = 49 → x = 7; Scheitel bei x = −5; 0,5 · 36 = 18.',
+          'Für einen Funktionswert setzt du die angegebene Stelle überall dort ein, wo x steht, und rechnest Punkt vor Strich.',
+          'Für die Nullstellen setzt du y = 0. In der Scheitelpunktform y = (x − d)² + e liegt der Scheitel bei x = d; steht in der Klammer ein Pluszeichen, ist die x-Koordinate negativ.',
         ],
-        loesung: 'f(4) = 21 · x = 7 · x = −5 · f(6) = 18 → Einerziffern 1, 7, 5, 8.',
+        zufall: (z) => {
+          const w = satz(z, (g) => {
+            // 1) Funktionswert einer Parabel in Normalform.
+            // Der Koeffizient 1 bleibt ausgeschlossen – „1x" schreibt man nicht.
+            const b = g.ganz(2, 6);
+            const c = g.ganz(1, 12);
+            const n = g.ganz(3, 7);
+            const wert = n * n + b * n - c;
+            // 2) Nullstelle einer verschobenen Normalparabel
+            const k = g.ganz(2, 15);
+            // 3) Scheitelpunkt aus der Scheitelpunktform
+            const d = g.ganz(2, 15);
+            const e = g.ganz(1, 20);
+            const links = g.mal(0.5);          // true: (x + d)² − e, Scheitel links
+            const scheitel = links ? -d : d;
+            // 4) gestreckte Parabel
+            const a = g.ganz(2, 9);
+            const m = g.ganz(3, 9);
+            const bogen = a * m * m;
+            return { b, c, n, wert, k, d, e, links, scheitel, a, m, bogen,
+              ok: wert >= 5,
+              erg: [wert, k, d, bogen] };
+          });
+          const term = w.links ? `(x + ${w.d})² − ${w.e}` : `(x − ${w.d})² + ${w.e}`;
+          return {
+            regel: 'einer',
+            aufgaben: [
+              { frage: `Für f(x) = x² + ${w.b}x − ${w.c}: Welchen Wert hat f(${w.n})?`, antwort: antw(w.wert) },
+              { frage: `Welche positive Nullstelle hat y = x² − ${fmt(w.k * w.k)}?`, antwort: antw(w.k) },
+              { frage: `Welche x-Koordinate hat der Scheitelpunkt von y = ${term}?`, antwort: antw(w.scheitel) },
+              { frage: `Für f(x) = ${w.a}x²: Welchen Wert hat f(${w.m})?`, antwort: antw(w.bogen) },
+            ],
+            tipp: `${w.n}² + ${w.b} · ${w.n} − ${w.c} = ${fmt(w.n * w.n)} + ${fmt(w.b * w.n)} − ${w.c} = ${fmt(w.wert)}; `
+              + `x² = ${fmt(w.k * w.k)} führt auf x = ${w.k}; `
+              + `in ${term} liegt der Scheitel bei x = ${fmt(w.scheitel)}; `
+              + `${w.a} · ${w.m}² = ${w.a} · ${fmt(w.m * w.m)} = ${fmt(w.bogen)}. `
+              + `Einerziffern: ${ziffern(w.erg)}.`,
+            loesung: `f(${w.n}) = ${fmt(w.wert)}; x = ${w.k}; x = ${fmt(w.scheitel)}; f(${w.m}) = ${fmt(w.bogen)} → Einerziffern ${ziffern(w.erg)}.`,
+          };
+        },
       },
       {
-        titel: 'Rätsel 3: Die Nullstellenkartei',
-        text: 'In einer Kassette liegen sechs Funktionsgleichungen und sechs Karten mit Nullstellen. '
-          + 'Die Nullstellen sagen der Steuerung, wo ein Wasserbogen wieder auf dem Becken aufkommt – '
-          + 'ohne sie läuft die Choreografie ins Leere.',
-        auftrag: 'Ordne jeder Funktion ihre <strong>Nullstellen</strong> zu.',
-        typ: 'zuordnen',
-        titelLinks: 'Funktion',
-        titelRechts: 'Nullstellen',
-        codeAmEnde: true,
-        saat: 5449,
-        paare: [
-          { links: 'y = x² − 4', rechts: 'x = −2 und x = 2' },
-          { links: 'y = x² − 9', rechts: 'x = −3 und x = 3' },
-          { links: 'y = x² − 6x', rechts: 'x = 0 und x = 6' },
-          { links: 'y = (x − 2) · (x − 5)', rechts: 'x = 2 und x = 5' },
-          { links: 'y = x² + 1', rechts: 'keine Nullstelle' },
-          { links: 'y = (x + 4)²', rechts: 'x = −4 (doppelt)' },
-        ],
+        titel: 'Rätsel 3: Der Plan der Mitteldüse',
+        text: 'An der Innenseite der Schaltschranktür hängt der Plan der Mitteldüse: die Bahn ihres '
+          + 'Wasserbogens in einem Koordinatensystem, x und y in Metern. Vier Angaben daraus verlangt die '
+          + 'Steuerung, bevor sie die Düse freigibt. Alle vier Werte liegen genau auf Gitterlinien.',
+        auftrag: 'Lies die vier Werte aus dem Plan ab. Die <strong>Einerziffer</strong> jedes Wertes ist eine Codeziffer.',
+        typ: 'ablesen',
         code: '2506',
-        codeRegel: 'Wenn alle Paare stimmen, erscheint der Code: die Nullstellen von <strong>y = (x − 2)(x − 5)</strong> und von <strong>y = x² − 6x</strong>, jeweils die kleinere zuerst.',
-        tipps: [
-          'Ein Produkt ist null, wenn einer der Faktoren null ist.',
-          'Bei y = x² − 6x kannst du x ausklammern: x · (x − 6) = 0.',
-          'y = (x−2)(x−5) hat die Nullstellen 2 und 5; y = x² − 6x hat 0 und 6. Der Code lautet 2506.',
+        codeRegel: 'Die <strong>Einerziffern</strong> der vier abgelesenen Werte – von oben nach unten.',
+        diagramm: {
+          art: 'koordinaten',
+          xVon: 0, xBis: 13, yVon: -1, yBis: 10,
+          xName: 'x in m', yName: 'y in m',
+          xSchritt: 1, ySchritt: 1,
+          kurven: [{ art: 'parabel', a: -0.25, d: 6, e: 9 }],
+          punkte: [{ x: 6, y: 9, name: 'S' }],
+          beschreibung: 'Parabel des Wasserbogens mit dem Scheitelpunkt S',
+        },
+        aufgaben: [
+          { frage: 'Wie weit reicht der Bogen? Lies die größere Nullstelle ab.', antwort: '12', einheit: 'm', zeichen: '2' },
+          { frage: 'Wie hoch steht das Wasser 2 m hinter der Düse, also an der Stelle x = 2?', antwort: '5', einheit: 'm', zeichen: '5' },
+          { frage: 'An welcher zweiten Stelle x ist der Bogen wieder genau so hoch wie bei x = 2?', antwort: '10', einheit: 'm', zeichen: '0' },
+          { frage: 'An welcher Stelle x liegt der Scheitelpunkt S?', antwort: '6', einheit: 'm', zeichen: '6' },
         ],
-        loesung: '±2; ±3; 0 und 6; 2 und 5; keine; −4 (doppelt).',
+        tipps: [
+          'Schau zuerst nach, wie viel ein Kästchen wert ist. Eine Nullstelle ist eine Stelle, an der die Parabel '
+            + 'die x-Achse schneidet.',
+          'Eine Parabel liegt spiegelbildlich zur senkrechten Linie durch ihren Scheitelpunkt: Zwei Stellen mit '
+            + 'derselben Höhe sind gleich weit von dieser Linie entfernt.',
+          'Der Bogen schneidet die x-Achse bei x = 0 und x = 12, die größere Nullstelle ist also 12 m. Bei x = 2 ist '
+            + 'er 5 m hoch. Der Scheitel liegt bei x = 6; von dort sind es bis x = 2 vier Meter, also ist der Bogen '
+            + 'auch bei x = 6 + 4 = 10 noch 5 m hoch. Einerziffern: 2, 5, 0, 6.',
+        ],
+        loesung: '12 m; 5 m; 10 m; 6 m → Einerziffern 2, 5, 0, 6.',
       },
       {
         titel: 'Rätsel 4: Die Düsen am Beckenrand',
@@ -294,30 +455,47 @@ export default [
         loesung: 'Treffer: x², 2x², x²−3x, −x², x²+5x, 0,5x². Die übrigen haben bei x = 0 die Werte 1, 1, −4, 3, 3 und 2.',
       },
       {
-        titel: 'Rätsel 5: Die Höhe der Scheitelpunkte',
-        text: 'Sechs Bögen der Choreografie sind in Scheitelpunktform gespeichert. Für den Ablauf müssen '
-          + 'sie nach der Höhe ihres Scheitels sortiert werden – der tiefste zuerst, damit die Show von '
-          + 'unten nach oben aufgebaut wird.',
-        auftrag: 'Ordne die Funktionen nach der <strong>y-Koordinate ihres Scheitelpunkts</strong> – von der kleinsten zur größten.',
-        typ: 'reihenfolge',
-        codeAmEnde: true,
-        saat: 5557,
-        elemente: [
-          { text: 'y = x² − 7' },
-          { text: 'y = (x − 2)² − 3' },
-          { text: 'y = x²' },
-          { text: 'y = (x + 1)² + 2' },
-          { text: 'y = x² + 5' },
-          { text: 'y = (x − 3)² + 8' },
-        ],
+        titel: 'Rätsel 5: Die Reglerkonsole der Wasserorgel',
+        text: 'Hinter einer Klappe sitzt die Reglerkonsole: vier Schieberegler, mit denen die Technikerin '
+          + 'die Parameter der Bögen einstellt. Die Anzeige verrät immer nur, was der eingestellte Wert '
+          + 'bewirkt – ob er richtig ist, sagt sie nicht. Vier Einstellungen fehlen noch.',
+        auftrag: 'Schiebe jeden Regler, bis der eingestellte Wert passt. Die Anzeige zeigt dir die '
+          + '<strong>Wirkung</strong> deines Wertes, nicht die Lösung.',
+        typ: 'schieben',
         code: '0305',
-        codeRegel: 'Der Code: die y-Koordinaten des <strong>zweiten</strong> und des <strong>fünften</strong> Scheitels der richtigen Reihenfolge – jeweils zweistellig und ohne Vorzeichen.',
-        tipps: [
-          'In y = (x − d)² + e ist e die Höhe des Scheitels.',
-          'Steht kein Summand dahinter, liegt der Scheitel auf der x-Achse: e = 0.',
-          'Scheitelhöhen: −7 < −3 < 0 < 2 < 5 < 8. An zweiter Stelle steht −3, an fünfter 5.',
+        codeRegel: 'Die <strong>Einerziffern</strong> der vier eingestellten Werte – von oben nach unten.',
+        aufgaben: [
+          {
+            frage: 'Der Bogen y = (x − d)² − 9 soll seine Nullstellen bei x = 7 und x = 13 haben. Stelle <strong>d</strong> ein.',
+            von: 0, bis: 20, schritt: 1, antwort: 10, zeichen: '0',
+            anzeige: (w) => `Nullstellen: x = ${fmt(w - 3)} und x = ${fmt(w + 3)}`,
+          },
+          {
+            frage: 'Der Bogen y = (x − 5)² + e soll durch den Punkt P(8 | 12) laufen. Stelle <strong>e</strong> ein.',
+            von: -10, bis: 20, schritt: 1, antwort: 3, zeichen: '3',
+            anzeige: (w) => `Der Bogen läuft durch den Punkt (8 | ${fmt(9 + w)}).`,
+          },
+          {
+            frage: 'Die Steuerung rechnet die Steighöhe aus dem Druckwert p: h = 0,25 · p². Stelle <strong>p</strong> so ein, dass der Strahl 100 cm hoch steigt.',
+            von: 0, bis: 40, schritt: 1, antwort: 20, zeichen: '0',
+            anzeige: (w) => `Steighöhe: 0,25 · ${fmt(w)}² = ${eine(0.25 * w * w)} cm`,
+          },
+          {
+            frage: 'Für f(x) = x² − 10x gilt f(x) = 75. Stelle die <strong>größere</strong> der beiden Stellen x ein.',
+            von: 0, bis: 30, schritt: 1, antwort: 15, zeichen: '5',
+            anzeige: (w) => `${fmt(w)}² − 10 · ${fmt(w)} = ${fmt(w * w - 10 * w)}`,
+          },
         ],
-        loesung: 'y = x²−7 (−7) < (x−2)²−3 (−3) < x² (0) < (x+1)²+2 (2) < x²+5 (5) < (x−3)²+8 (8).',
+        tipps: [
+          'Schiebe erst einmal hin und her und beobachte die Anzeige – sie zeigt dir, was dein Wert bewirkt.',
+          'In y = (x − d)² − 9 liegt der Scheitel bei x = d, und die Nullstellen liegen 3 Einheiten links und '
+            + 'rechts davon. Für den zweiten Regler setzt du x = 8 ein: (8 − 5)² = 9, dazu kommt e. Beim dritten '
+            + 'Regler suchst du die Zahl, deren Quadrat 400 ist.',
+          'Nullstellen 7 und 13 heißt Scheitel bei x = 10, also d = 10. 9 + e = 12 ergibt e = 3. 0,25 · p² = 100 '
+            + 'führt auf p² = 400, also p = 20. x² − 10x = 75 gilt für x = 15 (und für x = −5). '
+            + 'Einerziffern: 0, 3, 0, 5.',
+        ],
+        loesung: 'd = 10; e = 3; p = 20; x = 15 → Einerziffern 0, 3, 0, 5.',
       },
       {
         titel: 'Rätsel 6: Der höchste Bogen der Show',
@@ -326,20 +504,55 @@ export default [
           + 'Stelle, an der das Wasser wieder aufkommt.',
         auftrag: 'Beantworte die vier Fragen. Jede richtige Antwort deckt einen Buchstaben auf.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Die Bahn lautet y = −0,2x² + 4x. Wie hoch ist der Strahl bei x = 10?', antwort: '20', einheit: 'm', zeichen: 'H' },
-          { frage: 'Welche x-Koordinate hat der Scheitelpunkt von y = x² − 8x + 12?', antwort: '4', zeichen: 'O' },
-          { frage: 'Welche größere Nullstelle hat y = x² − 10x + 21?', antwort: '7', zeichen: 'C' },
-          { frage: 'Welchen größten Funktionswert hat f(x) = −x² + 6x?', antwort: '9', zeichen: 'H' },
-        ],
         code: 'HOCH',
         codeRegel: 'Jede richtige Antwort deckt einen Buchstaben auf – von oben nach unten.',
         tipps: [
-          'Setze bei der ersten Aufgabe 10 für x ein: −0,2 · 100 + 40.',
-          'Der Scheitel liegt genau in der Mitte zwischen den beiden Nullstellen. x² − 8x + 12 hat die Nullstellen 2 und 6.',
-          '−20 + 40 = 20 m; Mitte zwischen 2 und 6 ist 4; x²−10x+21 = (x−3)(x−7), also 7; −x²+6x hat den Scheitel bei x = 3 mit y = 9.',
+          'Setze bei der Bahn die angegebene Stelle überall für x ein und rechne Punkt vor Strich – das Quadrat kommt zuerst.',
+          'Eine Parabel der Form y = x² − px + q lässt sich als Produkt zweier Klammern (x − a) · (x − b) schreiben; a und b sind dann ihre Nullstellen, und der Scheitel liegt genau in der Mitte zwischen ihnen. Bei einer nach unten geöffneten Parabel ist der Scheitelpunkt der höchste Punkt.',
         ],
-        loesung: '20 m · x = 4 · x = 7 · y = 9 → H, O, C, H.',
+        zufall: (z) => {
+          // Jede Bahn y = −(1 : k)x² + b·x liefert bei x = m eine ganzzahlige Höhe.
+          // Aufgenommen sind nur Bahnen, deren Scheitel unter 13 m bleibt – ein höherer
+          // Strahl wäre für eine Wasserorgel im Kurpark nicht mehr glaubwürdig.
+          const BAHNEN = [
+            [2, 3, 2], [2, 4, 2], [2, 4, 4], [2, 4, 6], [2, 5, 2], [2, 5, 4], [2, 5, 6], [2, 5, 8],
+            [4, 2, 2], [4, 2, 4], [4, 3, 2], [4, 3, 4], [4, 3, 6], [4, 3, 8], [4, 3, 10],
+            [5, 2, 5], [5, 3, 5], [5, 3, 10], [10, 2, 10],
+          ];
+          const w = satz(z, (g) => {
+            // 1) Höhe eines Wasserbogens an einer Stelle
+            const [k, b, m] = g.aus(BAHNEN);
+            const hoehe = b * m - (m * m) / k;
+            // 2) Scheitelstelle einer Parabel mit zwei ganzzahligen Nullstellen
+            const r = g.ganz(1, 9);
+            const s = r + 2 * g.ganz(1, 5);
+            const mitte = (r + s) / 2;
+            // 3) größere Nullstelle einer zweiten solchen Parabel
+            const u = g.ganz(1, 8);
+            const v = u + g.ganz(1, 9);
+            // 4) Hochpunkt einer nach unten geöffneten Parabel
+            const t = g.ganz(2, 9);
+            return { k, b, m, hoehe, r, s, mitte, u, v, t, hoch: t * t,
+              ok: u + v !== r + s || u * v !== r * s,
+              erg: [hoehe, mitte, v, t * t] };
+          });
+          return {
+            regel: 'buchstaben',
+            code: 'HOCH',
+            aufgaben: [
+              { frage: `Die Bahn lautet y = −${fmt(1 / w.k)}x² + ${w.b}x. Wie hoch ist der Strahl bei x = ${w.m}?`, antwort: antw(w.hoehe), einheit: 'm' },
+              { frage: `Welche x-Koordinate hat der Scheitelpunkt von y = x² − ${w.r + w.s}x + ${fmt(w.r * w.s)}?`, antwort: antw(w.mitte) },
+              { frage: `Welche größere Nullstelle hat y = x² − ${w.u + w.v}x + ${fmt(w.u * w.v)}?`, antwort: antw(w.v) },
+              { frage: `Welchen größten Funktionswert hat f(x) = −x² + ${2 * w.t}x?`, antwort: antw(w.hoch) },
+            ],
+            tipp: `−${fmt(1 / w.k)} · ${w.m}² + ${w.b} · ${w.m} = −${fmt((w.m * w.m) / w.k)} + ${fmt(w.b * w.m)} = ${fmt(w.hoehe)} m; `
+              + `x² − ${w.r + w.s}x + ${fmt(w.r * w.s)} = (x − ${w.r}) · (x − ${w.s}), die Mitte zwischen ${w.r} und ${w.s} liegt bei ${fmt(w.mitte)}; `
+              + `x² − ${w.u + w.v}x + ${fmt(w.u * w.v)} = (x − ${w.u}) · (x − ${w.v}), die größere Nullstelle ist ${w.v}; `
+              + `−x² + ${2 * w.t}x hat den Scheitel bei x = ${w.t} mit y = ${fmt(w.hoch)}. `
+              + `Die vier Buchstaben lauten H, O, C, H.`,
+            loesung: `${fmt(w.hoehe)} m; x = ${fmt(w.mitte)}; x = ${w.v}; y = ${fmt(w.hoch)} → H, O, C, H.`,
+          };
+        },
       },
     ],
   },
@@ -383,29 +596,61 @@ export default [
           'Im Volumen steht r², deshalb wirkt sich eine Verdopplung des Radius viermal aus.',
           'Zylinder; Rechteck; 2 · π · 4 = 25,1 cm; viermal so groß.',
         ],
-        loesung: 'Zylinder · Rechteck · 25 cm · viermal so groß → D, O, S, E.',
+        loesung: 'Zylinder; Rechteck; 25 cm; viermal so groß → D, O, S, E.',
       },
       {
         titel: 'Rätsel 2: Die Produktionswerte',
         text: 'Im Schichtbuch stehen vier Rechnungen: ein Dosenvolumen, eine Mantelfläche, ein '
           + 'Deckelumfang und eine Deckelfläche. Gerundet wird auf ganze Zahlen – mehr Genauigkeit '
           + 'braucht die Anlage nicht.',
-        auftrag: 'Rechne die vier Aufgaben mit π ≈ 3,14159 und runde auf ganze Zahlen. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
+        auftrag: 'Benutze den Taschenrechner, rechne mit allen Stellen von π und runde erst das Endergebnis '
+          + 'auf ganze Zahlen. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Welches Volumen hat eine Dose mit r = 5 cm und h = 10 cm?', antwort: '785', einheit: 'cm³', zeichen: '5' },
-          { frage: 'Wie groß ist die Mantelfläche einer Dose mit r = 3 cm und h = 8 cm?', antwort: '151', einheit: 'cm²', zeichen: '1' },
-          { frage: 'Wie lang ist der Umfang eines Deckels mit d = 14 cm?', antwort: '44', einheit: 'cm', zeichen: '4' },
-          { frage: 'Wie groß ist die Fläche eines Deckels mit r = 7 cm?', antwort: '154', einheit: 'cm²', zeichen: '4' },
-        ],
-        code: '5144',
+        rechner: 'wiss',   // Volumen, Mantel, Umfang und Fläche: π-Taste nötig
         codeRegel: 'Die Einerziffern der vier gerundeten Ergebnisse – von oben nach unten.',
         tipps: [
           'V = π · r² · h, M = 2 · π · r · h, u = π · d, A = π · r².',
-          'Rechne zuerst r², dann multipliziere mit π und der Höhe.',
-          'π·25·10 = 785,4 → 785; 2·π·3·8 = 150,8 → 151; π·14 = 44,0 → 44; π·49 = 153,9 → 154.',
+          'Rechne zuerst r², dann multipliziere mit π und der Höhe. Runde erst ganz am Ende.',
         ],
-        loesung: '785 cm³ · 151 cm² · 44 cm · 154 cm² → Einerziffern 5, 1, 4, 4.',
+        zufall: (z) => {
+          const w = satz(z, (g) => {
+            // 1) Dosenvolumen
+            const r1 = g.ganz(3, 8), h1 = g.ganz(6, 16);
+            const v = Math.PI * r1 * r1 * h1;
+            // 2) Mantelfläche
+            const r2 = g.ganz(2, 7), h2 = g.ganz(5, 15);
+            const mantel = 2 * Math.PI * r2 * h2;
+            // 3) Deckelumfang aus dem Durchmesser
+            const d = g.ganz(6, 20);
+            const umfang = Math.PI * d;
+            // 4) Deckelfläche aus dem Radius. Der Radius wird in Zehnteln gewürfelt – mit
+            // ganzen Zentimetern gibt es zu wenige mögliche Ergebnisse, und dann nimmt die
+            // vierte Codestelle weniger als acht verschiedene Ziffern an.
+            const r4z = g.ganz(30, 120);
+            const r4 = r4z / 10;
+            const r4q = (r4z * r4z) / 100;        // r² ohne Rundungsartefakt
+            const flaeche = Math.PI * r4q;
+            return { r1, h1, v, r2, h2, mantel, d, umfang, r4, r4q, flaeche,
+              ok: klar(v) && klar(mantel) && klar(umfang) && klar(flaeche) && r1 !== r2,
+              erg: [rund(v), rund(mantel), rund(umfang), rund(flaeche)] };
+          });
+          const [v, mantel, umfang, flaeche] = w.erg;
+          return {
+            regel: 'einer',
+            aufgaben: [
+              { frage: `Welches Volumen hat eine Dose mit r = ${w.r1} cm und h = ${w.h1} cm?`, antwort: antw(v), einheit: 'cm³' },
+              { frage: `Wie groß ist die Mantelfläche einer Dose mit r = ${w.r2} cm und h = ${w.h2} cm?`, antwort: antw(mantel), einheit: 'cm²' },
+              { frage: `Wie lang ist der Umfang eines Deckels mit d = ${w.d} cm?`, antwort: antw(umfang), einheit: 'cm' },
+              { frage: `Wie groß ist die Fläche eines Deckels mit r = ${fmt(w.r4)} cm?`, antwort: antw(flaeche), einheit: 'cm²' },
+            ],
+            tipp: `π · ${fmt(w.r1 * w.r1)} · ${w.h1} = ${mitRundung(w.v)} cm³; `
+              + `2 · π · ${w.r2} · ${w.h2} = ${mitRundung(w.mantel)} cm²; `
+              + `π · ${w.d} = ${mitRundung(w.umfang)} cm; `
+              + `${fmt(w.r4)}² = ${fmt(w.r4q)}, und π · ${fmt(w.r4q)} = ${mitRundung(w.flaeche)} cm². `
+              + `Einerziffern: ${ziffern(w.erg)}.`,
+            loesung: `${fmt(v)} cm³; ${fmt(mantel)} cm²; ${fmt(umfang)} cm; ${fmt(flaeche)} cm² → Einerziffern ${ziffern(w.erg)}.`,
+          };
+        },
       },
       {
         titel: 'Rätsel 3: Die Literdosen',
@@ -439,80 +684,172 @@ export default [
         loesung: 'Knapp darunter: r = 6, h = 8 (905 cm³) und r = 9, h = 3 (763 cm³).',
       },
       {
-        titel: 'Rätsel 4: Die Volumenkartei',
-        text: 'In der Musterkartei stecken sechs Dosenformate und sechs Volumenangaben, alle auf ganze '
-          + 'Kubikzentimeter gerundet. Die Karten sind beim Umräumen des Büros durcheinandergeraten – '
-          + 'und ohne sie kann die Bestellung nicht raus.',
-        auftrag: 'Ordne jedem Format sein <strong>Volumen</strong> zu (gerundet auf ganze cm³).',
-        typ: 'zuordnen',
-        titelLinks: 'Format',
-        titelRechts: 'Volumen',
-        codeAmEnde: true,
-        saat: 5669,
-        paare: [
-          { links: 'r = 2 cm, h = 10 cm', rechts: '126 cm³' },
-          { links: 'r = 2 cm, h = 20 cm', rechts: '251 cm³' },
-          { links: 'r = 3 cm, h = 10 cm', rechts: '283 cm³' },
-          { links: 'r = 4 cm, h = 10 cm', rechts: '503 cm³' },
-          { links: 'r = 6 cm, h = 5 cm', rechts: '565 cm³' },
-          { links: 'r = 5 cm, h = 10 cm', rechts: '785 cm³' },
-        ],
+        titel: 'Rätsel 4: Der Plättchenkasten des Schichtleiters',
+        text: 'Auf dem Schreibtisch des Schichtleiters liegt ein flacher Kasten mit Zahlen- und '
+          + 'Rechenplättchen. Vier Zielwerte hat er daneben notiert, jeder gehört zu einer Rechnung aus '
+          + 'der Produktion. Zu jedem Zielwert soll ein Term gelegt werden, der genau diesen Wert ergibt.',
+        auftrag: 'Baue zu jedem Zielwert einen passenden Term. Jedes Plättchen lässt sich nur '
+          + '<strong>einmal</strong> benutzen, und du musst nicht alle benutzen.',
+        typ: 'termbauen',
         code: '1263',
-        codeRegel: 'Wenn alle Paare stimmen, erscheint der Code: das <strong>kleinste Volumen</strong> (dreistellig) und die <strong>Anzahl der Formate mit mehr als 500 cm³</strong>.',
-        tipps: [
-          'V = π · r² · h. Verdoppelt sich die Höhe, verdoppelt sich das Volumen.',
-          'Verdoppelt sich dagegen der Radius, wird das Volumen viermal so groß – vergleiche r = 2 und r = 4 bei gleicher Höhe.',
-          'Volumen: 126, 251, 283, 503, 565 und 785 cm³. Das kleinste ist 126; über 500 cm³ liegen drei Formate.',
+        codeRegel: 'Jeder getroffene Zielwert deckt eine Ziffer auf – von oben nach unten.',
+        aufgaben: [
+          {
+            frage: 'Ein Prisma hat die Grundfläche 24 cm² und die Höhe 8 cm; daraus wird ein Loch von 24 cm³ gebohrt. '
+              + 'So viel Material bleibt: Baue einen Term mit dem Wert <strong>168</strong>.',
+            ziel: 168, bausteine: ['24', '24', '8', '2', '3', '·', '−', '+', ':'], zeichen: '1',
+            musterloesung: '24 · 8 − 24',
+          },
+          {
+            frage: 'Ein dreiseitiges Prisma hat drei gleich breite Seitenflächen: Grundkante 9 cm, Höhe 15 cm. '
+              + 'So groß ist seine Mantelfläche: Baue einen Term mit dem Wert <strong>405</strong>.',
+            ziel: 405, bausteine: ['3', '9', '15', '5', '2', '·', '·', '+', '(', ')'], zeichen: '2',
+            musterloesung: '3 · 9 · 15',
+          },
+          {
+            frage: 'In einen Karton passen 4 Lagen mit je 12 Dosen; 6 Dosen fehlen in der Lieferung. '
+              + 'So viele sind angekommen: Baue einen Term mit dem Wert <strong>42</strong>.',
+            ziel: 42, bausteine: ['4', '12', '6', '2', '8', '·', '−', '+', ':'], zeichen: '6',
+            musterloesung: '4 · 12 − 6',
+          },
+          {
+            frage: 'Aus einem Blechquader 10 cm × 10 cm × 8 cm wird ein Zylinder von 200 cm³ ausgestanzt. '
+              + 'So viel Blech bleibt übrig: Baue einen Term mit dem Wert <strong>600</strong>.',
+            ziel: 600, bausteine: ['10', '10', '8', '200', '5', '·', '·', '−', '+'], zeichen: '3',
+            musterloesung: '10 · 10 · 8 − 200',
+          },
         ],
-        loesung: '126 · 251 · 283 · 503 · 565 · 785 cm³.',
+        tipps: [
+          'Du musst nicht alle Plättchen benutzen – oft reichen zwei oder drei Zahlen und ein Rechenzeichen.',
+          'Beim Prisma gilt V = G · h; die Mantelfläche ist der Grundumfang mal die Höhe, und der Umfang eines '
+            + 'gleichseitigen Dreiecks ist dreimal die Kante. Denk an Punkt vor Strich: In 10 · 10 · 8 − 200 wird '
+            + 'erst malgenommen.',
+          '24 · 8 − 24 = 192 − 24 = 168; 3 · 9 · 15 = 27 · 15 = 405; 4 · 12 − 6 = 48 − 6 = 42; '
+            + '10 · 10 · 8 − 200 = 800 − 200 = 600.',
+        ],
+        loesung: '168; 405; 42; 600 – zum Beispiel 24 · 8 − 24; 3 · 9 · 15; 4 · 12 − 6; 10 · 10 · 8 − 200.',
       },
       {
-        titel: 'Rätsel 5: Die Etikettenrollen',
-        text: 'Für die Deckel werden runde Etiketten gestanzt. Sechs Größen liegen bereit, mal mit Radius, '
-          + 'mal mit Durchmesser angegeben. Die Stanzmaschine verlangt sie nach dem Umfang sortiert, '
-          + 'vom kleinsten zum größten.',
-        auftrag: 'Ordne die Kreise nach ihrem <strong>Umfang</strong> – vom kleinsten zum größten.',
-        typ: 'reihenfolge',
-        codeAmEnde: true,
-        saat: 5779,
-        elemente: [
-          { text: 'r = 2 cm' },
-          { text: 'd = 8 cm' },
-          { text: 'r = 5 cm' },
-          { text: 'd = 14 cm' },
-          { text: 'r = 8 cm' },
-          { text: 'd = 20 cm' },
-        ],
+        titel: 'Rätsel 5: Der Notizblock des Praktikanten',
+        text: 'Am Band liegt der Notizblock des Praktikanten. Vier Rechenwege hat er aufgeschrieben, und in '
+          + 'jeden hat sich genau ein Fehler eingeschlichen – danach hat er stur weitergerechnet, auch mit '
+          + 'der falschen Zahl. Die Anlage übernimmt keinen dieser Werte.',
+        auftrag: 'Tippe in jedem Rechenweg die Zeile an, in der <strong>zum ersten Mal</strong> etwas falsch '
+          + 'ist. Rechne danach selbst richtig weiter: Benutze den Taschenrechner mit allen Stellen von π '
+          + 'und runde auf eine Nachkommastelle.',
+        typ: 'fehlerfinden',
+        rechner: 'wiss',   // π-Taste für das richtige Nachrechnen
         code: '1363',
-        codeRegel: 'Der Code: der Umfang des <strong>ersten</strong> und des <strong>letzten</strong> Kreises der richtigen Reihenfolge in cm, auf ganze Zentimeter gerundet.',
-        tipps: [
-          'Rechne alle Angaben auf den Radius um: r = d : 2.',
-          'Je größer der Radius, desto größer der Umfang – du musst gar nicht alles ausrechnen, um zu sortieren.',
-          'Radien: 2 < 4 < 5 < 7 < 8 < 10 cm. Umfang des ersten: 2 · π · 2 = 12,6 → 13; des letzten: π · 20 = 62,8 → 63.',
+        codeRegel: 'Jede gefundene Fehlerzeile deckt eine Ziffer auf – von oben nach unten.',
+        faelle: [
+          {
+            titel: 'Welches Volumen hat eine Dose mit d = 10 cm und h = 12 cm?',
+            zeilen: [
+              'Gegeben sind der Durchmesser d = 10 cm und die Höhe h = 12 cm.',
+              'Volumen eines Zylinders: V = π · r² · h',
+              '= π · 10² · 12',
+              '= π · 100 · 12 = 3 770 cm³',
+              'Antwort: Die Dose hat ein Volumen von 3 770 cm³.',
+            ],
+            falsch: 2, zeichen: '1',
+          },
+          {
+            titel: 'Wie lang muss das Etikett rund um einen Dosenboden mit r = 7 cm sein?',
+            zeilen: [
+              'Der Dosenboden ist ein Kreis mit dem Radius r = 7 cm.',
+              'Umfang: u = π · r',
+              '= π · 7 cm',
+              '= 22,0 cm',
+              'Antwort: Das Etikett muss 22,0 cm lang sein.',
+            ],
+            falsch: 1, zeichen: '3',
+          },
+          {
+            titel: 'Wie viele Liter fasst ein Kessel mit 18 000 cm³?',
+            zeilen: [
+              'Der Kessel hat ein Volumen von 18 000 cm³.',
+              'Dabei gilt: 1 Liter sind 100 cm³.',
+              '18 000 : 100 = 180',
+              'Antwort: Der Kessel fasst 180 Liter.',
+            ],
+            falsch: 1, zeichen: '6',
+          },
+          {
+            titel: 'Wie groß ist die Fläche eines Deckels mit r = 6 cm?',
+            zeilen: [
+              'Der Deckel ist ein Kreis mit dem Radius r = 6 cm.',
+              'Kreisfläche: A = π · r²',
+              '= π · 12 cm²',
+              '= 37,7 cm²',
+              'Antwort: Der Deckel hat eine Fläche von 37,7 cm².',
+            ],
+            falsch: 2, zeichen: '3',
+          },
         ],
-        loesung: 'r = 2 (12,6 cm) < d = 8 (25,1) < r = 5 (31,4) < d = 14 (44,0) < r = 8 (50,3) < d = 20 (62,8).',
+        tipps: [
+          'Lies jeden Rechenweg Zeile für Zeile und frage dich: Stimmt genau dieser Schritt? Der Fehler steckt '
+            + 'nicht immer am Ende – manchmal ist schon die Formel richtig, aber die eingesetzte Zahl nicht.',
+          'In V = π · r² · h und A = π · r² steht der Radius, nicht der Durchmesser. Der Kreisumfang ist '
+            + 'u = 2 · π · r (oder π · d). r² heißt r · r. Und 1 Liter sind 1 000 cm³.',
+          'Weg 1: Zeile 3 – eingesetzt wurde d statt r = 5 cm, richtig sind π · 25 · 12 = 942,5 cm³. '
+            + 'Weg 2: Zeile 2 – der Faktor 2 fehlt, richtig sind 2 · π · 7 = 44,0 cm. '
+            + 'Weg 3: Zeile 2 – 1 l = 1 000 cm³, also 18 000 : 1 000 = 18 Liter. '
+            + 'Weg 4: Zeile 3 – r² = 36, nicht 12, richtig sind π · 36 = 113,1 cm².',
+        ],
+        loesung: 'Fehler in Zeile 3, 2, 2 und 3 – richtig sind 942,5 cm³; 44,0 cm; 18 l; 113,1 cm².',
       },
       {
         titel: 'Rätsel 6: Das große Fass',
         text: 'Im Lager steht ein Fass, das morgen abgefüllt werden soll. Vier Fragen stehen auf dem '
           + 'Lieferschein: nach dem Fassinhalt, nach dem Blech für einen Mantel, nach der Höhe eines '
-          + 'Zylinders und nach einer Füllmenge in Litern.',
-        auftrag: 'Beantworte die vier Fragen (π ≈ 3,14159, auf ganze Zahlen gerundet). Jede richtige Antwort deckt einen Buchstaben auf.',
+          + 'Zylinders und nach der Zahl der Dosen, die ein Kessel füllt.',
+        auftrag: 'Beantworte die vier Fragen. Benutze den Taschenrechner, rechne mit allen Stellen von π '
+          + 'und runde erst das Endergebnis auf ganze Zahlen. Jede richtige Antwort deckt einen Buchstaben auf.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Ein Fass hat r = 30 cm und h = 80 cm. Wie viele Liter fasst es?', antwort: '226', einheit: 'l', zeichen: 'F' },
-          { frage: 'Wie viel Blech braucht der Mantel einer Dose mit r = 5 cm und h = 12 cm?', antwort: '377', einheit: 'cm²', zeichen: 'A' },
-          { frage: 'Ein Zylinder hat V = 500 cm³ und die Grundfläche 50 cm². Wie hoch ist er?', antwort: '10', einheit: 'cm', zeichen: 'S' },
-          { frage: 'Wie viele Liter fasst ein Zylinder mit r = 10 cm und h = 30 cm?', antwort: '9', einheit: 'l', zeichen: 'S' },
-        ],
+        rechner: 'wiss',   // Fassinhalt und Mantelfläche: π-Taste nötig
         code: 'FASS',
         codeRegel: 'Jede richtige Antwort deckt einen Buchstaben auf – von oben nach unten.',
         tipps: [
-          '1 Liter sind 1 000 cm³ – rechne also zuerst in Kubikzentimetern.',
-          'Beim Zylinder gilt V = G · h, also h = V : G.',
-          'π·900·80 = 226 195 cm³ ≈ 226 l; 2·π·5·12 = 377 cm²; 500 : 50 = 10 cm; π·100·30 = 9 425 cm³ ≈ 9 l.',
+          '1 Liter sind 1 000 cm³ – rechne also zuerst in Kubikzentimetern und wandle danach um.',
+          'Beim Zylinder gilt V = G · h, also h = V : G. Der Mantel ist ein Rechteck aus dem Kreisumfang und der Höhe.',
         ],
-        loesung: '226 l · 377 cm² · 10 cm · 9 l → F, A, S, S.',
+        zufall: (z) => {
+          const w = satz(z, (g) => {
+            // 1) Fassinhalt in Litern – ein übliches Fass fasst nicht mehr als etwa 200 l
+            const r1 = g.vielfach(20, 30, 5), h1 = g.ganz(60, 90);
+            const liter = (Math.PI * r1 * r1 * h1) / 1000;
+            // 2) Blech für den Mantel
+            const r2 = g.ganz(3, 9), h2 = g.ganz(8, 20);
+            const mantel = 2 * Math.PI * r2 * h2;
+            // 3) Höhe eines Zylinders aus Volumen und Grundfläche
+            const grund = g.vielfach(20, 120, 10), hoehe = g.ganz(4, 15);
+            const vol = grund * hoehe;
+            // 4) Zahl der Dosen, die ein Kessel füllt
+            const dose = g.aus([125, 200, 250, 500]);   // alle teilen 1 000 cm³ ohne Rest
+            const kessel = g.ganz(4, 25);
+            const dosen = (kessel * 1000) / dose;
+            return { r1, h1, liter, r2, h2, mantel, grund, hoehe, vol, dose, kessel, dosen,
+              ok: klar(liter) && klar(mantel) && liter >= 80 && liter <= 200,
+              erg: [rund(liter), rund(mantel), hoehe, dosen] };
+          });
+          const [liter, mantel] = w.erg;
+          return {
+            regel: 'buchstaben',
+            code: 'FASS',
+            aufgaben: [
+              { frage: `Ein Fass hat r = ${w.r1} cm und h = ${w.h1} cm. Wie viele Liter fasst es?`, antwort: antw(liter), einheit: 'l' },
+              { frage: `Wie viel Blech braucht der Mantel einer Dose mit r = ${w.r2} cm und h = ${w.h2} cm?`, antwort: antw(mantel), einheit: 'cm²' },
+              { frage: `Ein Zylinder hat V = ${fmt(w.vol)} cm³ und die Grundfläche ${w.grund} cm². Wie hoch ist er?`, antwort: antw(w.hoehe), einheit: 'cm' },
+              { frage: `Ein Kessel enthält ${w.kessel} Liter Suppe. Wie viele Dosen zu je ${w.dose} cm³ lassen sich damit füllen?`, antwort: antw(w.dosen), einheit: 'Dosen' },
+            ],
+            tipp: `π · ${fmt(w.r1 * w.r1)} · ${w.h1} = ${fmt(Math.round(w.liter * 1000))} cm³, das sind ${mitRundung(w.liter)} l; `
+              + `2 · π · ${w.r2} · ${w.h2} = ${mitRundung(w.mantel)} cm²; `
+              + `${fmt(w.vol)} : ${w.grund} = ${w.hoehe} cm; `
+              + `${w.kessel} l = ${fmt(w.kessel * 1000)} cm³, und ${fmt(w.kessel * 1000)} : ${w.dose} = ${fmt(w.dosen)} Dosen. `
+              + `Die vier Buchstaben lauten F, A, S, S.`,
+            loesung: `${fmt(liter)} l; ${fmt(mantel)} cm²; ${w.hoehe} cm; ${fmt(w.dosen)} Dosen → F, A, S, S.`,
+          };
+        },
       },
     ],
   },
@@ -556,7 +893,7 @@ export default [
           'Beim Potenzieren von Potenzen werden die Exponenten multipliziert.',
           '2¹⁰ = 1 024; a⁰ = 1; (aᵐ)ⁿ = a^(m·n); √a = a^(1/2).',
         ],
-        loesung: '1 024 Lagen · 1 · a^(m·n) · a^(1/2) → F, A, L, T.',
+        loesung: '1 024 Lagen; 1; a^(m·n); a^(1/2) → F, A, L, T.',
       },
       {
         titel: 'Rätsel 2: Das Maschinenprotokoll',
@@ -565,20 +902,47 @@ export default [
           + 'im Protokoll.',
         auftrag: 'Rechne die vier Aufgaben. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Berechne 2¹⁰.', antwort: '1024', zeichen: '4' },
-          { frage: 'Berechne 5⁴.', antwort: '625', zeichen: '5' },
-          { frage: 'Berechne 3³ · 3².', antwort: '243', zeichen: '3' },
-          { frage: 'Berechne 10⁶ : 10³.', antwort: '1000', zeichen: '0' },
-        ],
-        code: '4530',
         codeRegel: 'Die Einerziffern der vier Ergebnisse – von oben nach unten.',
         tipps: [
-          '2¹⁰ kannst du schrittweise verdoppeln: 2, 4, 8, 16, 32, 64, 128, 256, 512, 1 024.',
-          'Bei gleicher Basis werden die Exponenten addiert bzw. subtrahiert.',
-          '2¹⁰ = 1 024; 5⁴ = 625; 3⁵ = 243; 10³ = 1 000.',
+          'Bei gleicher Basis werden die Exponenten addiert, wenn du die Potenzen multiplizierst, und subtrahiert, wenn du sie dividierst.',
+          'Haben zwei Potenzen denselben Exponenten, darfst du zuerst die beiden Basen multiplizieren. Rechne die Potenz danach schrittweise aus: Nimm die Basis immer wieder mit sich selbst mal.',
         ],
-        loesung: '1 024 · 625 · 243 · 1 000 → Einerziffern 4, 5, 3, 0.',
+        zufall: (z) => {
+          const w = satz(z, (g) => {
+            // 1) Potenz ausrechnen
+            const a = g.ganz(2, 9), b = g.ganz(2, 4);
+            // 2) Potenzen mit gleicher Basis multiplizieren
+            const c = g.ganz(2, 9), m1 = g.ganz(1, 4), n1 = g.ganz(1, 4);
+            // 3) Potenzen mit gleicher Basis dividieren
+            const d = g.ganz(2, 9), q = g.ganz(1, 4), diff = g.ganz(1, 4);
+            // 4) zwei Potenzen mit gleichem Exponenten
+            const e = g.ganz(2, 9);
+            let f = g.ganz(2, 9);
+            for (let i = 0; i < 20 && f === e; i++) f = g.ganz(2, 9);
+            const n2 = g.ganz(2, 3);
+            const erg = [a ** b, c ** (m1 + n1), d ** diff, (e * f) ** n2];
+            return { a, b, c, m1, n1, d, q, diff, p: q + diff, e, f, n2, erg,
+              ok: m1 + n1 >= 3 && m1 + n1 <= 6 && c ** (m1 + n1) <= 10000
+                && a ** b >= 27          // keine trivialen Potenzen wie 3² oder 4²
+                && e !== f && (e * f) ** n2 <= 20000 };
+          });
+          const [e1, e2, e3, e4] = w.erg;
+          return {
+            regel: 'einer',
+            aufgaben: [
+              { frage: `Berechne ${w.a}${hoch(w.b)}.`, antwort: antw(e1) },
+              { frage: `Berechne ${w.c}${hoch(w.m1)} · ${w.c}${hoch(w.n1)}.`, antwort: antw(e2) },
+              { frage: `Berechne ${w.d}${hoch(w.p)} : ${w.d}${hoch(w.q)}.`, antwort: antw(e3) },
+              { frage: `Berechne ${w.e}${hoch(w.n2)} · ${w.f}${hoch(w.n2)}.`, antwort: antw(e4) },
+            ],
+            tipp: `${w.a}${hoch(w.b)} = ${fmt(e1)}; `
+              + `${w.c}${hoch(w.m1)} · ${w.c}${hoch(w.n1)} = ${w.c}${hoch(w.m1 + w.n1)} = ${fmt(e2)}; `
+              + `${w.d}${hoch(w.p)} : ${w.d}${hoch(w.q)} = ${w.d}${hoch(w.diff)} = ${fmt(e3)}; `
+              + `${w.e}${hoch(w.n2)} · ${w.f}${hoch(w.n2)} = (${w.e} · ${w.f})${hoch(w.n2)} = ${fmt(w.e * w.f)}${hoch(w.n2)} = ${fmt(e4)}. `
+              + `Einerziffern: ${ziffern(w.erg)}.`,
+            loesung: `${fmt(e1)}; ${fmt(e2)}; ${fmt(e3)}; ${fmt(e4)} → Einerziffern ${ziffern(w.erg)}.`,
+          };
+        },
       },
       {
         titel: 'Rätsel 3: Die Prüfkarten',
@@ -612,58 +976,85 @@ export default [
         loesung: 'Falsch: 2³·2² = 2⁶; (3²)² = 3⁶; 5⁰ = 0; 10⁻¹ = −10; a⁵:a² = a^2,5; (2a)³ = 2a³.',
       },
       {
-        titel: 'Rätsel 4: Die Zehnerpotenzen',
-        text: 'In der Qualitätskontrolle werden Dicken und Längen in Zehnerpotenzen notiert – von '
-          + 'Papierstärken im Hundertstelmillimeter bis zu Bahnlängen in Kilometern. Sechs Zahlen und '
-          + 'sechs Schreibweisen warten darauf, wieder zusammenzufinden.',
-        auftrag: 'Ordne jeder Zahl ihre <strong>Schreibweise mit Zehnerpotenz</strong> zu.',
-        typ: 'zuordnen',
-        titelLinks: 'Zahl',
-        titelRechts: 'Zehnerpotenz',
-        codeAmEnde: true,
-        saat: 5897,
-        paare: [
-          { links: '3 400', rechts: '3,4 · 10³' },
-          { links: '340 000', rechts: '3,4 · 10⁵' },
-          { links: '34', rechts: '3,4 · 10¹' },
-          { links: '0,34', rechts: '3,4 · 10⁻¹' },
-          { links: '0,034', rechts: '3,4 · 10⁻²' },
-          { links: '0,0034', rechts: '3,4 · 10⁻³' },
-        ],
+        titel: 'Rätsel 4: Die Karten der Qualitätskontrolle',
+        text: 'In der Qualitätskontrolle liegen acht Rechenkarten mit Potenzen und acht Ergebniskarten '
+          + 'durcheinander auf dem Tisch. Auf den Rückseiten ist eine große Zahl aufgemalt; man sieht sie '
+          + 'erst, wenn alle Karten richtig beieinanderliegen.',
+        auftrag: 'Tippe eine Rechenkarte an und danach die passende Ergebniskarte. Jede richtig gelegte '
+          + 'Karte deckt ein Stück des Bildes auf; am Ende steht dort der Code.',
+        typ: 'legen',
         code: '0305',
-        codeRegel: 'Wenn alle Paare stimmen, erscheint der Code: die <strong>Exponenten von 3 400 und 340 000</strong> – jeweils zweistellig.',
-        tipps: [
-          'Verschiebe das Komma so weit, bis vorn eine Zahl zwischen 1 und 10 steht, und zähle die Stellen.',
-          'Nach rechts verschoben ergibt einen positiven Exponenten, nach links einen negativen.',
-          '3 400 = 3,4 · 10³ und 340 000 = 3,4 · 10⁵. Die Exponenten sind 3 und 5.',
+        zahlbild: '0305',
+        spalten: 4,
+        saat: 5897,
+        titelLinks: 'Potenz',
+        titelRechts: 'Wert',
+        codeRegel: 'Die Zahl, die das fertige Bild zeigt.',
+        karten: [
+          { rechnung: '2⁵', ergebnis: '32' },
+          { rechnung: '3⁴', ergebnis: '81' },
+          { rechnung: '10⁻²', ergebnis: '0,01' },
+          { rechnung: '5⁰', ergebnis: '1' },
+          { rechnung: '2³ · 2⁴', ergebnis: '128' },
+          { rechnung: '(2³)²', ergebnis: '64' },
+          { rechnung: '6² : 6', ergebnis: '6' },
+          { rechnung: '4² · 5²', ergebnis: '400' },
         ],
-        loesung: '3 400 = 3,4·10³; 340 000 = 3,4·10⁵; 34 = 3,4·10¹; 0,34 = 3,4·10⁻¹; 0,034 = 3,4·10⁻²; 0,0034 = 3,4·10⁻³.',
+        tipps: [
+          'Fang mit den reinen Potenzen an und rechne sie schrittweise aus: Nimm die Basis immer wieder mit sich '
+            + 'selbst mal. Die Karte mit dem vierstelligen Ergebnis gibt es nur einmal.',
+          'Bei gleicher Basis werden die Exponenten beim Multiplizieren addiert und beim Dividieren subtrahiert. '
+            + 'Wird eine Potenz noch einmal potenziert, multiplizierst du die Exponenten. Ein negativer Exponent '
+            + 'bedeutet den Kehrwert, und jede Zahl hoch null ist 1.',
+          '2⁵ = 32; 3⁴ = 81; 10⁻² = 1 : 100 = 0,01; 5⁰ = 1; 2³ · 2⁴ = 2⁷ = 128; (2³)² = 2⁶ = 64; 6² : 6 = 36 : 6 = 6; '
+            + '4² · 5² = (4 · 5)² = 400. Das Bild zeigt 0305.',
+        ],
+        loesung: '32; 81; 0,01; 1; 128; 64; 6; 400 – das Bild zeigt 0305.',
       },
       {
-        titel: 'Rätsel 5: Die Größenreihe',
-        text: 'Auf dem Prüfstand liegen sechs Zettel mit Potenzen, von sehr kleinen Papierdicken bis zu '
-          + 'großen Stückzahlen. Für die Dokumentation müssen sie der Größe nach geordnet werden – '
-          + 'zwei davon sind kleiner als eins.',
-        auftrag: 'Ordne die Potenzen nach ihrem <strong>Wert</strong> – von der kleinsten zur größten.',
-        typ: 'reihenfolge',
-        codeAmEnde: true,
-        saat: 6007,
-        elemente: [
-          { text: '2⁻³' },
-          { text: '0,5²' },
-          { text: '3⁰' },
-          { text: '2⁴' },
-          { text: '5³' },
-          { text: '10³' },
-        ],
+        titel: 'Rätsel 5: Der Prüfstand mit den Lücken',
+        text: 'Auf dem Prüfstand liegen vier Zettel, auf denen jeweils eine Zahl ausgeschnitten ist – '
+          + 'einmal die Basis, einmal der Exponent. Daneben hat der Meister notiert: „Wer die Potenzen '
+          + 'kennt, muss nicht raten. Wer klug probiert, kommt aber auch hin."',
+        auftrag: 'Gib eine Zahl ein und tippe auf „Probieren". Jeder Versuch bleibt stehen und meldet, ob '
+          + 'er <strong>zu klein</strong> oder <strong>zu groß</strong> ist. Alle gesuchten Zahlen sind ganze Zahlen.',
+        typ: 'probieren',
         code: '1602',
-        codeRegel: 'Der Code: der Wert an <strong>vierter Stelle</strong> der richtigen Reihenfolge und die <strong>Anzahl der Werte unter 1</strong> – jeweils zweistellig.',
-        tipps: [
-          'Rechne jede Potenz als Dezimalzahl aus.',
-          '2⁻³ = 1/8 = 0,125 und 0,5² = 0,25 – beide liegen unter 1. Jede Zahl hoch null ist 1.',
-          '0,125 < 0,25 < 1 < 16 < 125 < 1 000. An vierter Stelle steht 2⁴ = 16, und zwei Werte liegen unter 1.',
+        codeRegel: 'Die <strong>Einerziffern</strong> der vier gefundenen Zahlen – von oben nach unten.',
+        aufgaben: [
+          {
+            frage: 'Für welchen Exponenten n gilt 2ⁿ = 2 048?',
+            antwort: '11', von: 1, bis: 20, zeichen: '1',
+            pruefe: (x) => (Number.isInteger(x) && x >= 0 && x <= 40
+              ? `2${hoch(x)} = ${fmt(2 ** x)}` : 'Probiere eine ganze Zahl zwischen 1 und 20.'),
+          },
+          {
+            frage: 'Welche Zahl ergibt hoch 3 genommen 216?',
+            antwort: '6', von: 1, bis: 20, zeichen: '6',
+            pruefe: (x) => nurGanz(x, `${x}³ = ${fmt(x ** 3)}`),
+          },
+          {
+            frage: 'Für welche Basis a gilt a⁴ = 10 000?',
+            antwort: '10', von: 1, bis: 30, zeichen: '0',
+            pruefe: (x) => nurGanz(x, `${x}⁴ = ${fmt(x ** 4)}`),
+          },
+          {
+            frage: 'Ein Blatt ist 0,1 mm dick. Wie oft muss man es falten, damit der Stapel mehr als 40 cm hoch ist?',
+            antwort: '12', von: 1, bis: 25, einheit: 'mal', zeichen: '2',
+            pruefe: (x) => (Number.isInteger(x) && x >= 0 && x <= 40
+              ? `${fmt(2 ** x)} Lagen · 0,1 mm = ${eine((2 ** x) / 10)} mm`
+              : 'Probiere eine ganze Zahl zwischen 1 und 25.'),
+          },
         ],
-        loesung: '2⁻³ = 0,125 < 0,5² = 0,25 < 3⁰ = 1 < 2⁴ = 16 < 5³ = 125 < 10³ = 1 000.',
+        tipps: [
+          'Fang mit einem Versuch mitten im Bereich an. Jede Rückmeldung halbiert den Bereich, in dem die Zahl noch liegen kann.',
+          'Schreibe dir die Zweierpotenzen der Reihe nach auf: 2, 4, 8, 16, 32, … Bei der zweiten und dritten Aufgabe '
+            + 'ist die Basis gesucht – probiere kleine Zahlen und nimm sie dreimal bzw. viermal mit sich selbst mal. '
+            + 'Bei der letzten Aufgabe sind 40 cm gleich 400 mm.',
+          '2¹¹ = 2 048, also n = 11; 6³ = 216; 10⁴ = 10 000, also a = 10; 2¹¹ = 2 048 Lagen ergeben 204,8 mm, '
+            + '2¹² = 4 096 Lagen ergeben 409,6 mm > 400 mm – also 12-mal falten. Einerziffern: 1, 6, 0, 2.',
+        ],
+        loesung: 'n = 11; 6; a = 10; 12-mal → Einerziffern 1, 6, 0, 2.',
       },
       {
         titel: 'Rätsel 6: Der Papierstapel',
@@ -672,20 +1063,53 @@ export default [
           + 'nötigen Faltungen und über eine Potenz von Potenzen.',
         auftrag: 'Beantworte die vier Fragen. Jede richtige Antwort deckt einen Buchstaben auf.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Ein Blatt ist 0,1 mm dick. Wie dick ist der Stapel nach 8 Faltungen?', antwort: ['25,6', '25.6'], einheit: 'mm', zeichen: 'L' },
-          { frage: 'Berechne 2⁻³ als Dezimalzahl.', antwort: ['0,125', '0.125'], zeichen: 'A' },
-          { frage: 'Wie oft muss man falten, um mindestens 1 000 Lagen zu erhalten?', antwort: '10', einheit: 'mal', zeichen: 'G' },
-          { frage: 'Berechne (10²)³ : 10⁴.', antwort: '100', zeichen: 'E' },
-        ],
         code: 'LAGE',
         codeRegel: 'Jede richtige Antwort deckt einen Buchstaben auf – von oben nach unten.',
         tipps: [
-          'Nach 8 Faltungen hat der Stapel 2⁸ = 256 Lagen.',
-          '2⁹ = 512 ist noch zu wenig, 2¹⁰ = 1 024 reicht aus.',
-          '256 · 0,1 mm = 25,6 mm; 2⁻³ = 1/8 = 0,125; 10 Faltungen; (10²)³ = 10⁶, geteilt durch 10⁴ ergibt 10² = 100.',
+          'Mit jeder Faltung verdoppelt sich die Lagenzahl: Nach n Faltungen liegen 2ⁿ Lagen übereinander, und der Stapel ist so dick wie die Lagenzahl mal die Dicke eines Blattes.',
+          'Ein negativer Exponent bedeutet den Kehrwert: a⁻ⁿ = 1 : aⁿ. Wird eine Potenz noch einmal potenziert, multiplizierst du die beiden Exponenten; beim Dividieren mit gleicher Basis ziehst du sie voneinander ab.',
         ],
-        loesung: '25,6 mm · 0,125 · 10-mal · 100 → L, A, G, E.',
+        zufall: (z) => {
+          const KEHRWERTE = [[2, 1], [2, 2], [4, 1], [5, 1], [5, 2], [10, 1], [10, 2], [20, 1], [25, 1], [50, 1]];
+          const GRENZEN = [60, 100, 150, 200, 300, 400, 600, 800, 1000, 1500, 2000, 3000];
+          const w = satz(z, (g) => {
+            // 1) Stapeldicke nach mehreren Faltungen (intern in Hundertstelmillimetern)
+            const blatt = g.aus([5, 10, 20, 25]);     // Blattdicke in 1/100 mm
+            const falten = g.ganz(6, 10);
+            const lagen = 2 ** falten;
+            const zehntel = (blatt * lagen) / 10;     // Stapeldicke in 1/10 mm
+            // 2) negativer Exponent als Dezimalzahl
+            const [basis, exp] = g.aus(KEHRWERTE);
+            const kehrwert = (100 / basis ** exp) / 100;
+            // 3) nötige Faltungen für eine Mindestzahl an Lagen
+            const grenze = g.aus(GRENZEN);
+            let noetig = 0;
+            while (2 ** noetig < grenze) noetig++;
+            // 4) Potenz einer Potenz, danach dividiert
+            const a = g.ganz(2, 10), m = g.ganz(2, 3), n = g.ganz(2, 3);
+            const k = g.ganz(1, m * n - 2);
+            const rest = a ** (m * n - k);
+            return { blatt, falten, lagen, zehntel, basis, exp, kehrwert, grenze, noetig, a, m, n, k, rest,
+              ok: rest <= 10000,
+              erg: [zehntel / 10, kehrwert, noetig, rest] };
+          });
+          return {
+            regel: 'buchstaben',
+            code: 'LAGE',
+            aufgaben: [
+              { frage: `Ein Blatt ist ${fmt(w.blatt / 100)} mm dick. Wie dick ist der Stapel nach ${w.falten} Faltungen?`, antwort: antw(w.zehntel / 10), einheit: 'mm' },
+              { frage: `Berechne ${w.basis}⁻${hoch(w.exp)} als Dezimalzahl.`, antwort: antw(w.kehrwert) },
+              { frage: `Wie oft muss man falten, um mindestens ${fmt(w.grenze)} Lagen zu erhalten?`, antwort: antw(w.noetig), einheit: 'mal' },
+              { frage: `Berechne (${w.a}${hoch(w.m)})${hoch(w.n)} : ${w.a}${hoch(w.k)}.`, antwort: antw(w.rest) },
+            ],
+            tipp: `Nach ${w.falten} Faltungen sind es 2${hoch(w.falten)} = ${fmt(w.lagen)} Lagen, also ${fmt(w.lagen)} · ${fmt(w.blatt / 100)} mm = ${fmt(w.zehntel / 10)} mm; `
+              + `${w.basis}⁻${hoch(w.exp)} = 1 : ${fmt(w.basis ** w.exp)} = ${fmt(w.kehrwert)}; `
+              + `2${hoch(w.noetig - 1)} = ${fmt(2 ** (w.noetig - 1))} ist noch zu wenig, 2${hoch(w.noetig)} = ${fmt(2 ** w.noetig)} reicht – also ${w.noetig} Faltungen; `
+              + `(${w.a}${hoch(w.m)})${hoch(w.n)} = ${w.a}${hoch(w.m * w.n)}, geteilt durch ${w.a}${hoch(w.k)} ergibt ${w.a}${hoch(w.m * w.n - w.k)} = ${fmt(w.rest)}. `
+              + `Die vier Buchstaben lauten L, A, G, E.`,
+            loesung: `${fmt(w.zehntel / 10)} mm; ${fmt(w.kehrwert)}; ${w.noetig}-mal; ${fmt(w.rest)} → L, A, G, E.`,
+          };
+        },
       },
     ],
   },
@@ -729,29 +1153,62 @@ export default [
           'Für die Raumdiagonale wendest du den Satz des Pythagoras zweimal an: erst in der Grundfläche, dann mit der Höhe.',
           'V = 4/3·π·r³; der Kegel hat ein Drittel; O = 4·π·r²; d = √(1+1+1) = √3.',
         ],
-        loesung: '4/3·π·r³ · ein Drittel · 4·π·r² · √3 → G, L, A, S.',
+        loesung: '4/3·π·r³; ein Drittel; 4·π·r²; √3 → G, L, A, S.',
       },
       {
         titel: 'Rätsel 2: Die Mengenberechnung',
         text: 'Für die Bestellung der Glasmenge sind vier Werte auszurechnen: zwei Volumen, eine '
           + 'Pyramide und eine Kugeloberfläche. Der Glasbläser rundet immer auf ganze Zahlen – alles '
           + 'andere verbrennt ohnehin im Ofen.',
-        auftrag: 'Rechne die vier Aufgaben (π ≈ 3,14159, auf ganze Zahlen gerundet). Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
+        auftrag: 'Benutze den Taschenrechner, rechne mit allen Stellen von π und runde erst das Endergebnis '
+          + 'auf ganze Zahlen. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Welches Volumen hat eine Kugel mit r = 3 cm?', antwort: '113', einheit: 'cm³', zeichen: '3' },
-          { frage: 'Welches Volumen hat ein Kegel mit r = 6 cm und h = 10 cm?', antwort: '377', einheit: 'cm³', zeichen: '7' },
-          { frage: 'Welches Volumen hat eine Pyramide mit G = 24 cm² und h = 5 cm?', antwort: '40', einheit: 'cm³', zeichen: '0' },
-          { frage: 'Wie groß ist die Oberfläche einer Kugel mit r = 5 cm?', antwort: '314', einheit: 'cm²', zeichen: '4' },
-        ],
-        code: '3704',
+        rechner: 'wiss',   // Kugel, Kegel und Kugeloberfläche: π-Taste nötig
         codeRegel: 'Die Einerziffern der vier gerundeten Ergebnisse – von oben nach unten.',
         tipps: [
-          'Kugel: V = 4/3 · π · r³. Kegel: V = 1/3 · π · r² · h. Pyramide: V = 1/3 · G · h.',
-          'Rechne zuerst die Potenz, dann multipliziere und teile zum Schluss durch 3.',
-          '4/3·π·27 = 113,1 → 113; π·36·10:3 = 377,0 → 377; 24·5:3 = 40; 4·π·25 = 314,2 → 314.',
+          'Kugelvolumen: V = 4/3 · π · r³. Kegel: V = 1/3 · π · r² · h. Pyramide: V = 1/3 · G · h. Kugeloberfläche: O = 4 · π · r².',
+          'Rechne zuerst die Potenz, multipliziere danach und teile bei den drei Volumenaufgaben zum '
+            + 'Schluss durch 3 – bei der Oberfläche nicht. Runde erst am Ende.',
         ],
-        loesung: '113 cm³ · 377 cm³ · 40 cm³ · 314 cm² → Einerziffern 3, 7, 0, 4.',
+        zufall: (z) => {
+          const w = satz(z, (g) => {
+            // 1) Kugelvolumen – aus dem Durchmesser, damit erst halbiert werden muss
+            const d1 = g.ganz(5, 20);
+            const kugel = (Math.PI * d1 ** 3) / 6;
+            // 2) Kegelvolumen
+            const r2 = g.ganz(3, 9), h2 = g.ganz(5, 15);
+            const kegel = (Math.PI * r2 * r2 * h2) / 3;
+            // 3) Pyramidenvolumen (geht ohne Rest auf)
+            const grund = g.vielfach(18, 90, 3), h3 = g.ganz(4, 12);
+            const pyramide = (grund * h3) / 3;
+            // 4) Kugeloberfläche. Der Radius wird in Zehnteln gewürfelt – mit ganzen
+            // Zentimetern gibt es zu wenige mögliche Ergebnisse, und dann nimmt die vierte
+            // Codestelle weniger als acht verschiedene Ziffern an.
+            const r4z = g.ganz(30, 120);
+            const r4 = r4z / 10;
+            const r4q = (r4z * r4z) / 100;        // r² ohne Rundungsartefakt
+            const ober = 4 * Math.PI * r4q;
+            return { d1, kugel, r2, h2, kegel, grund, h3, pyramide, r4, r4q, ober,
+              ok: klar(kugel) && klar(kegel) && klar(ober),
+              erg: [rund(kugel), rund(kegel), pyramide, rund(ober)] };
+          });
+          const [kugel, kegel, pyramide, ober] = w.erg;
+          return {
+            regel: 'einer',
+            aufgaben: [
+              { frage: `Welches Volumen hat eine Kugel mit d = ${w.d1} cm?`, antwort: antw(kugel), einheit: 'cm³' },
+              { frage: `Welches Volumen hat ein Kegel mit r = ${w.r2} cm und h = ${w.h2} cm?`, antwort: antw(kegel), einheit: 'cm³' },
+              { frage: `Welches Volumen hat eine Pyramide mit G = ${w.grund} cm² und h = ${w.h3} cm?`, antwort: antw(pyramide), einheit: 'cm³' },
+              { frage: `Wie groß ist die Oberfläche einer Kugel mit r = ${fmt(w.r4)} cm?`, antwort: antw(ober), einheit: 'cm²' },
+            ],
+            tipp: `aus d = ${w.d1} cm folgt r = ${fmt(w.d1 / 2)} cm, und 4/3 · π · r³ = ${mitRundung(w.kugel)} cm³; `
+              + `π · ${fmt(w.r2 * w.r2)} · ${w.h2} : 3 = ${mitRundung(w.kegel)} cm³; `
+              + `${w.grund} · ${w.h3} : 3 = ${fmt(pyramide)} cm³; `
+              + `${fmt(w.r4)}² = ${fmt(w.r4q)}, und 4 · π · ${fmt(w.r4q)} = ${mitRundung(w.ober)} cm². `
+              + `Einerziffern: ${ziffern(w.erg)}.`,
+            loesung: `${fmt(kugel)} cm³; ${fmt(kegel)} cm³; ${fmt(pyramide)} cm³; ${fmt(ober)} cm² → Einerziffern ${ziffern(w.erg)}.`,
+          };
+        },
       },
       {
         titel: 'Rätsel 3: Das Regal der großen Stücke',
@@ -785,80 +1242,183 @@ export default [
         loesung: 'Darunter: Würfel 7 (343), Kugel r = 4 (268), Zylinder r = 4 (402), Quader 8·8·7 (448), Kegel r = 6 (377), Pyramide G = 60 (300).',
       },
       {
-        titel: 'Rätsel 4: Die Musterstücke',
-        text: 'Auf dem Schautisch stehen sechs Musterstücke, daneben liegen sechs Kärtchen mit ihren '
-          + 'Volumen – gerundet auf ganze Kubikzentimeter. Beim Abstauben sind die Kärtchen '
-          + 'durcheinandergeraten.',
-        auftrag: 'Ordne jedem Körper sein <strong>Volumen</strong> zu (gerundet auf ganze cm³).',
-        typ: 'zuordnen',
-        titelLinks: 'Körper',
-        titelRechts: 'Volumen',
-        codeAmEnde: true,
-        saat: 6113,
-        paare: [
-          { links: 'Würfel mit a = 5 cm', rechts: '125 cm³' },
-          { links: 'Kugel mit r = 3 cm', rechts: '113 cm³' },
-          { links: 'Kegel: r = 3 cm, h = 8 cm', rechts: '75 cm³' },
-          { links: 'Pyramide: G = 30 cm², h = 6 cm', rechts: '60 cm³' },
-          { links: 'Zylinder: r = 2 cm, h = 10 cm', rechts: '126 cm³' },
-          { links: 'Quader 4 cm × 5 cm × 6 cm', rechts: '120 cm³' },
-        ],
+        titel: 'Rätsel 4: Das Kladdenbuch des Lehrlings',
+        text: 'Auf dem Schautisch liegt das Kladdenbuch des Lehrlings. Vier Rechenwege hat er notiert, und '
+          + 'in jeden hat sich genau ein Fehler eingeschlichen – danach hat er stur weitergerechnet, auch '
+          + 'mit der falschen Zahl. Keiner der vier Werte stimmt am Ende.',
+        auftrag: 'Tippe in jedem Rechenweg die Zeile an, in der <strong>zum ersten Mal</strong> etwas falsch '
+          + 'ist. Rechne danach selbst richtig weiter: Benutze den Taschenrechner mit allen Stellen von π '
+          + 'und runde auf eine Nachkommastelle.',
+        typ: 'fehlerfinden',
+        rechner: 'wiss',   // π-Taste und Wurzeltaste für das richtige Nachrechnen
         code: '6075',
-        codeRegel: 'Wenn alle Paare stimmen, erscheint der Code: das Volumen der <strong>Pyramide</strong> und das des <strong>Kegels</strong> – jeweils zweistellig.',
-        tipps: [
-          'Spitze Körper haben ein Drittel des Volumens: Pyramide G·h:3, Kegel π·r²·h:3.',
-          'Die Werte liegen dicht beieinander – rechne jeden Körper sorgfältig aus.',
-          'Pyramide: 30 · 6 : 3 = 60 cm³; Kegel: π · 9 · 8 : 3 = 75,4 → 75 cm³. Code: 6075.',
+        codeRegel: 'Jede gefundene Fehlerzeile deckt eine Ziffer auf – von oben nach unten.',
+        faelle: [
+          {
+            titel: 'Wie lang ist die Diagonale einer Glasscheibe von 9 cm × 12 cm?',
+            zeilen: [
+              'Die Scheibe ist 9 cm breit und 12 cm hoch; gesucht ist ihre Diagonale.',
+              'Satz des Pythagoras: d² = 12² − 9²',
+              '= 144 − 81 = 63',
+              'd = √63 ≈ 7,9 cm',
+              'Antwort: Die Diagonale ist etwa 7,9 cm lang.',
+            ],
+            falsch: 1, zeichen: '6',
+          },
+          {
+            titel: 'Wie lang ist die Raumdiagonale eines Glasblocks von 3 cm × 4 cm × 12 cm?',
+            zeilen: [
+              'Der Glasblock hat die Kanten 3 cm, 4 cm und 12 cm.',
+              'Für die Raumdiagonale gilt d² = a² + b² + c².',
+              'd² = 3² + 4² = 9 + 16 = 25',
+              'd = √25 = 5 cm',
+              'Antwort: Die Raumdiagonale ist 5 cm lang.',
+            ],
+            falsch: 2, zeichen: '0',
+          },
+          {
+            titel: 'Welches Volumen hat ein Trichter (Kegel) mit r = 3 cm und h = 10 cm?',
+            zeilen: [
+              'Gesucht ist das Volumen eines Kegels mit r = 3 cm und h = 10 cm.',
+              'V = π · r² · h',
+              '= π · 9 · 10 = 282,7 cm³',
+              'Antwort: Der Trichter enthält 282,7 cm³ Glas.',
+            ],
+            falsch: 1, zeichen: '7',
+          },
+          {
+            titel: 'Welches Volumen hat eine Glaskugel mit r = 6 cm?',
+            zeilen: [
+              'Die Glaskugel hat den Radius r = 6 cm.',
+              'Kugelvolumen: V = 4 : 3 · π · r³',
+              '= 4 : 3 · π · 18',
+              '= 75,4 cm³',
+              'Antwort: Die Kugel enthält 75,4 cm³ Glas.',
+            ],
+            falsch: 2, zeichen: '5',
+          },
         ],
-        loesung: 'Würfel 125; Kugel 113; Kegel 75; Pyramide 60; Zylinder 126; Quader 120 (cm³).',
+        tipps: [
+          'Lies jeden Rechenweg Zeile für Zeile und frage dich: Stimmt genau dieser Schritt? Der Fehler steckt '
+            + 'nicht immer am Ende – manchmal ist schon die Formel richtig, aber die eingesetzte Zahl nicht.',
+          'Die Hypotenuse ist die längste Seite: Ihr Quadrat ist die <em>Summe</em> der Kathetenquadrate. In die '
+            + 'Raumdiagonale gehen alle drei Kanten ein. Beim Kegel steht vor π · r² · h noch ein Drittel. '
+            + 'Und r³ heißt r · r · r.',
+          'Weg 1: Zeile 2 – richtig ist d² = 81 + 144 = 225, also d = 15 cm. Weg 2: Zeile 3 – die Kante 12 cm '
+            + 'fehlt: 9 + 16 + 144 = 169, also d = 13 cm. Weg 3: Zeile 2 – das Drittel fehlt: π · 9 · 10 : 3 '
+            + '= 94,2 cm³. Weg 4: Zeile 3 – r³ = 216, nicht 18: 4 : 3 · π · 216 = 904,8 cm³.',
+        ],
+        loesung: 'Fehler in Zeile 2, 3, 2 und 3 – richtig sind 15 cm; 13 cm; 94,2 cm³; 904,8 cm³.',
       },
       {
-        titel: 'Rätsel 5: Die Zuschnittlängen',
-        text: 'Für die Glasrahmen werden sechs Längen gebraucht – Diagonalen und Hypotenusen, alle mit '
-          + 'dem Satz des Pythagoras berechnet. Für die Schneidemaschine müssen sie der Größe nach '
-          + 'sortiert werden.',
-        auftrag: 'Ordne die Längen nach ihrem <strong>Wert</strong> – von der kürzesten zur längsten.',
-        typ: 'reihenfolge',
-        codeAmEnde: true,
-        saat: 6221,
-        elemente: [
-          { text: 'Hypotenuse bei den Katheten 3 cm und 4 cm' },
-          { text: 'Diagonale eines Quadrats mit a = 4 cm' },
-          { text: 'Raumdiagonale eines Würfels mit a = 4 cm' },
-          { text: 'Hypotenuse bei den Katheten 6 cm und 8 cm' },
-          { text: 'Diagonale eines Rechtecks 5 cm × 12 cm' },
-          { text: 'Hypotenuse bei den Katheten 9 cm und 12 cm' },
-        ],
+        titel: 'Rätsel 5: Die Reglerleiste der Schneidemaschine',
+        text: 'An der Schneidemaschine sitzt eine Leiste mit vier Schiebereglern. Mit ihnen stellt der '
+          + 'Glasbläser Längen, Kanten und Höhen ein. Die Anzeige verrät immer nur, was der eingestellte '
+          + 'Wert bewirkt – ob er richtig ist, sagt sie nicht. Vier Einstellungen fehlen noch.',
+        auftrag: 'Schiebe jeden Regler, bis der eingestellte Wert passt. Die Anzeige zeigt dir die '
+          + '<strong>Wirkung</strong> deines Wertes, nicht die Lösung – sie ist auf eine Nachkommastelle gerundet.',
+        typ: 'schieben',
+        rechner: 'wiss',   // π-Taste und Wurzeltaste zum Nachrechnen
         code: '0510',
-        codeRegel: 'Der Code: die Längen an <strong>erster</strong> und an <strong>vierter</strong> Stelle der richtigen Reihenfolge in cm – jeweils zweistellig.',
-        tipps: [
-          'Rechne jede Länge mit dem Satz des Pythagoras aus.',
-          'Die Diagonale eines Quadrats ist a · √2 ≈ 5,66 cm, die Raumdiagonale eines Würfels a · √3 ≈ 6,93 cm.',
-          '5 < 5,66 < 6,93 < 10 < 13 < 15. An erster Stelle steht 5 cm, an vierter 10 cm.',
+        codeRegel: 'Die <strong>Einerziffern</strong> der vier eingestellten Werte – von oben nach unten.',
+        aufgaben: [
+          {
+            frage: 'Eine 26 cm lange Glasstange lehnt an der Wand, ihr Fuß steht 24 cm von der Wand entfernt. '
+              + 'Stelle ein, in welcher <strong>Höhe</strong> sie die Wand berührt.',
+            von: 1, bis: 25, schritt: 1, antwort: 10, einheit: 'cm', zeichen: '0',
+            anzeige: (w) => `Bei ${fmt(w)} cm Höhe wäre die Stange √(24² + ${fmt(w)}²) = ${eine(Math.sqrt(576 + w * w))} cm lang.`,
+          },
+          {
+            frage: 'Eine quadratische Glaspyramide ist 8 cm hoch und soll 600 cm³ Glas enthalten. '
+              + 'Stelle ihre <strong>Grundkante</strong> ein.',
+            von: 1, bis: 30, schritt: 1, antwort: 15, einheit: 'cm', zeichen: '5',
+            anzeige: (w) => `Volumen: ${fmt(w)}² · 8 : 3 = ${eine((w * w * 8) / 3)} cm³`,
+          },
+          {
+            frage: 'Ein rechtwinkliges Glasdreieck hat die Kathete a = 20 cm und die Hypotenuse c = 29 cm. '
+              + 'Stelle die zweite <strong>Kathete b</strong> ein.',
+            von: 1, bis: 40, schritt: 1, antwort: 21, einheit: 'cm', zeichen: '1',
+            anzeige: (w) => `Hypotenuse: √(20² + ${fmt(w)}²) = ${eine(Math.sqrt(400 + w * w))} cm`,
+          },
+          {
+            frage: 'Ein Trichter (Kegel) mit r = 5 cm soll 524 cm³ Glas enthalten (auf ganze cm³ gerundet). '
+              + 'Stelle seine <strong>Höhe</strong> ein.',
+            von: 1, bis: 40, schritt: 1, antwort: 20, einheit: 'cm', zeichen: '0',
+            anzeige: (w) => `Volumen: π · 5² · ${fmt(w)} : 3 = ${eine((Math.PI * 25 * w) / 3)} cm³`,
+          },
         ],
-        loesung: '5 cm < 5,66 cm < 6,93 cm < 10 cm < 13 cm < 15 cm.',
+        tipps: [
+          'Schiebe erst einmal hin und her und beobachte die Anzeige – sie zeigt dir, was dein Wert bewirkt.',
+          'Für die Stange und das Dreieck gilt der Satz des Pythagoras: Die Quadrate der beiden kurzen Seiten '
+            + 'ergeben zusammen das Quadrat der längsten. Pyramide: V = G · h : 3 mit G = a². Kegel: V = π · r² · h : 3.',
+          '26² − 24² = 676 − 576 = 100, also 10 cm Höhe. a² · 8 : 3 = 600 führt auf a² = 225, also a = 15 cm. '
+            + '29² − 20² = 841 − 400 = 441, also b = 21 cm. π · 25 · h : 3 = 524 führt auf h = 20 cm '
+            + '(π · 25 · 20 : 3 = 523,6). Einerziffern: 0, 5, 1, 0.',
+        ],
+        loesung: '10 cm; 15 cm; 21 cm; 20 cm → Einerziffern 0, 5, 1, 0.',
       },
       {
         titel: 'Rätsel 6: Der Ofen',
-        text: 'Am Ofen hängt das letzte Schloss. Vier Fragen stehen auf der Klappe: nach einer großen '
+        text: 'Am Ofen hängt das letzte Schloss. Vier Fragen stehen auf der Klappe: nach einer '
           + 'Glaskugel, nach einem Trichter, nach der Raumdiagonale eines Glasblocks und nach einer '
-          + 'kleinen Pyramide.',
-        auftrag: 'Beantworte die vier Fragen (π ≈ 3,14159, auf ganze Zahlen gerundet). Jede richtige Antwort deckt einen Buchstaben auf.',
+          + 'quadratischen Pyramide.',
+        auftrag: 'Beantworte die vier Fragen. Benutze den Taschenrechner, rechne mit allen Stellen von π '
+          + 'und runde erst das Endergebnis auf ganze Zahlen. Jede richtige Antwort deckt einen Buchstaben auf.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Welches Volumen hat eine Glaskugel mit r = 6 cm?', antwort: '905', einheit: 'cm³', zeichen: 'O' },
-          { frage: 'Welches Volumen hat ein Trichter (Kegel) mit r = 5 cm und h = 12 cm?', antwort: '314', einheit: 'cm³', zeichen: 'F' },
-          { frage: 'Wie lang ist die Raumdiagonale eines Würfels mit a = 10 cm?', antwort: '17', einheit: 'cm', zeichen: 'E' },
-          { frage: 'Welches Volumen hat eine quadratische Pyramide mit der Grundkante 6 cm und h = 4 cm?', antwort: '48', einheit: 'cm³', zeichen: 'N' },
-        ],
+        rechner: 'wiss',   // Kugel und Kegel mit π, die Raumdiagonale mit der Wurzeltaste
         code: 'OFEN',
         codeRegel: 'Jede richtige Antwort deckt einen Buchstaben auf – von oben nach unten.',
         tipps: [
           'Kugel: V = 4/3 · π · r³. Kegel: V = 1/3 · π · r² · h.',
-          'Für die Raumdiagonale gilt d = √(a² + a² + a²) = a · √3.',
-          '4/3·π·216 = 904,8 → 905; π·25·12:3 = 314,2 → 314; √300 = 17,3 → 17; 36·4:3 = 48.',
+          'Für die Raumdiagonale eines Quaders gilt d = √(Länge² + Breite² + Höhe²). Das Volumen einer quadratischen Pyramide ist ein Drittel von Grundkante mal Grundkante mal Höhe.',
         ],
-        loesung: '905 cm³ · 314 cm³ · 17 cm · 48 cm³ → O, F, E, N.',
+        zufall: (z) => {
+          // Kantenlängen, bei denen die Raumdiagonale eine ganze Zahl ist.
+          const BLOECKE = [
+            [1, 2, 2, 3], [2, 3, 6, 7], [1, 4, 8, 9], [4, 4, 7, 9], [2, 6, 9, 11],
+            [6, 6, 7, 11], [3, 4, 12, 13], [2, 5, 14, 15], [2, 10, 11, 15],
+            [8, 9, 12, 17], [1, 12, 12, 17], [6, 10, 15, 19], [4, 13, 16, 21],
+            [8, 11, 16, 21], [3, 16, 24, 29], [12, 16, 21, 29],
+          ];
+          const w = satz(z, (g) => {
+            // 1) große Glaskugel
+            const r1 = g.ganz(5, 10);
+            const kugel = (4 / 3) * Math.PI * r1 ** 3;
+            // 2) Trichter
+            const r2 = g.ganz(4, 10), h2 = g.ganz(8, 20);
+            const trichter = (Math.PI * r2 * r2 * h2) / 3;
+            // 3) Raumdiagonale eines Glasblocks
+            const [b1, b2, b3, bd] = g.aus(BLOECKE);
+            const s = g.ganz(1, 2);
+            const kanten = [b1 * s, b2 * s, b3 * s].sort((x, y) => y - x);
+            const diagonale = bd * s;
+            // 4) kleine quadratische Pyramide
+            const kante = g.ganz(3, 12), h4 = g.ganz(3, 15);
+            const pyramide = (kante * kante * h4) / 3;
+            return { r1, kugel, r2, h2, trichter, kanten, diagonale, kante, h4, pyramide,
+              ok: klar(kugel) && klar(trichter) && (kante * kante * h4) % 3 === 0
+                && kanten[2] >= 2 && kanten[0] <= 30,
+              erg: [rund(kugel), rund(trichter), diagonale, pyramide] };
+          });
+          const [kugel, trichter] = w.erg;
+          const [lang, breit, hochKante] = w.kanten;
+          return {
+            regel: 'buchstaben',
+            code: 'OFEN',
+            aufgaben: [
+              { frage: `Welches Volumen hat eine Glaskugel mit r = ${w.r1} cm?`, antwort: antw(kugel), einheit: 'cm³' },
+              { frage: `Welches Volumen hat ein Trichter (Kegel) mit r = ${w.r2} cm und h = ${w.h2} cm?`, antwort: antw(trichter), einheit: 'cm³' },
+              { frage: `Ein Glasblock ist ${lang} cm lang, ${breit} cm breit und ${hochKante} cm hoch. Wie lang ist seine Raumdiagonale?`, antwort: antw(w.diagonale), einheit: 'cm' },
+              { frage: `Welches Volumen hat eine quadratische Pyramide mit der Grundkante ${w.kante} cm und h = ${w.h4} cm?`, antwort: antw(w.pyramide), einheit: 'cm³' },
+            ],
+            tipp: `4/3 · π · ${fmt(w.r1 ** 3)} = ${mitRundung(w.kugel)} cm³; `
+              + `π · ${fmt(w.r2 * w.r2)} · ${w.h2} : 3 = ${mitRundung(w.trichter)} cm³; `
+              + `${lang}² + ${breit}² + ${hochKante}² = ${fmt(lang * lang)} + ${fmt(breit * breit)} + ${fmt(hochKante * hochKante)} = ${fmt(w.diagonale * w.diagonale)}, und √${fmt(w.diagonale * w.diagonale)} = ${w.diagonale} cm; `
+              + `${w.kante} · ${w.kante} · ${w.h4} : 3 = ${fmt(w.pyramide)} cm³. `
+              + `Die vier Buchstaben lauten O, F, E, N.`,
+            loesung: `${fmt(kugel)} cm³; ${fmt(trichter)} cm³; ${w.diagonale} cm; ${fmt(w.pyramide)} cm³ → O, F, E, N.`,
+          };
+        },
       },
     ],
   },
@@ -902,57 +1462,97 @@ export default [
           'Unabhängig heißt: P(A und B) = P(A) · P(B).',
           '50 + 80 − 20 = 110, also bleiben 90 übrig; relative Häufigkeit ist ein Anteil; ohne Bezugsgröße sagt „Verdoppelung" wenig; 0,5 · 0,4 = 0,2, also unabhängig.',
         ],
-        loesung: '90 · Anteil an der Gesamtzahl · die Bezugsgröße · unabhängig → S, E, I, T.',
+        loesung: '90; Anteil an der Gesamtzahl; die Bezugsgröße; unabhängig → S, E, I, T.',
       },
       {
         titel: 'Rätsel 2: Die Zahlen für die Morgenausgabe',
         text: 'Vier Zahlen fehlen noch in der Morgenausgabe: ein Anteil in Prozent, eine Wahrscheinlichkeit '
-          + 'bei Unabhängigkeit, eine Restgruppe aus einer Vierfeldertafel und ein Leseranteil. '
-          + 'Für das Schloss zählt jeweils nur die letzte Ziffer.',
+          + 'bei Unabhängigkeit, eine Restgruppe aus einer Vierfeldertafel und eine Personenzahl aus einem '
+          + 'Prozentsatz. Für das Schloss zählt jeweils nur die letzte Ziffer.',
         auftrag: 'Rechne die vier Aufgaben. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Von 250 Befragten lesen 90 täglich Zeitung. Wie viel Prozent sind das?', antwort: '36', einheit: '%', zeichen: '6' },
-          { frage: 'A und B sind unabhängig mit P(A) = 0,4 und P(B) = 0,3. Wie groß ist P(A und B) in Prozent?', antwort: '12', einheit: '%', zeichen: '2' },
-          { frage: 'Von 200 Personen gehören 70 zu A, 50 zu B und 20 zu beiden. Wie viele gehören zu keiner der beiden Gruppen?', antwort: '100', einheit: 'Personen', zeichen: '0' },
-          { frage: 'Von 80 Lesern sind 28 jünger als 30 Jahre. Wie viel Prozent sind das?', antwort: '35', einheit: '%', zeichen: '5' },
-        ],
-        code: '6205',
+        rechner: true,   // Prozentrechnung mit mehrstelligen Grundwerten
         codeRegel: 'Die Einerziffern der vier Ergebnisse – von oben nach unten.',
         tipps: [
-          'Anteil in Prozent: Teil geteilt durch Ganzes, mal 100.',
-          'Bei Unabhängigkeit multiplizierst du die beiden Wahrscheinlichkeiten.',
-          '90 : 250 = 36 %; 0,4 · 0,3 = 0,12 = 12 %; 70 + 50 − 20 = 100, also bleiben 100; 28 : 80 = 35 %.',
+          'Anteil in Prozent: Teil geteilt durch Ganzes, mal 100. Umgekehrt findest du den Teil, indem du den Prozentsatz durch 100 teilst und mit dem Ganzen multiplizierst.',
+          'Bei Unabhängigkeit multiplizierst du die beiden Wahrscheinlichkeiten. Wer zu beiden Gruppen gehört, wird beim Addieren doppelt gezählt – ziehe ihn einmal wieder ab.',
         ],
-        loesung: '36 % · 12 % · 100 Personen · 35 % → Einerziffern 6, 2, 0, 5.',
+        zufall: (z) => {
+          const w = satz(z, (g) => {
+            // 1) Prozentsatz aus Teil und Ganzem
+            const ganzes = g.aus([200, 400, 500, 800]);
+            const prozent = g.ganz(12, 88);
+            const teil = (ganzes * prozent) / 100;
+            // 2) Produkt zweier unabhängiger Wahrscheinlichkeiten
+            const pa = g.ganz(2, 9);
+            let pb = g.ganz(2, 9);
+            for (let i = 0; i < 20 && pb === pa; i++) pb = g.ganz(2, 9);
+            const zusammen = pa * pb;
+            // 3) Vierfeldertafel: wer zu keiner Gruppe gehört
+            const beide = g.ganz(10, 40);
+            const nurA = g.ganz(20, 80);
+            const nurB = g.ganz(15, 70);
+            const weder = g.ganz(30, 150);
+            const leute = beide + nurA + nurB + weder;
+            // 4) Prozentwert aus Grundwert und Prozentsatz
+            const leser = g.aus([40, 60, 80, 120, 160, 240]);
+            const anteil = g.vielfach(10, 90, 5);
+            const jung = (leser * anteil) / 100;
+            return { ganzes, prozent, teil, pa, pb, zusammen, beide, nurA, nurB, weder, leute,
+              leser, anteil, jung,
+              erg: [prozent, zusammen, weder, jung] };
+          });
+          return {
+            regel: 'einer',
+            aufgaben: [
+              { frage: `Von ${fmt(w.ganzes)} Befragten lesen ${fmt(w.teil)} täglich Zeitung. Wie viel Prozent sind das?`, antwort: antw(w.prozent), einheit: '%' },
+              { frage: `A und B sind unabhängig mit P(A) = ${fmt(w.pa / 10)} und P(B) = ${fmt(w.pb / 10)}. Wie groß ist P(A und B) in Prozent?`, antwort: antw(w.zusammen), einheit: '%' },
+              { frage: `Von ${fmt(w.leute)} Personen gehören ${fmt(w.nurA + w.beide)} zu A, ${fmt(w.nurB + w.beide)} zu B und ${w.beide} zu beiden. Wie viele gehören zu keiner der beiden Gruppen?`, antwort: antw(w.weder), einheit: 'Personen' },
+              { frage: `Von ${fmt(w.leser)} befragten Lesern sind ${w.anteil} % jünger als 30 Jahre. Wie viele Personen sind das?`, antwort: antw(w.jung), einheit: 'Personen' },
+            ],
+            tipp: `${fmt(w.teil)} : ${fmt(w.ganzes)} = ${fmt(w.prozent / 100)} = ${w.prozent} %; `
+              + `${fmt(w.pa / 10)} · ${fmt(w.pb / 10)} = 0,${String(w.zusammen).padStart(2, '0')} = ${w.zusammen} %; `
+              + `${fmt(w.nurA + w.beide)} + ${fmt(w.nurB + w.beide)} − ${w.beide} = ${fmt(w.nurA + w.nurB + w.beide)} gehören zu mindestens einer Gruppe, also bleiben ${fmt(w.leute)} − ${fmt(w.nurA + w.nurB + w.beide)} = ${fmt(w.weder)}; `
+              + `${w.anteil} % von ${fmt(w.leser)} sind ${w.anteil} : 100 · ${fmt(w.leser)} = ${fmt(w.jung)}. `
+              + `Einerziffern: ${ziffern(w.erg)}.`,
+            loesung: `${w.prozent} %; ${w.zusammen} %; ${fmt(w.weder)} Personen; ${fmt(w.jung)} Personen → Einerziffern ${ziffern(w.erg)}.`,
+          };
+        },
       },
       {
-        titel: 'Rätsel 3: Das Glossar',
-        text: 'Im Redaktionshandbuch steht ein Glossar der statistischen Begriffe – links die Begriffe, '
-          + 'rechts die Erklärungen. In der Nachtschicht ist die Seite auseinandergefallen, und das '
-          + 'System verlangt die Zuordnung, bevor es weiterarbeitet.',
-        auftrag: 'Ordne jedem Begriff seine <strong>Erklärung</strong> zu.',
-        typ: 'zuordnen',
-        titelLinks: 'Begriff',
-        titelRechts: 'Erklärung',
-        codeAmEnde: true,
-        saat: 6329,
-        paare: [
-          { links: 'relative Häufigkeit', rechts: 'Anteil an der Gesamtzahl' },
-          { links: 'bedingte Wahrscheinlichkeit', rechts: 'Wahrscheinlichkeit unter einer Zusatzbedingung' },
-          { links: 'stochastisch unabhängig', rechts: 'P(A und B) = P(A) · P(B)' },
-          { links: 'Vierfeldertafel', rechts: 'Tabelle für zwei Merkmale mit je zwei Ausprägungen' },
-          { links: 'Stichprobe', rechts: 'ausgewählter Teil der Grundgesamtheit' },
-          { links: 'Spannweite', rechts: 'größter Wert minus kleinster Wert' },
-        ],
+        titel: 'Rätsel 3: Die Leserbriefkurve',
+        text: 'An der Wand des Großraumbüros hängt ein Säulendiagramm mit den Leserbriefen des ersten '
+          + 'Halbjahres. Die Zahlen daneben hat nie jemand eingetragen – die könne man doch ablesen, sagt '
+          + 'der Chef vom Dienst. Alle Säulen enden genau auf einer Gitterlinie.',
+        auftrag: 'Lies die Werte aus dem Säulendiagramm ab. Die <strong>Einerziffer</strong> jedes Wertes ist eine Codeziffer.',
+        typ: 'ablesen',
         code: '0620',
-        codeRegel: 'Wenn alle Paare stimmen, erscheint der Code: die <strong>Anzahl der Begriffe</strong> und <strong>P(A und B) in Prozent für unabhängige Ereignisse mit P(A) = 0,5 und P(B) = 0,4</strong> – jeweils zweistellig.',
-        tipps: [
-          'Überlege bei jedem Begriff, ob er etwas über eine Tabelle, über einen Anteil oder über einen Zusammenhang aussagt.',
-          'Bei Unabhängigkeit werden die beiden Wahrscheinlichkeiten multipliziert.',
-          'Es sind 6 Begriffe, und 0,5 · 0,4 = 0,2 = 20 %. Der Code lautet 0620.',
+        codeRegel: 'Die <strong>Einerziffern</strong> der vier abgelesenen Zahlen – von oben nach unten.',
+        diagramm: {
+          art: 'saeulen',
+          yName: 'Zuschriften',
+          ySchritt: 4,
+          beschreibung: 'Säulendiagramm mit den Leserbriefen von Januar bis Juni',
+          werte: [
+            { name: 'Jan', wert: 16 }, { name: 'Feb', wert: 24 }, { name: 'Mär', wert: 12 },
+            { name: 'Apr', wert: 32 }, { name: 'Mai', wert: 20 }, { name: 'Jun', wert: 16 },
+          ],
+        },
+        aufgaben: [
+          { frage: 'Wie viele Zuschriften kamen im Mai?', antwort: '20', einheit: 'Zuschriften', zeichen: '0' },
+          { frage: 'Wie viele Zuschriften kamen im Januar?', antwort: '16', einheit: 'Zuschriften', zeichen: '6' },
+          { frage: 'Wie viele Zuschriften kamen im schwächsten Monat?', antwort: '12', einheit: 'Zuschriften', zeichen: '2' },
+          { frage: 'Wie viele Zuschriften kamen im Schnitt auf einen Monat?', antwort: '20', einheit: 'Zuschriften', zeichen: '0' },
         ],
-        loesung: 'relative Häufigkeit → Anteil; bedingte Wahrscheinlichkeit → unter Zusatzbedingung; unabhängig → P(A∩B) = P(A)·P(B); Vierfeldertafel → zwei Merkmale; Stichprobe → Teil der Grundgesamtheit; Spannweite → größter minus kleinster Wert.',
+        tipps: [
+          'Schau zuerst nach, für wie viele Zuschriften der Abstand zwischen zwei Gitterlinien steht – danach ist '
+            + 'jede Säule schnell abgelesen.',
+          'Für die letzte Aufgabe brauchst du alle sechs Säulen: erst alles zusammenzählen, dann durch die Zahl '
+            + 'der Monate teilen.',
+          'Eine Linie steht für 4 Zuschriften. Mai: 20; Januar: 16; schwächster Monat ist der März mit 12; '
+            + '(16 + 24 + 12 + 32 + 20 + 16) : 6 = 120 : 6 = 20. Einerziffern: 0, 6, 2, 0.',
+        ],
+        loesung: '20; 16; 12; 20 Zuschriften → Einerziffern 0, 6, 2, 0.',
       },
       {
         titel: 'Rätsel 4: Die Unabhängigkeitsprüfung',
@@ -986,52 +1586,109 @@ export default [
         loesung: 'Unabhängig: 0,5·0,4 = 0,20; 0,6·0,5 = 0,30; 0,2·0,3 = 0,06; 0,8·0,25 = 0,20; 0,4·0,4 = 0,16; 0,5·0,6 = 0,30.',
       },
       {
-        titel: 'Rätsel 5: Die Anteile der Leserumfrage',
-        text: 'Die Leserumfrage hat sechs Anteile ergeben – mal als Bruch, mal als Dezimalzahl, mal als '
-          + '„x von y". Für die Infografik müssen sie der Größe nach sortiert werden, der kleinste Anteil '
-          + 'zuerst.',
-        auftrag: 'Ordne die Anteile – vom <strong>kleinsten</strong> zum <strong>größten</strong>.',
-        typ: 'reihenfolge',
-        codeAmEnde: true,
-        saat: 6451,
-        elemente: [
-          { text: '12 von 80' },
-          { text: '1 von 5' },
-          { text: '0,28' },
-          { text: '<sup>1</sup>⁄<sub>3</sub>' },
-          { text: '45 von 120' },
-          { text: '0,4' },
-        ],
+        titel: 'Rätsel 5: Der Rechenbaukasten der Infografik',
+        text: 'Für die Infografik der Morgenausgabe liegt auf dem Layouttisch ein Kasten mit Zahlen- und '
+          + 'Rechenplättchen. Vier Zielwerte hat die Grafikerin daneben geschrieben, jeder gehört zu einer '
+          + 'Auswertung der Leserumfrage. Zu jedem Zielwert soll ein Term gelegt werden.',
+        auftrag: 'Baue zu jedem Zielwert einen passenden Term. Jedes Plättchen lässt sich nur '
+          + '<strong>einmal</strong> benutzen, und du musst nicht alle benutzen.',
+        typ: 'termbauen',
         code: '1540',
-        codeRegel: 'Der Code: der <strong>kleinste</strong> und der <strong>größte</strong> Anteil in Prozent – jeweils zweistellig.',
-        tipps: [
-          'Rechne jeden Anteil in Prozent um.',
-          '12 : 80 = 0,15 und 45 : 120 = 0,375.',
-          '15 % < 20 % < 28 % < 33,3 % < 37,5 % < 40 %. Der kleinste ist 15 %, der größte 40 %.',
+        codeRegel: 'Jeder getroffene Zielwert deckt eine Ziffer auf – von oben nach unten.',
+        aufgaben: [
+          {
+            frage: 'Von 200 Befragten gehören 50 zu Gruppe A, 80 zu Gruppe B und 20 zu beiden. So viele gehören '
+              + 'zu keiner der beiden Gruppen: Baue einen Term mit dem Wert <strong>90</strong>.',
+            ziel: 90, bausteine: ['200', '50', '80', '20', '4', '(', ')', '+', '−', '−', '·'], zeichen: '1',
+            musterloesung: '200 − (50 + 80 − 20)',
+          },
+          {
+            frage: 'Von 400 Befragten lesen 25 % täglich Zeitung. So viele Personen sind das: '
+              + 'Baue einen Term mit dem Wert <strong>100</strong>.',
+            ziel: 100, bausteine: ['400', '4', '25', '2', '5', ':', '·', '+', '−'], zeichen: '5',
+            musterloesung: '400 : 4',
+          },
+          {
+            frage: 'Von 300 Befragten sind 60 % jünger als 30 Jahre. So viele Personen sind das: '
+              + 'Baue einen Term mit dem Wert <strong>180</strong>.',
+            ziel: 180, bausteine: ['300', '60', '100', '10', '6', ':', '·', '−', '+'], zeichen: '4',
+            musterloesung: '300 : 10 · 6',
+          },
+          {
+            frage: 'A und B sind unabhängig mit P(A) = 0,5 und P(B) = 0,4. So groß ist P(A und B) in Prozent: '
+              + 'Baue einen Term mit dem Wert <strong>20</strong>.',
+            ziel: 20, bausteine: ['50', '40', '100', '4', '5', ':', '·', '+', '−'], zeichen: '0',
+            musterloesung: '50 · 40 : 100',
+          },
         ],
-        loesung: '12/80 = 15 % < 1/5 = 20 % < 0,28 = 28 % < 1/3 ≈ 33,3 % < 45/120 = 37,5 % < 0,4 = 40 %.',
+        tipps: [
+          'Du musst nicht alle Plättchen benutzen – oft reichen zwei oder drei Zahlen und ein Rechenzeichen.',
+          'Wer zu beiden Gruppen gehört, wird beim Addieren doppelt gezählt; zieh ihn einmal wieder ab und nimm '
+            + 'das Ergebnis vom Ganzen weg – dafür brauchst du eine Klammer. 25 % sind ein Viertel, 60 % sind '
+            + 'sechs Zehntel. Bei Unabhängigkeit multiplizierst du die beiden Wahrscheinlichkeiten; in Prozent '
+            + 'gerechnet musst du danach wieder durch 100 teilen.',
+          '200 − (50 + 80 − 20) = 200 − 110 = 90; 400 : 4 = 100 (auch 25 · 4); 300 : 10 · 6 = 30 · 6 = 180 '
+            + '(auch 300 · 60 : 100); 50 · 40 : 100 = 2 000 : 100 = 20 (auch 100 : 5).',
+        ],
+        loesung: '90; 100; 180; 20 – zum Beispiel 200 − (50 + 80 − 20); 400 : 4; 300 : 10 · 6; 50 · 40 : 100.',
       },
       {
         titel: 'Rätsel 6: Die Leseranalyse',
-        text: 'Die letzte Auswertung der Nacht: 600 Befragte, 240 lesen digital, 150 sind jünger als '
-          + '30 Jahre, 96 gehören zu beiden Gruppen. Vier Fragen stehen im Auswertungsbogen – zum Schluss '
+        text: 'Die letzte Auswertung der Nacht steht an: eine Leserumfrage mit zwei Merkmalen – digital '
+          + 'lesen und jünger als 30 Jahre sein. Vier Fragen stehen im Auswertungsbogen, und zum Schluss '
           + 'will das System wissen, ob die beiden Merkmale zusammenhängen.',
         auftrag: 'Beantworte die vier Fragen. Jede richtige Antwort deckt einen Buchstaben auf.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Wie viele der unter 30-Jährigen lesen nicht digital?', antwort: '54', einheit: 'Personen', zeichen: 'T' },
-          { frage: 'Wie groß ist die Wahrscheinlichkeit für „digital" unter der Bedingung „unter 30", in Prozent?', antwort: '64', einheit: '%', zeichen: 'E' },
-          { frage: 'Wie groß ist die Wahrscheinlichkeit für „unter 30" unter der Bedingung „digital", in Prozent?', antwort: '40', einheit: '%', zeichen: 'X' },
-          { frage: 'Wie groß ist P(digital) · P(unter 30) in Prozent?', antwort: '10', einheit: '%', zeichen: 'T' },
-        ],
+        rechner: true,   // bedingte Wahrscheinlichkeiten mit mehrstelligen Grundwerten
         code: 'TEXT',
         codeRegel: 'Jede richtige Antwort deckt einen Buchstaben auf – von oben nach unten.',
         tipps: [
-          'Trage die Zahlen in eine Vierfeldertafel ein: 96 lesen digital und sind unter 30.',
-          'Bedingte Wahrscheinlichkeiten beziehen sich nur auf eine Zeile oder Spalte der Tafel.',
-          '150 − 96 = 54; 96 : 150 = 64 %; 96 : 240 = 40 %; 0,4 · 0,25 = 0,1 = 10 %. Weil 96 : 600 = 16 % ≠ 10 % ist, sind die Merkmale nicht unabhängig.',
+          'Trage die Zahlen in eine Vierfeldertafel ein: Wer zu beiden Gruppen gehört, steht im mittleren Feld; die Randsummen ergänzt du zeilen- und spaltenweise.',
+          'Eine bedingte Wahrscheinlichkeit bezieht sich nur auf eine Zeile oder Spalte der Tafel – deren Summe ist dann das neue Ganze. Für das Produkt zweier Wahrscheinlichkeiten brauchst du dagegen beide Anteile an allen Befragten.',
         ],
-        loesung: '54 Personen · 64 % · 40 % · 10 % – die Merkmale sind nicht unabhängig (16 % statt 10 %).',
+        zufall: (z) => {
+          const ANTEILE = [20, 25, 40, 50, 60, 75, 80];
+          const w = satz(z, (g) => {
+            const leute = g.vielfach(200, 1500, 100);
+            const pDigital = g.aus(ANTEILE);
+            const pJung = g.aus([20, 25, 40, 50, 60]);   // höchstens 60 % unter 30 Jahren
+            const digital = (leute * pDigital) / 100;
+            const jung = (leute * pJung) / 100;
+            const produkt = (pDigital * pJung) / 100;
+            const moeglich = [];
+            if ((pDigital * pJung) % 100 === 0) {
+              for (let b = 1; b < Math.min(digital, jung); b++) {
+                if ((100 * b) % jung === 0 && (100 * b) % digital === 0 && (100 * b) % leute === 0
+                  && digital + jung - b <= leute && b * leute !== digital * jung) moeglich.push(b);
+              }
+            }
+            const beide = moeglich.length ? g.aus(moeglich) : 1;
+            return { leute, pDigital, pJung, digital, jung, produkt, beide,
+              ohne: jung - beide,
+              bedingtJung: (100 * beide) / jung,
+              bedingtDigital: (100 * beide) / digital,
+              gemeinsam: (100 * beide) / leute,
+              ok: moeglich.length > 0,
+              erg: [jung - beide, (100 * beide) / jung, (100 * beide) / digital, produkt] };
+          });
+          return {
+            regel: 'buchstaben',
+            code: 'TEXT',
+            aufgaben: [
+              { frage: `${fmt(w.jung)} der Befragten sind unter 30 Jahren, ${fmt(w.beide)} von ihnen lesen digital. Wie viele der unter 30-Jährigen lesen nicht digital?`, antwort: antw(w.ohne), einheit: 'Personen' },
+              { frage: `Unter den ${fmt(w.jung)} Befragten unter 30 Jahren lesen ${fmt(w.beide)} digital. Wie groß ist die Wahrscheinlichkeit für „digital" unter der Bedingung „unter 30", in Prozent?`, antwort: antw(w.bedingtJung), einheit: '%' },
+              { frage: `Von den ${fmt(w.digital)} Befragten, die digital lesen, sind ${fmt(w.beide)} unter 30 Jahren. Wie groß ist die Wahrscheinlichkeit für „unter 30" unter der Bedingung „digital", in Prozent?`, antwort: antw(w.bedingtDigital), einheit: '%' },
+              { frage: `Von ${fmt(w.leute)} Befragten lesen ${fmt(w.digital)} digital, und ${fmt(w.jung)} sind unter 30 Jahren. Wie groß ist P(digital) · P(unter 30) in Prozent?`, antwort: antw(w.produkt), einheit: '%' },
+            ],
+            tipp: `${fmt(w.jung)} − ${fmt(w.beide)} = ${fmt(w.ohne)} Personen; `
+              + `${fmt(w.beide)} : ${fmt(w.jung)} = ${w.bedingtJung} %; `
+              + `${fmt(w.beide)} : ${fmt(w.digital)} = ${w.bedingtDigital} %; `
+              + `P(digital) = ${fmt(w.pDigital / 100)} und P(unter 30) = ${fmt(w.pJung / 100)}, also ${fmt(w.pDigital / 100)} · ${fmt(w.pJung / 100)} = ${fmt(w.produkt / 100)} = ${w.produkt} %. `
+              + `Weil ${fmt(w.beide)} : ${fmt(w.leute)} = ${w.gemeinsam} % und nicht ${w.produkt} % ist, sind die Merkmale nicht unabhängig. `
+              + `Die vier Buchstaben lauten T, E, X, T.`,
+            loesung: `${fmt(w.ohne)} Personen; ${w.bedingtJung} %; ${w.bedingtDigital} %; ${w.produkt} % – die Merkmale sind nicht unabhängig (${w.gemeinsam} % statt ${w.produkt} %).`,
+          };
+        },
       },
     ],
   },

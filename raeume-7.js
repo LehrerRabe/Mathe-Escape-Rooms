@@ -6,6 +6,23 @@
    Zu jedem Kapitel gibt es einen zweiten Raum in `raeume-7-weitere.js`.                        */
 
 import weitereRaeume from './raeume-7-weitere.js';
+import sportRaeume from './raeume-7-sport.js';
+import { fmt, antw, einerziffer } from './zufall.js';
+
+/* ---------- Helfer für die Zufallsaufgaben ---------- */
+
+/** Sind alle Zahlen der Liste verschieden? (verhindert zwei gleiche Ergebnisse) */
+const verschieden = (liste) => new Set(liste.map(Number)).size === liste.length;
+
+/** Würfelt mit `wurf`, bis `gut` stimmt – nach 50 Versuchen gilt der letzte Wurf. */
+const bis = (wurf, gut) => { let w = wurf(); for (let i = 0; i < 50 && !gut(w); i++) w = wurf(); return w; };
+
+/** Potenz mit negativer Basis für den Aufgabentext: (−2)<sup>4</sup>. */
+const potenz = (basis, hoch) => `(−${basis})<sup>${hoch}</sup>`;
+
+/** Zahl in deutscher Schreibweise – für die Rückmeldungen von `schieben` und `probieren`.
+    Rundet auf drei Stellen, damit die Anzeige nicht ausfranst. */
+const dz = (n) => String(Math.round(n * 1000) / 1000).replace('.', ',').replace('-', '−');
 
 const GRUNDRAEUME = [
 
@@ -30,25 +47,45 @@ const GRUNDRAEUME = [
     raetsel: [
       {
         titel: 'Rätsel 1: Das Tiefenprotokoll',
-        text: 'Im Steuerraum blinkt das Tiefenprotokoll der letzten Schicht. Vier Messungen sind nicht zu Ende '
-          + 'gerechnet – Tiefen, Temperaturen und Kräfte, alle mit Vorzeichen. Am Rand hat die Pilotin notiert: '
+        text: 'Im Steuerraum blinkt das Tiefenprotokoll der letzten Schicht. Vier Zeilen sind nicht zu Ende '
+          + 'gerechnet: zuerst eine Tiefe und eine Temperatur, darunter zwei Übungsrechnungen mit Vorzeichen '
+          + 'aus dem Rechenheft der Pilotin. Am Rand hat sie notiert: '
           + '„Für die Schleuse brauche ich nur die letzte Ziffer."',
         auftrag: 'Rechne die vier Aufgaben. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Das Boot ist auf −120 m und steigt 45 m auf. In welcher Tiefe ist es jetzt?', antwort: ['-75', '−75'], einheit: 'm', zeichen: '5' },
-          { frage: 'Die Außentemperatur beträgt −8 °C und steigt um 11 °C. Wie warm ist es dann?', antwort: '3', einheit: '°C', zeichen: '3' },
-          { frage: 'Berechne (−4) · (−6).', antwort: '24', zeichen: '4' },
-          { frage: 'Berechne (−56) : 7.', antwort: ['-8', '−8'], zeichen: '8' },
-        ],
-        code: '5348',
         codeRegel: 'Die Einerziffern der vier Ergebnisse – von oben nach unten. Das Vorzeichen zählt nicht mit.',
         tipps: [
-          'Beim Aufsteigen wird die Tiefe größer, die Zahl also größer: −120 + 45.',
+          'Beim Aufsteigen wird die Tiefe kleiner – zu einer negativen Tiefe wird also etwas addiert.',
           'Minus mal Minus ergibt Plus, Minus geteilt durch Plus ergibt Minus.',
-          '−120 + 45 = −75; −8 + 11 = 3; (−4) · (−6) = 24; (−56) : 7 = −8. Einerziffern: 5, 3, 4, 8.',
         ],
-        loesung: '−75 m · 3 °C · 24 · −8 → Einerziffern 5, 3, 4, 8.',
+        zufall: (z) => {
+          const w = bis(() => {
+            const tiefe = z.ganz(90, 180), aufstieg = z.ganz(25, 70);
+            const kalt = z.ganz(5, 14), anstieg = z.ganz(2, 12);
+            const p = z.ganz(3, 9), q = z.ganz(4, 12);
+            const teiler = z.ganz(4, 9), ergD = z.ganz(6, 15);
+            return { tiefe, aufstieg, kalt, anstieg, p, q, teiler, ergD,
+              erg: [tiefe - aufstieg, anstieg, p * q, ergD] };
+          }, (w) => verschieden(w.erg));
+          const { tiefe, aufstieg, kalt, anstieg, p, q, teiler, ergD } = w;
+          const neueTiefe = -(tiefe - aufstieg);
+          const ziffern = w.erg.map(einerziffer).join(', ');
+          return {
+            regel: 'einer',
+            aufgaben: [
+              { frage: `Das Boot ist auf ${fmt(-tiefe)} m und steigt ${aufstieg} m auf. In welcher Tiefe ist es jetzt?`, antwort: antw(neueTiefe), einheit: 'm' },
+              { frage: `Die Außentemperatur beträgt ${fmt(-kalt)} °C und steigt um ${kalt + anstieg} °C. Wie warm ist es dann?`, antwort: antw(anstieg), einheit: '°C' },
+              { frage: `Berechne (${fmt(-p)}) · (${fmt(-q)}).`, antwort: antw(p * q) },
+              { frage: `Berechne (${fmt(-ergD * teiler)}) : ${teiler}.`, antwort: antw(-ergD) },
+            ],
+            tipp: `${fmt(-tiefe)} + ${aufstieg} = ${fmt(neueTiefe)}; `
+              + `${fmt(-kalt)} + ${kalt + anstieg} = ${anstieg}; `
+              + `(${fmt(-p)}) · (${fmt(-q)}) = ${fmt(p * q)}; `
+              + `(${fmt(-ergD * teiler)}) : ${teiler} = ${fmt(-ergD)}. `
+              + `Einerziffern: ${ziffern}.`,
+            loesung: `${fmt(neueTiefe)} m; ${anstieg} °C; ${fmt(p * q)}; ${fmt(-ergD)} → Einerziffern ${ziffern}.`,
+          };
+        },
       },
       {
         titel: 'Rätsel 2: Die Vorzeichentafel',
@@ -70,33 +107,70 @@ const GRUNDRAEUME = [
           'Minus und Minus hintereinander heben sich auf: a − (−b) = a + b. Zähle bei Produkten die Minuszeichen: eine ungerade Anzahl ergibt ein negatives Ergebnis.',
           '−12 ist am kleinsten. 5 − (−3) = 8. Drei Minuszeichen sind ungerade, also negativ. (−4) · 5 = −20.',
         ],
-        loesung: '−12 · 5 + 3 = 8 · negativ · (−4) · 5 → T, I, E, F.',
+        loesung: '−12; 5 + 3 = 8; negativ; (−4) · 5 → T, I, E, F.',
       },
       {
-        titel: 'Rätsel 3: Die Tiefenskala',
-        text: 'Auf dem Monitor der Tiefenskala stehen sechs Werte durcheinander. Die Automatik sortiert sie '
-          + 'sonst selbst, doch der Rechner ist abgestürzt. Erst wenn die Werte von der kleinsten zur größten '
-          + 'Zahl stehen, gibt die Anzeige den nächsten Code frei.',
-        auftrag: 'Ordne die Zahlen vom <strong>kleinsten</strong> zum <strong>größten</strong> Wert.',
-        typ: 'reihenfolge',
-        codeAmEnde: true,
-        saat: 211,
-        elemente: [
-          { text: '−3,5' },
-          { text: '−2' },
-          { text: '−1,25' },
-          { text: '−0,5' },
-          { text: '0,75' },
-          { text: '2,5' },
-        ],
+        titel: 'Rätsel 3: Der Rechenblock der Pilotin',
+        text: 'Auf dem Klapptisch liegt der Rechenblock der Pilotin. Vier Rechenwege hat sie heute notiert, '
+          + 'und in jedem einzelnen hat sie sich mit den Vorzeichen verheddert – manchmal schon beim Ansatz, '
+          + 'manchmal erst im Antwortsatz. Die Schleusenautomatik nimmt den Block nur an, wenn in jedem Weg '
+          + 'die Zeile markiert ist, in der es zum ersten Mal schiefgeht. Die Nummern dieser Zeilen sind der Code.',
+        auftrag: 'Tippe in jedem Rechenweg die Zeile an, in der <strong>zum ersten Mal</strong> etwas falsch ist. '
+          + 'Alles, was danach kommt, ist nur konsequent falsch weitergerechnet.',
+        typ: 'fehlerfinden',
         code: '3525',
-        codeRegel: 'Der Code: die <strong>kleinste</strong> und die <strong>größte</strong> Zahl, jeweils ohne Vorzeichen und ohne Komma (z. B. −1,25 würde 125 ergeben).',
-        tipps: [
-          'Trage die Zahlen auf einer Zahlengeraden ein. Alles links von der Null ist negativ.',
-          'Bei negativen Zahlen gilt: Je größer der Betrag, desto kleiner die Zahl. −3,5 liegt also am weitesten links.',
-          'Reihenfolge: −3,5 < −2 < −1,25 < −0,5 < 0,75 < 2,5. Kleinste Zahl −3,5 → 35, größte 2,5 → 25.',
+        codeRegel: 'Die <strong>Nummern</strong> der vier falschen Zeilen – von oben nach unten.',
+        faelle: [
+          {
+            titel: 'Wie groß ist der Abstand von −12 und 5 auf der Zahlengeraden?',
+            zeilen: [
+              'Gesucht ist der Abstand der beiden Zahlen −12 und 5.',
+              'Den Abstand erhält man, wenn man von der größeren Zahl die kleinere abzieht: 5 − (−12).',
+              '5 − (−12) = 5 − 12 = −7',
+              'Antwort: Der Abstand beträgt −7 Einheiten.',
+            ],
+            falsch: 2, zeichen: '3',
+          },
+          {
+            titel: 'Wie hat sich die Außentemperatur verändert?',
+            zeilen: [
+              'Am Morgen waren es −6 °C, am Mittag −1 °C.',
+              'Die Änderung ist der Endwert minus dem Anfangswert: (−1) − (−6).',
+              '(−1) − (−6) = −1 + 6',
+              '= 5',
+              'Antwort: Die Temperatur ist um 5 °C gefallen.',
+            ],
+            falsch: 4, zeichen: '5',
+          },
+          {
+            titel: 'Welchen Wert hat (−3) · (−4) · (−2)?',
+            zeilen: [
+              'Zu berechnen ist das Produkt (−3) · (−4) · (−2).',
+              'Bei drei Minuszeichen ist das Ergebnis positiv.',
+              'Also genügt es, mit den Beträgen zu rechnen: 3 · 4 · 2 = 24.',
+              'Antwort: Das Produkt hat den Wert 24.',
+            ],
+            falsch: 1, zeichen: '2',
+          },
+          {
+            titel: 'Wo ist das Boot nach dem Aufstieg?',
+            zeilen: [
+              'Das Boot steht auf −150 m und steigt 40 m auf.',
+              'Beim Aufsteigen wird zu der negativen Tiefe addiert: −150 + 40.',
+              '−150 + 40 = −110',
+              'Das Boot steht demnach bei −110 m.',
+              'Antwort: Das Boot ist jetzt 110 m über dem Meeresspiegel.',
+            ],
+            falsch: 4, zeichen: '5',
+          },
         ],
-        loesung: '−3,5 < −2 < −1,25 < −0,5 < 0,75 < 2,5 – Code 3525.',
+        tipps: [
+          'Lies jeden Weg Zeile für Zeile und frage dich nur: Stimmt genau dieser Schritt noch? Der Fehler steckt nicht immer in der Rechnung – manchmal erst im Antwortsatz.',
+          'Minus und Minus hintereinander heben sich auf: a − (−b) = a + b. Bei einem Produkt entscheidet die Anzahl der Minuszeichen – eine ungerade Anzahl ergibt ein negatives Ergebnis. Und ein Ort unter null bleibt unter null.',
+          'Weg 1: Zeile 3 – richtig ist 5 − (−12) = 5 + 12 = 17. Weg 2: Zeile 5 – von −6 °C auf −1 °C ist die Temperatur um 5 °C <em>gestiegen</em>. '
+            + 'Weg 3: Zeile 2 – drei Minuszeichen sind ungerade, das Produkt ist −24. Weg 4: Zeile 5 – −110 m heißt 110 m <em>unter</em> dem Meeresspiegel. → 3, 5, 2, 5.',
+        ],
+        loesung: 'Zeile 3; Zeile 5; Zeile 2; Zeile 5 → 3, 5, 2, 5. Richtig wären 17 Einheiten; um 5 °C gestiegen; −24; 110 m unter dem Meeresspiegel.',
       },
       {
         titel: 'Rätsel 4: Die Druckrechnungen',
@@ -124,32 +198,36 @@ const GRUNDRAEUME = [
         loesung: 'Treffer: (−5)·3 = −15, 7−12 = −5, (−2)³ = −8, (−18):3 = −6, (−1)(−2)(−3) = −6, 4−9 = −5. Summe −45.',
       },
       {
-        titel: 'Rätsel 5: Die Rechenkarten der Besatzung',
-        text: 'In einer wasserdichten Box liegen zwölf Karten: sechs mit Rechnungen, sechs mit Ergebnissen. '
-          + 'Die Besatzung hat damit vor jeder Schicht das Rechnen mit Vorzeichen geübt. Beim letzten Manöver '
-          + 'ist die Box umgekippt – jetzt liegt alles durcheinander.',
-        auftrag: 'Ordne jeder Rechnung ihr <strong>Ergebnis</strong> zu.',
-        typ: 'zuordnen',
-        titelLinks: 'Rechnung',
-        titelRechts: 'Ergebnis',
-        codeAmEnde: true,
-        saat: 331,
-        paare: [
-          { links: '(−7) + 3', rechts: '−4' },
-          { links: '(−7) − 3', rechts: '−10' },
-          { links: '(−7) · 3', rechts: '−21' },
-          { links: '(−7) · (−3)', rechts: '21' },
-          { links: '(−21) : 3', rechts: '−7' },
-          { links: '(−21) : (−7)', rechts: '3' },
-        ],
+        titel: 'Rätsel 5: Die Kartei der Besatzung',
+        text: 'In einer wasserdichten Box liegen sechzehn Karten: acht mit Rechnungen, acht mit Ergebnissen. '
+          + 'Die Besatzung hat damit vor jeder Schicht das Rechnen mit Vorzeichen geübt. Auf der Rückseite der '
+          + 'Box ist eine vierstellige Zahl aufgemalt – sie wird erst sichtbar, wenn jede Rechenkarte bei ihrem '
+          + 'Ergebnis liegt. Beim letzten Manöver ist die Box umgekippt, jetzt liegt alles durcheinander.',
+        auftrag: 'Tippe eine Rechenkarte an und dann die passende Ergebniskarte. Jedes richtige Paar deckt ein '
+          + 'Stück des Bildes auf. Die Zahl im fertigen Bild ist der Code.',
+        typ: 'legen',
         code: '2121',
-        codeRegel: 'Wenn alle Paare stimmen, erscheint der Code: der <strong>Betrag des kleinsten</strong> und das <strong>größte</strong> Ergebnis – jeweils zweistellig.',
-        tipps: [
-          'Gehe jede Rechnung einzeln durch: Addition und Subtraktion auf der Zahlengeraden, Multiplikation und Division mit der Vorzeichenregel.',
-          'Minus mal Minus und Minus geteilt durch Minus ergeben beide ein positives Ergebnis.',
-          'Ergebnisse: −4, −10, −21, 21, −7, 3. Das kleinste ist −21 (Betrag 21), das größte 21.',
+        zahlbild: '2121',
+        spalten: 4,
+        saat: 331,
+        karten: [
+          { rechnung: '(−7) + 3', ergebnis: '−4' },
+          { rechnung: '(−7) − 3', ergebnis: '−10' },
+          { rechnung: '(−7) · 3', ergebnis: '−21' },
+          { rechnung: '(−7) · (−3)', ergebnis: '21' },
+          { rechnung: '(−24) : 3', ergebnis: '−8' },
+          { rechnung: '(−24) : (−4)', ergebnis: '6' },
+          { rechnung: '5 − 12', ergebnis: '−7' },
+          { rechnung: '(−2) · (−2) · (−3)', ergebnis: '−12' },
         ],
-        loesung: '(−7)+3 = −4; (−7)−3 = −10; (−7)·3 = −21; (−7)·(−3) = 21; (−21):3 = −7; (−21):(−7) = 3.',
+        codeRegel: 'Die Zahl, die das fertige Bild zeigt.',
+        tipps: [
+          'Sortiert zuerst nach dem Vorzeichen: Nur zwei der acht Rechnungen haben ein positives Ergebnis – die findet ihr sofort.',
+          'Minus mal Minus und Minus geteilt durch Minus ergeben beide ein positives Ergebnis. Bei einem Produkt aus drei Faktoren zählt ihr die Minuszeichen: eine ungerade Anzahl ergibt ein negatives Ergebnis.',
+          '(−7) + 3 = −4; (−7) − 3 = −10; (−7) · 3 = −21; (−7) · (−3) = 21; (−24) : 3 = −8; (−24) : (−4) = 6; 5 − 12 = −7; '
+            + '(−2) · (−2) · (−3) = −12. Das Bild zeigt 2121.',
+        ],
+        loesung: '−4; −10; −21; 21; −8; 6; −7; −12 – das Bild zeigt 2121.',
       },
       {
         titel: 'Rätsel 6: Der Goldbarren im Wrack',
@@ -158,20 +236,40 @@ const GRUNDRAEUME = [
           + 'verblichenen Karte neben der Steuerung.',
         auftrag: 'Beantworte die vier Fragen. Jede richtige Antwort deckt einen Buchstaben auf.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Welche Zahl muss man zu −14 addieren, um 0 zu erhalten?', antwort: '14', zeichen: 'G' },
-          { frage: 'Wie groß ist der Abstand von −6 und 9 auf der Zahlengeraden?', antwort: '15', zeichen: 'O' },
-          { frage: 'Berechne 3 · (−4) + 20.', antwort: '8', zeichen: 'L' },
-          { frage: 'Berechne (−2)⁴.', antwort: '16', zeichen: 'D' },
-        ],
         code: 'GOLD',
         codeRegel: 'Jede richtige Antwort deckt einen Buchstaben auf – von oben nach unten.',
         tipps: [
           'Die Gegenzahl einer Zahl hat denselben Betrag, aber das andere Vorzeichen.',
-          'Den Abstand zweier Zahlen findest du, indem du von der größeren die kleinere abziehst: 9 − (−6).',
-          '14; 9 − (−6) = 15; 3 · (−4) + 20 = −12 + 20 = 8; (−2)⁴ = 16, weil vier Minuszeichen gerade sind.',
+          'Den Abstand zweier Zahlen auf der Zahlengeraden findest du, indem du von der größeren die kleinere abziehst. Bei einer Potenz mit negativer Basis entscheidet der Exponent: ein gerader Exponent ergibt ein positives Ergebnis.',
         ],
-        loesung: '14 · 15 · 8 · 16 → G, O, L, D.',
+        zufall: (z) => {
+          const wort = 'GOLD';   // Buchstabencode bleibt fest, nur die Zahlen würfeln
+          const w = bis(() => {
+            const gegen = z.ganz(11, 29);
+            const links = z.ganz(3, 12), rechts = z.ganz(4, 15);
+            const m = z.ganz(2, 6), n = z.ganz(3, 9), rest = z.ganz(2, 20);
+            const [basis, hoch] = z.aus([[2, 4], [3, 4], [2, 6], [5, 2], [6, 2], [7, 2], [8, 2], [9, 2], [11, 2], [12, 2]]);
+            return { gegen, links, rechts, m, n, rest, basis, hoch,
+              erg: [gegen, links + rechts, rest, basis ** hoch] };
+          }, (w) => verschieden(w.erg));
+          const { gegen, links, rechts, m, n, rest, basis, hoch } = w;
+          return {
+            regel: 'buchstaben',
+            code: wort,
+            aufgaben: [
+              { frage: `Welche Zahl muss man zu ${fmt(-gegen)} addieren, um 0 zu erhalten?`, antwort: antw(gegen) },
+              { frage: `Wie groß ist der Abstand von ${fmt(-links)} und ${rechts} auf der Zahlengeraden?`, antwort: antw(links + rechts) },
+              { frage: `Berechne ${m} · (${fmt(-n)}) + ${m * n + rest}.`, antwort: antw(rest) },
+              { frage: `Berechne ${potenz(basis, hoch)}.`, antwort: antw(basis ** hoch) },
+            ],
+            tipp: `Die Gegenzahl von ${fmt(-gegen)} ist ${gegen}; `
+              + `${rechts} − (${fmt(-links)}) = ${rechts} + ${links} = ${links + rechts}; `
+              + `${m} · (${fmt(-n)}) = ${fmt(-m * n)}, also ${fmt(-m * n)} + ${m * n + rest} = ${rest}; `
+              + `${potenz(basis, hoch)} = ${fmt(basis ** hoch)}, weil der Exponent ${hoch} gerade ist. `
+              + `Die vier Buchstaben lauten ${wort.split('').join(', ')}.`,
+            loesung: `${gegen}; ${links + rechts}; ${rest}; ${fmt(basis ** hoch)} → ${wort.split('').join(', ')}.`,
+          };
+        },
       },
     ],
   },
@@ -202,20 +300,55 @@ const GRUNDRAEUME = [
           + '„Mir reicht die letzte Ziffer – den Rest weiß ich selbst."',
         auftrag: 'Rechne die vier Aufgaben. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: '4 Räder kosten 30 € am Tag. Was kosten 10 Räder?', antwort: '75', einheit: '€', zeichen: '5' },
-          { frage: '3 Stunden Verleih kosten 18 €. Wie viele Stunden bekommt man für 42 €?', antwort: '7', einheit: 'Stunden', zeichen: '7' },
-          { frage: '5 Mechaniker brauchen 12 Tage für die Inspektion. Wie lange brauchen 6 Mechaniker?', antwort: '10', einheit: 'Tage', zeichen: '0' },
-          { frage: 'Auf 3 Anhänger passen 12 Räder. Wie viele Räder passen auf 7 Anhänger?', antwort: '28', einheit: 'Räder', zeichen: '8' },
-        ],
-        code: '5708',
         codeRegel: 'Die Einerziffern der vier Ergebnisse – von oben nach unten.',
         tipps: [
-          'Rechne beim Dreisatz zuerst auf eine Einheit herunter: Was kostet ein Rad, eine Stunde, ein Anhänger?',
-          'Achtung bei Aufgabe 3: Mehr Mechaniker brauchen weniger Zeit – das ist antiproportional. Hier bleibt das Produkt gleich: 5 · 12 = 6 · ?',
-          '30 : 4 · 10 = 75 €; 18 : 3 = 6 €/h, 42 : 6 = 7 h; 5 · 12 = 60, 60 : 6 = 10 Tage; 12 : 3 · 7 = 28 Räder.',
+          'Rechne beim Dreisatz zuerst auf eine Einheit herunter: Was kostet ein Rad, eine Stunde, was passt auf einen Anhänger?',
+          'Achtung bei Aufgabe 3: Mehr Mechaniker brauchen weniger Zeit – das ist antiproportional. Dort bleibt das Produkt aus Anzahl und Zeit gleich.',
         ],
-        loesung: '75 € · 7 Stunden · 10 Tage · 28 Räder → Einerziffern 5, 7, 0, 8.',
+        zufall: (z) => {
+          const w = bis(() => {
+            // 1) proportional: der Preis je Rad ist eine ganze Zahl von Euro.
+            const jeRad = z.ganz(6, 12), rad1 = z.ganz(3, 6), rad2 = z.ganz(8, 15);
+            // 2) proportional, rückwärts gefragt: der Stundenpreis geht auf.
+            const jeStunde = z.ganz(4, 9), std1 = z.ganz(2, 5), std2 = z.ganz(6, 15);
+            // 3) antiproportional in Stunden: nur Paare, bei denen das Produkt aufgeht.
+            //    Die Stundenzahl t2 ist die Codeziffer – deshalb decken die Paare alle Einerziffern ab.
+            const [m1, t1, m2, t2] = z.aus([
+              [5, 12, 6, 10], [6, 10, 5, 12], [4, 15, 6, 10], [6, 10, 4, 15],
+              [4, 15, 5, 12], [5, 12, 4, 15], [6, 12, 8, 9], [8, 9, 6, 12],
+              [4, 12, 6, 8], [6, 8, 4, 12], [8, 6, 4, 12], [4, 12, 8, 6],
+              [6, 14, 7, 12], [7, 12, 6, 14], [6, 15, 9, 10], [9, 10, 6, 15],
+              [3, 8, 4, 6], [4, 6, 3, 8], [3, 12, 4, 9], [4, 9, 3, 12],
+              [6, 4, 8, 3], [8, 3, 6, 4], [7, 4, 4, 7], [4, 7, 7, 4],
+              [2, 22, 4, 11], [4, 11, 2, 22], [6, 7, 2, 21], [2, 21, 6, 7],
+              [7, 12, 4, 21], [4, 21, 7, 12], [6, 8, 3, 16], [3, 16, 6, 8],
+              [9, 8, 6, 12], [4, 18, 8, 9], [8, 9, 4, 18], [5, 18, 6, 15],
+              [6, 15, 5, 18], [9, 10, 5, 18], [5, 6, 3, 10], [3, 10, 5, 6],
+              [5, 4, 2, 10], [2, 10, 5, 4], [3, 20, 5, 12], [5, 12, 3, 20],
+            ]);
+            // 4) proportional: je Anhänger eine ganze Zahl von Rädern.
+            const jeHaenger = z.ganz(3, 6), h1 = z.ganz(2, 5), h2 = z.ganz(6, 10);
+            return { jeRad, rad1, rad2, jeStunde, std1, std2, m1, t1, m2, t2, jeHaenger, h1, h2,
+              erg: [rad2 * jeRad, std2, t2, h2 * jeHaenger] };
+          }, (w) => verschieden(w.erg) && w.rad1 !== w.rad2 && w.std1 !== w.std2 && w.h1 !== w.h2);
+          const { jeRad, rad1, rad2, jeStunde, std1, std2, m1, t1, m2, t2, jeHaenger, h1, h2 } = w;
+          const ziffern = w.erg.map(einerziffer).join(', ');
+          return {
+            regel: 'einer',
+            aufgaben: [
+              { frage: `${rad1} Räder kosten ${fmt(rad1 * jeRad)} € am Tag. Was kosten ${rad2} Räder?`, antwort: antw(rad2 * jeRad), einheit: '€' },
+              { frage: `${std1} Stunden Verleih kosten ${fmt(std1 * jeStunde)} €. Wie viele Stunden bekommt man für ${fmt(std2 * jeStunde)} €?`, antwort: antw(std2), einheit: 'Stunden' },
+              { frage: `${m1} Mechaniker brauchen ${t1} Stunden für die Inspektion aller Räder. Wie lange brauchen ${m2} Mechaniker?`, antwort: antw(t2), einheit: 'Stunden' },
+              { frage: `Auf ${h1} Anhänger passen ${h1 * jeHaenger} Räder. Wie viele Räder passen auf ${h2} Anhänger?`, antwort: antw(h2 * jeHaenger), einheit: 'Räder' },
+            ],
+            tipp: `${fmt(rad1 * jeRad)} : ${rad1} = ${jeRad} € je Rad, ${jeRad} · ${rad2} = ${fmt(rad2 * jeRad)} €; `
+              + `${fmt(std1 * jeStunde)} : ${std1} = ${jeStunde} € je Stunde, ${fmt(std2 * jeStunde)} : ${jeStunde} = ${std2} Stunden; `
+              + `${m1} · ${t1} = ${fmt(m1 * t1)}, und ${fmt(m1 * t1)} : ${m2} = ${t2} Stunden; `
+              + `${h1 * jeHaenger} : ${h1} = ${jeHaenger} Räder je Anhänger, ${jeHaenger} · ${h2} = ${h2 * jeHaenger} Räder. `
+              + `Einerziffern: ${ziffern}.`,
+            loesung: `${fmt(rad2 * jeRad)} €; ${std2} Stunden Verleih; ${t2} Stunden Inspektion; ${h2 * jeHaenger} Räder → Einerziffern ${ziffern}.`,
+          };
+        },
       },
       {
         titel: 'Rätsel 2: Die Werkstatttafel',
@@ -237,35 +370,45 @@ const GRUNDRAEUME = [
           'Proportional heißt Quotientengleichheit (y : x ist konstant), antiproportional heißt Produktgleichheit (x · y ist konstant).',
           'Räder → Mietpreis ist proportional. Antiproportional heißt: x · y bleibt gleich. Der Graph ist eine Ursprungsgerade. 2,5 · 6 = 15.',
         ],
-        loesung: 'Räder → Mietpreis · Produkt konstant · Ursprungsgerade · y = 15 → G, A, N, G.',
+        loesung: 'Räder → Mietpreis; Produkt konstant; Ursprungsgerade; y = 15 → G, A, N, G.',
       },
       {
-        titel: 'Rätsel 3: Die Kartei der Proportionalitätsfaktoren',
-        text: 'In einem Karteikasten stecken sechs Angebote des Zubehörlieferanten und sechs Kärtchen mit '
-          + 'Proportionalitätsfaktoren. Der Chef hat zu jedem Angebot notiert, was ein Kilogramm kostet. '
-          + 'Die Kärtchen sind beim Transport aus dem Kasten gefallen.',
-        auftrag: 'Ordne jedem Angebot seinen <strong>Proportionalitätsfaktor</strong> zu – also den Preis für 1 kg.',
-        typ: 'zuordnen',
-        titelLinks: 'Angebot',
-        titelRechts: 'Preis für 1 kg',
-        codeAmEnde: true,
-        saat: 419,
-        paare: [
-          { links: '2 kg kosten 5,00 €', rechts: 'k = 2,50' },
-          { links: '4 kg kosten 14,00 €', rechts: 'k = 3,50' },
-          { links: '5 kg kosten 20,00 €', rechts: 'k = 4' },
-          { links: '3 kg kosten 4,50 €', rechts: 'k = 1,50' },
-          { links: '6 kg kosten 18,00 €', rechts: 'k = 3' },
-          { links: '8 kg kosten 10,00 €', rechts: 'k = 1,25' },
-        ],
+        titel: 'Rätsel 3: Die Preistafel am Tresen',
+        text: 'Über dem Tresen hängt die große Preistafel: zwei Ursprungsgeraden in einem Koordinatensystem, '
+          + 'eine für das Cityrad und eine für das Mountainbike. Beide Zuordnungen sind proportional, deshalb '
+          + 'gehen die Geraden durch den Nullpunkt. Der Punkt C liegt auf der Cityrad-Geraden, der Punkt M auf '
+          + 'der des Mountainbikes. Alle Werte, die ihr braucht, liegen genau auf Gitterlinien – geschätzt wird hier nichts.',
+        auftrag: 'Lies die vier Werte aus der Preistafel ab. Jede richtige Antwort deckt eine Ziffer auf.',
+        typ: 'ablesen',
         code: '1575',
-        codeRegel: 'Wenn alle Paare stimmen, erscheint der Code: die <strong>Summe aller sechs Faktoren</strong>, ohne Komma geschrieben.',
-        tipps: [
-          'Den Proportionalitätsfaktor bekommst du, indem du den Preis durch die Masse teilst.',
-          'Rechne jeden Quotienten einzeln aus, zum Beispiel 14,00 € : 4 kg = 3,50 €/kg.',
-          'Faktoren: 2,50 · 3,50 · 4 · 1,50 · 3 · 1,25. Ihre Summe ist 15,75 – ohne Komma 1575.',
+        codeRegel: 'Jede richtige Antwort deckt eine <strong>Ziffer</strong> auf – von oben nach unten.',
+        diagramm: {
+          art: 'koordinaten',
+          xVon: 0, xBis: 8, yVon: 0, yBis: 48,
+          xSchritt: 1, ySchritt: 4,
+          xName: 'Mietdauer in h', yName: 'Preis in €',
+          kurven: [
+            { art: 'gerade', m: 4, b: 0 },
+            { art: 'gerade', m: 6, b: 0 },
+          ],
+          punkte: [
+            { x: 1, y: 4, name: 'C' },
+            { x: 1, y: 6, name: 'M' },
+          ],
+          beschreibung: 'Zwei Ursprungsgeraden: die flachere durch C für das Cityrad, die steilere durch M für das Mountainbike',
+        },
+        aufgaben: [
+          { frage: 'Was kosten 5 Stunden mit dem <strong>Cityrad</strong>?', antwort: '20', einheit: '€', zeichen: '1' },
+          { frage: 'Was kosten 4 Stunden mit dem <strong>Mountainbike</strong>?', antwort: '24', einheit: '€', zeichen: '5' },
+          { frage: 'Für wie viele Stunden reichen 32 € beim <strong>Cityrad</strong>?', antwort: '8', einheit: 'Stunden', zeichen: '7' },
+          { frage: 'Wie viel Euro mehr kosten 6 Stunden Mountainbike als 6 Stunden Cityrad?', antwort: '12', einheit: '€', zeichen: '5' },
         ],
-        loesung: 'k = 2,50; 3,50; 4; 1,50; 3; 1,25 – Summe 15,75.',
+        tipps: [
+          'Findet zuerst heraus, wie viel ein Abstand zwischen zwei waagerechten Gitterlinien wert ist – danach lest ihr jeden Preis in einem Blick ab.',
+          'Für die dritte Frage gehst du den umgekehrten Weg: von der Preisachse waagerecht zur Geraden und von dort nach unten auf die Zeitachse. Für die vierte Frage liest du beide Geraden an derselben Stelle ab und vergleichst.',
+          'Cityrad: 4 € je Stunde, also 5 h → 20 €; Mountainbike: 6 € je Stunde, also 4 h → 24 €; 32 € : 4 € = 8 Stunden; bei 6 h sind es 36 € und 24 €, die Differenz ist 12 €. → 1, 5, 7, 5.',
+        ],
+        loesung: '20 €; 24 €; 8 Stunden; 12 € → 1, 5, 7, 5.',
       },
       {
         titel: 'Rätsel 4: Die Zuordnungstafel',
@@ -299,30 +442,47 @@ const GRUNDRAEUME = [
         loesung: 'Proportional: Brötchen→Preis, Fahrzeit→Weg, Benzin→Preis, Räder→Gewicht, Seitenlänge→Umfang, Arbeitszeit→Lohn (6). Antiproportional: 3. Nicht zuzuordnen: Alter→Größe, Seitenlänge→Flächeninhalt, Größe→Schuhgröße.',
       },
       {
-        titel: 'Rätsel 5: Die Angebotstafel',
-        text: 'Der Zubehörhändler hat sechs Angebote für Kettenöl geschickt, alle in anderen Gebinden. '
-          + 'Der Chef kauft grundsätzlich beim günstigsten Grundpreis – doch dafür müssen die Angebote erst '
-          + 'vergleichbar gemacht werden.',
-        auftrag: 'Ordne die Angebote nach ihrem <strong>Grundpreis je Kilogramm</strong> – vom günstigsten zum teuersten.',
-        typ: 'reihenfolge',
-        codeAmEnde: true,
-        saat: 523,
-        elemente: [
-          { text: '4 kg für 7,20 €' },
-          { text: '2 kg für 4,40 €' },
-          { text: '3 kg für 7,50 €' },
-          { text: '5 kg für 14,00 €' },
-          { text: '2,5 kg für 7,75 €' },
-          { text: '6 kg für 19,80 €' },
-        ],
+        titel: 'Rätsel 5: Das Rechenpult des Chefs',
+        text: 'Hinten in der Werkstatt steht das alte Rechenpult des Chefs: vier Schieberegler, über jedem eine '
+          + 'Frage, und darunter eine Anzeige, die immer nur verrät, was der eingestellte Wert bewirkt – ob er '
+          + 'richtig ist, sagt sie nicht. Der Chef hat damit früher seine Preise und Arbeitszeiten eingestellt, '
+          + 'und das Tor gibt erst nach, wenn alle vier Regler richtig stehen.',
+        auftrag: 'Schiebe jeden Regler, bis der eingestellte Wert passt. Die Anzeige zeigt dir die '
+          + '<strong>Wirkung</strong> deines Wertes, nicht die Lösung.',
+        typ: 'schieben',
         code: '0180',
-        codeRegel: 'Der Code ist der <strong>günstigste Grundpreis in Cent</strong> je Kilogramm – vierstellig, mit führender Null.',
-        tipps: [
-          'Teile bei jedem Angebot den Preis durch die Masse. So bekommst du den Preis für ein Kilogramm.',
-          'Rechne in Euro mit zwei Nachkommastellen, zum Beispiel 7,20 € : 4 kg = 1,80 €/kg.',
-          'Grundpreise: 2,50 · 2,20 · 2,80 · 1,80 · 3,30 · 3,10 €/kg. Der günstigste ist 1,80 € = 180 Cent.',
+        codeRegel: 'Die <strong>Einerziffern</strong> der vier eingestellten Werte – von oben nach unten.',
+        aufgaben: [
+          {
+            frage: 'Ein Rad kostet 8 € am Tag. Stelle die <strong>Anzahl der Räder</strong> ein, für die 240 € Miete fällig werden.',
+            von: 5, bis: 45, schritt: 1, antwort: 30, einheit: 'Räder', zeichen: '0',
+            anzeige: (w) => `Miete für ${w} Räder: ${8 * w} €`,
+          },
+          {
+            frage: '6 Mechaniker brauchen 14 Stunden für die Inspektion. Stelle die <strong>Anzahl der Mechaniker</strong> ein, '
+              + 'bei der die Inspektion nur 4 Stunden dauert. (Die Anzeige rundet die Dauer auf drei Stellen.)',
+            von: 4, bis: 42, schritt: 1, antwort: 21, einheit: 'Mechaniker', zeichen: '1',
+            anzeige: (w) => `${w} Mechaniker brauchen ${dz(84 / w)} h`,
+          },
+          {
+            frage: 'Auf 3 Anhänger passen 12 Räder. Stelle ein, wie viele <strong>Räder</strong> auf 7 Anhänger passen. '
+              + '(Die Anzeige rundet auf drei Stellen.)',
+            von: 10, bis: 50, schritt: 1, antwort: 28, einheit: 'Räder', zeichen: '8',
+            anzeige: (w) => `${w} Räder auf 7 Anhänger: ${dz(w / 7)} Räder je Anhänger`,
+          },
+          {
+            frage: '4 kg Kettenöl kosten 7,20 €. Stelle den <strong>Grundpreis in Cent je Kilogramm</strong> ein.',
+            von: 100, bis: 300, schritt: 5, antwort: 180, einheit: 'ct/kg', zeichen: '0',
+            anzeige: (w) => `Bei ${w} ct/kg kosten 4 kg ${dz((4 * w) / 100)} €`,
+          },
         ],
-        loesung: '1,80 (4 kg) < 2,20 (2 kg) < 2,50 (3 kg) < 2,80 (5 kg) < 3,10 (2,5 kg) < 3,30 (6 kg) €/kg.',
+        tipps: [
+          'Schiebe erst einmal hin und her und lies die Anzeige: Sie zeigt dir, was dein Wert bewirkt. Danach rechne gezielt.',
+          'Drei der vier Fragen sind proportional – dort hilft der Dreisatz über eine Einheit. Nur die Frage nach den Mechanikern ist antiproportional: dort bleibt das Produkt aus Anzahl und Stunden gleich.',
+          '240 € : 8 € = 30 Räder; 6 · 14 = 84 Mechanikerstunden, 84 : 4 = 21 Mechaniker; 12 : 3 = 4 Räder je Anhänger, 4 · 7 = 28 Räder; '
+            + '7,20 € : 4 kg = 1,80 €/kg = 180 ct/kg. Einerziffern: 0, 1, 8, 0.',
+        ],
+        loesung: '30 Räder; 21 Mechaniker; 28 Räder; 180 ct/kg → Einerziffern 0, 1, 8, 0.',
       },
       {
         titel: 'Rätsel 6: Der Wartungsplan',
@@ -331,20 +491,56 @@ const GRUNDRAEUME = [
           + 'übernachtet in der Werkstatt.',
         auftrag: 'Beantworte die vier Fragen. Jede richtige Antwort deckt einen Buchstaben auf.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: '6 Räder brauchen 4 Stunden Wartung. Wie lange dauert die Wartung von 9 Rädern?', antwort: '6', einheit: 'Stunden', zeichen: 'M' },
-          { frage: '8 Helfer brauchen 15 Minuten zum Aufräumen. Wie lange brauchen 5 Helfer?', antwort: '24', einheit: 'Minuten', zeichen: 'I' },
-          { frage: 'Für y = 0,8 · x: Welchen Wert hat y bei x = 45?', antwort: '36', zeichen: 'E' },
-          { frage: 'Bei einer antiproportionalen Zuordnung gilt x · y = 72. Wie groß ist y bei x = 9?', antwort: '8', zeichen: 'T' },
-        ],
         code: 'MIET',
         codeRegel: 'Jede richtige Antwort deckt einen Buchstaben auf – von oben nach unten.',
         tipps: [
           'Prüfe bei jeder Aufgabe zuerst: proportional (mehr → mehr) oder antiproportional (mehr → weniger)?',
-          'Aufgabe 1 ist proportional: 4 : 6 · 9. Aufgabe 2 ist antiproportional: 8 · 15 = 5 · ?',
-          '4 : 6 · 9 = 6 Stunden; 8 · 15 = 120, 120 : 5 = 24 Minuten; 0,8 · 45 = 36; 72 : 9 = 8.',
+          'Aufgabe 1 ist proportional – rechne mit dem Dreisatz. Aufgabe 2 ist antiproportional: dort bleibt das Produkt aus Anzahl und Zeit gleich.',
         ],
-        loesung: '6 Stunden · 24 Minuten · 36 · 8 → M, I, E, T.',
+        zufall: (z) => {
+          const wort = 'MIET';   // Buchstabencode bleibt fest, nur die Zahlen würfeln
+          const w = bis(() => {
+            // 1) proportional im Verhältnis p : q – beide Werte bleiben ganzzahlig.
+            const [p, q] = z.aus([[2, 3], [3, 4], [2, 5], [3, 5], [4, 5], [3, 2], [4, 3], [5, 3]]);
+            // `schrittRad !== schrittStd` (unten in der Bedingung) verhindert, dass Räderzahl und
+            // Stundenzahl gleich sind – sonst wäre der Dreisatz trivial: die Antwort stünde in der Frage.
+            const schrittRad = z.ganz(2, 3), schrittStd = z.ganz(1, 3);
+            // 2) antiproportional: nur Paare, bei denen das Produkt aufgeht.
+            const [h1, min1, h2, min2] = z.aus([
+              [8, 15, 5, 24], [5, 24, 8, 15], [6, 20, 8, 15], [8, 15, 6, 20],
+              [4, 30, 5, 24], [5, 24, 4, 30], [6, 20, 4, 30], [4, 30, 6, 20],
+              [10, 12, 8, 15], [8, 15, 10, 12], [6, 15, 5, 18], [5, 18, 6, 15],
+              [4, 24, 6, 16], [6, 16, 4, 24], [8, 18, 6, 24], [6, 24, 8, 18],
+            ]);
+            // 3) Proportionalitätsfaktor als Kommazahl – y wird trotzdem ganzzahlig.
+            const [hundert, schritt] = z.aus([[25, 4], [40, 5], [50, 2], [60, 5], [75, 4], [80, 5], [120, 5], [150, 2], [250, 2]]);
+            const xWert = z.vielfach(2 * schritt, 60, schritt);
+            // 4) antiproportional mit gegebenem Produkt.
+            const xAnti = z.ganz(4, 12), yAnti = z.ganz(4, 15);
+            return { p, q, schrittRad, schrittStd, h1, min1, h2, min2, hundert, schritt, xWert, xAnti, yAnti,
+              erg: [q * schrittStd, min2, (hundert * xWert) / 100, yAnti] };
+          }, (w) => verschieden(w.erg) && w.xAnti !== w.yAnti && w.schrittRad !== w.schrittStd);
+          const { p, q, schrittRad, schrittStd, h1, min1, h2, min2, hundert, xWert, xAnti, yAnti } = w;
+          const rad1 = p * schrittRad, rad2 = q * schrittRad;
+          const std1 = p * schrittStd, std2 = q * schrittStd;
+          const faktor = hundert / 100, yWert = (hundert * xWert) / 100;
+          return {
+            regel: 'buchstaben',
+            code: wort,
+            aufgaben: [
+              { frage: `${rad1} Räder brauchen ${std1} Stunden Wartung. Wie lange dauert die Wartung von ${rad2} Rädern?`, antwort: antw(std2), einheit: 'Stunden' },
+              { frage: `${h1} Helfer brauchen ${min1} Minuten zum Aufräumen. Wie lange brauchen ${h2} Helfer?`, antwort: antw(min2), einheit: 'Minuten' },
+              { frage: `Für y = ${fmt(faktor)} · x: Welchen Wert hat y bei x = ${xWert}?`, antwort: antw(yWert) },
+              { frage: `Bei einer antiproportionalen Zuordnung gilt x · y = ${fmt(xAnti * yAnti)}. Wie groß ist y bei x = ${xAnti}?`, antwort: antw(yAnti) },
+            ],
+            tipp: `${std1} : ${rad1} · ${rad2} = ${std2} Stunden; `
+              + `${h1} · ${min1} = ${fmt(h1 * min1)}, und ${fmt(h1 * min1)} : ${h2} = ${min2} Minuten; `
+              + `${fmt(faktor)} · ${xWert} = ${fmt(yWert)}; `
+              + `${fmt(xAnti * yAnti)} : ${xAnti} = ${yAnti}. `
+              + `Die vier Buchstaben lauten ${wort.split('').join(', ')}.`,
+            loesung: `${std2} Stunden; ${min2} Minuten; ${fmt(yWert)}; ${yAnti} → ${wort.split('').join(', ')}.`,
+          };
+        },
       },
     ],
   },
@@ -370,25 +566,54 @@ const GRUNDRAEUME = [
     raetsel: [
       {
         titel: 'Rätsel 1: Das Kontobuch',
-        text: 'Auf dem Schaltertisch liegt ein Kontobuch mit vier unfertigen Zeilen. Es geht um Rabatte, '
-          + 'um einen gesuchten Grundwert, um eine Preissteigerung und um die Zinsen eines einzigen Jahres. '
-          + 'Am Rand sind vier Kästchen für das Zahlenschloss gezeichnet.',
+        text: 'Auf dem Schaltertisch liegt ein Kontobuch mit vier unfertigen Zeilen. Es geht um einen '
+          + 'Prozentwert, um einen Preis nach Rabatt, um eine Preissteigerung und um die Zinsen eines '
+          + 'einzigen Jahres. Am Rand sind vier Kästchen für das Zahlenschloss gezeichnet.',
         auftrag: 'Rechne die vier Aufgaben. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Wie viel sind 18 % von 250 €?', antwort: '45', einheit: '€', zeichen: '5' },
-          { frage: '36 € sind 15 % eines Betrages. Wie groß ist der ganze Betrag?', antwort: '240', einheit: '€', zeichen: '0' },
-          { frage: 'Ein Preis steigt von 80 € auf 92 €. Um wie viel Prozent ist er gestiegen?', antwort: '15', einheit: '%', zeichen: '5' },
-          { frage: 'Welche Zinsen bringen 1 200 € in einem Jahr bei 3 % Zinssatz?', antwort: '36', einheit: '€', zeichen: '6' },
-        ],
-        code: '5056',
         codeRegel: 'Die Einerziffern der vier Ergebnisse – von oben nach unten.',
         tipps: [
           'Für den Prozentwert rechnest du: Grundwert : 100 · Prozentsatz.',
-          'Beim Grundwert gehst du rückwärts: 36 € sind 15 %, also ist 1 % gleich 36 : 15 = 2,40 €. Bei der Steigerung vergleichst du die Zunahme mit dem alten Preis.',
-          '250 : 100 · 18 = 45 €; 36 : 15 · 100 = 240 €; Zunahme 12 € von 80 € sind 15 %; 1 200 · 0,03 = 36 €.',
+          'Nach einem Rabatt bleibt der Rest von 100 % übrig – rechne also zuerst aus, wie viel Prozent noch zu zahlen sind. Bei der Steigerung vergleichst du die Zunahme mit dem alten Preis.',
         ],
-        loesung: '45 € · 240 € · 15 % · 36 € → Einerziffern 5, 0, 5, 6.',
+        zufall: (z) => {
+          const w = bis(() => {
+            // 1) Prozentwert: Grundwert ein Vielfaches von 50, Prozentsatz gerade.
+            const grund = z.vielfach(150, 450, 50), satz = z.vielfach(6, 46, 2);
+            // 2) verminderter Grundwert: Preis nach Rabatt. Die Paare sind so gewählt, dass der
+            //    neue Preis ganzzahlig wird und seine Einerziffer über alle Ziffern streut.
+            const altPreis = z.aus([150, 180, 350]);
+            const rabatt = altPreis === 180 ? z.vielfach(10, 40, 5) : z.vielfach(10, 40, 2);
+            const neuPreis = (altPreis * (100 - rabatt)) / 100;
+            // 3) prozentuale Zunahme: alter Preis so, dass die Zunahme aufgeht.
+            const alt = z.aus([100, 150, 200, 250, 300]);
+            const zuSatz = alt % 100 === 0 ? z.ganz(6, 42) : z.vielfach(6, 42, 2);
+            // 4) Jahreszinsen.
+            const kapital = z.vielfach(600, 3200, 100), zins = z.ganz(2, 5);
+            return { grund, satz, altPreis, rabatt, neuPreis, alt, zuSatz, kapital, zins,
+              erg: [(grund * satz) / 100, neuPreis, zuSatz, (kapital / 100) * zins] };
+          }, (w) => verschieden(w.erg));
+          const { grund, satz, altPreis, rabatt, neuPreis, alt, zuSatz, kapital, zins } = w;
+          const wert = (grund * satz) / 100;
+          const zunahme = (alt * zuSatz) / 100, neu = alt + zunahme;
+          const zinsen = (kapital / 100) * zins;
+          const ziffern = w.erg.map(einerziffer).join(', ');
+          return {
+            regel: 'einer',
+            aufgaben: [
+              { frage: `Wie viel sind ${satz} % von ${fmt(grund)} €?`, antwort: antw(wert), einheit: '€' },
+              { frage: `Ein Preis von ${fmt(altPreis)} € wird um ${rabatt} % gesenkt. Wie hoch ist der neue Preis?`, antwort: antw(neuPreis), einheit: '€' },
+              { frage: `Ein Preis steigt von ${fmt(alt)} € auf ${fmt(neu)} €. Um wie viel Prozent ist er gestiegen?`, antwort: antw(zuSatz), einheit: '%' },
+              { frage: `Welche Zinsen bringen ${fmt(kapital)} € in einem Jahr bei ${zins} % Zinssatz?`, antwort: antw(zinsen), einheit: '€' },
+            ],
+            tipp: `${fmt(grund)} : 100 · ${satz} = ${fmt(wert)} €; `
+              + `100 % − ${rabatt} % = ${100 - rabatt} %, und ${fmt(altPreis)} : 100 · ${100 - rabatt} = ${fmt(neuPreis)} €; `
+              + `die Zunahme beträgt ${fmt(neu)} € − ${fmt(alt)} € = ${fmt(zunahme)} €, und ${fmt(zunahme)} : ${fmt(alt)} = ${fmt(zuSatz / 100)} = ${zuSatz} %; `
+              + `${fmt(kapital)} · ${fmt(zins / 100)} = ${fmt(zinsen)} €. `
+              + `Einerziffern: ${ziffern}.`,
+            loesung: `${fmt(wert)} €; ${fmt(neuPreis)} €; ${zuSatz} %; ${fmt(zinsen)} € → Einerziffern ${ziffern}.`,
+          };
+        },
       },
       {
         titel: 'Rätsel 2: Die Schalterfragen',
@@ -410,35 +635,48 @@ const GRUNDRAEUME = [
           'Bei 3 Monaten rechnest du nur ein Viertel der Jahreszinsen. Beim Rabatt bleiben 100 % − 20 % = 80 % übrig.',
           '1,04 = 4 % mehr. 15 € von 60 € sind 25 %. 2 000 · 0,02 = 40 € im Jahr, in 3 Monaten also 10 €. 20 % Rabatt heißt Faktor 0,8.',
         ],
-        loesung: '4 % mehr · 25 % weniger · 10 € · Faktor 0,8 → Z, I, N, S.',
+        loesung: '4 % mehr; 25 % weniger; 10 €; Faktor 0,8 → Z, I, N, S.',
       },
       {
-        titel: 'Rätsel 3: Die Prozentkartei',
-        text: 'In einer Holzkartei stecken sechs Karten mit Prozentangaben zu demselben Grundwert von 160 € – '
-          + 'und sechs Karten mit den passenden Beträgen. Die Kassiererin hat damit ihre Lehrlinge geprüft. '
-          + 'Heute liegen die Karten wild gemischt im Fach.',
-        auftrag: 'Ordne jeder Prozentangabe ihren <strong>Prozentwert</strong> zu.',
-        typ: 'zuordnen',
-        titelLinks: 'Prozentangabe',
-        titelRechts: 'Prozentwert',
-        codeAmEnde: true,
-        saat: 617,
-        paare: [
-          { links: '25 % von 160 €', rechts: '40 €' },
-          { links: '40 % von 160 €', rechts: '64 €' },
-          { links: '15 % von 160 €', rechts: '24 €' },
-          { links: '60 % von 160 €', rechts: '96 €' },
-          { links: '5 % von 160 €', rechts: '8 €' },
-          { links: '125 % von 160 €', rechts: '200 €' },
-        ],
+        titel: 'Rätsel 3: Der Setzkasten der Kassiererin',
+        text: 'Neben dem Schalter steht ein flacher Setzkasten mit Zahlenplättchen und Rechenzeichen. Die '
+          + 'Kassiererin hat vier Beträge auf den Rand des Kastens geschrieben, und zu jedem soll ein Term '
+          + 'gelegt werden, der genau diesen Wert ergibt. Jedes Plättchen darf nur einmal benutzt werden – '
+          + 'benutzen müsst ihr aber nicht alle. Jeder getroffene Wert gibt eine Ziffer des Codes frei.',
+        auftrag: 'Baue zu jedem Zielwert einen passenden Term. Jedes Plättchen lässt sich nur '
+          + '<strong>einmal</strong> benutzen, und du musst nicht alle benutzen.',
+        typ: 'termbauen',
         code: '0208',
-        codeRegel: 'Wenn alle Paare stimmen, erscheint der Code: die <strong>Summe des kleinsten und des größten</strong> Prozentwerts – vierstellig, mit führender Null.',
-        tipps: [
-          'Rechne zuerst 1 % aus: 160 € : 100 = 1,60 €. Damit gehen alle anderen Werte schnell.',
-          'Mehr als 100 % bedeutet mehr als der Grundwert – 125 % von 160 € sind also mehr als 160 €.',
-          '40 €, 64 €, 24 €, 96 €, 8 €, 200 €. Der kleinste Wert ist 8 €, der größte 200 €, zusammen 208.',
+        codeRegel: 'Jeder getroffene Zielwert deckt eine <strong>Ziffer</strong> auf – von oben nach unten.',
+        aufgaben: [
+          {
+            frage: 'So viel sind 25 % von 160 €: Baue einen Term mit dem Wert <strong>40</strong>.',
+            ziel: 40, bausteine: ['160', '100', '25', '4', ':', '·'], zeichen: '0',
+            musterloesung: '160 : 4',
+          },
+          {
+            frage: 'So hoch war der Grundwert, wenn 50 € genau 25 % davon sind: Baue einen Term mit dem Wert <strong>200</strong>.',
+            ziel: 200, bausteine: ['50', '100', '25', '4', '2', ':', '·'], zeichen: '2',
+            musterloesung: '50 · 100 : 25',
+          },
+          {
+            frage: 'So viel Zinsen bringen 500 € in einem Jahr bei 5 %: Baue einen Term mit dem Wert <strong>25</strong>.',
+            ziel: 25, bausteine: ['500', '100', '5', '4', ':', '·', '+'], zeichen: '0',
+            musterloesung: '500 · 5 : 100',
+          },
+          {
+            frage: 'So viel sind 30 % von 160 €: Baue einen Term mit dem Wert <strong>48</strong>.',
+            ziel: 48, bausteine: ['160', '100', '30', '16', '10', ':', '·'], zeichen: '8',
+            musterloesung: '160 : 100 · 30',
+          },
         ],
-        loesung: '25 % → 40 €; 40 % → 64 €; 15 % → 24 €; 60 % → 96 €; 5 % → 8 €; 125 % → 200 €.',
+        tipps: [
+          'Ihr müsst nicht alle Plättchen benutzen – oft reichen zwei Zahlen und ein Rechenzeichen.',
+          'Der Weg über 1 % ist immer möglich: erst durch 100 teilen, dann mit dem Prozentsatz malnehmen. Manchmal geht es kürzer – 25 % sind ein Viertel. Beim Grundwert rechnet ihr umgekehrt: mal 100, dann geteilt durch den Prozentsatz.',
+          '160 : 4 = 40; 50 · 100 : 25 = 5 000 : 25 = 200 (kürzer: 50 · 4); 500 · 5 : 100 = 2 500 : 100 = 25 (kürzer: 100 : 4); '
+            + '160 : 100 · 30 = 1,6 · 30 = 48 (kürzer: 16 · 30 : 10).',
+        ],
+        loesung: '40; 200; 25; 48 → Ziffern 0, 2, 0, 8.',
       },
       {
         titel: 'Rätsel 4: Die Fehlersuche im Kassenbuch',
@@ -472,30 +710,67 @@ const GRUNDRAEUME = [
         loesung: 'Richtig: 20 % von 80 = 16; 12 % von 50 = 6; 75 % von 64 = 48; 8 % von 250 = 20; 150 % von 40 = 60; 5 % von 1 200 = 60. Summe der Prozentsätze 270.',
       },
       {
-        titel: 'Rätsel 5: Die Reihe der Prozentwerte',
-        text: 'Auf dem Rollwagen stehen sechs Kassenzettel, jeder mit einer Prozentrechnung. Die Kassiererin '
-          + 'hat sie nach der Größe des Ergebnisses abgeheftet. Durch den Zugluftstoß beim Öffnen der Tür '
-          + 'liegen sie nun kreuz und quer.',
-        auftrag: 'Ordne die Rechnungen nach ihrem <strong>Ergebnis</strong> – vom kleinsten zum größten.',
-        typ: 'reihenfolge',
-        codeAmEnde: true,
-        saat: 733,
-        elemente: [
-          { text: '40 % von 75' },
-          { text: '30 % von 110' },
-          { text: '18 % von 200' },
-          { text: '25 % von 160' },
-          { text: '70 % von 60' },
-          { text: '12 % von 400' },
-        ],
+        titel: 'Rätsel 5: Die Reklamationsmappe',
+        text: 'In der Reklamationsmappe liegen vier Rechenwege, über die sich Kunden beschwert haben. Die '
+          + 'Kassiererin hat sie damals aufgeschrieben und jeden einzelnen vermasselt – jedes Mal mit einem '
+          + 'Fehler, der in der Prozentrechnung besonders häufig vorkommt. Alles, was auf den Fehler folgt, '
+          + 'ist sauber weitergerechnet, nur eben von der falschen Stelle an.',
+        auftrag: 'Tippe in jedem Rechenweg die Zeile an, in der <strong>zum ersten Mal</strong> etwas falsch ist. '
+          + 'Jede gefundene Zeile deckt eine Ziffer auf.',
+        typ: 'fehlerfinden',
         code: '3048',
-        codeRegel: 'Der Code: das <strong>kleinste</strong> und das <strong>größte</strong> Ergebnis – jeweils zweistellig.',
-        tipps: [
-          'Rechne jedes Ergebnis einzeln aus; am schnellsten geht es über 1 % oder über 10 %.',
-          '10 % von 200 sind 20, also sind 18 % etwas weniger als 40. So kannst du zuerst schätzen und dann genau rechnen.',
-          'Ergebnisse: 36, 33, 30, 40, 48, 42. Das kleinste ist 30, das größte 48.',
+        codeRegel: 'Jede gefundene Zeile deckt eine <strong>Ziffer</strong> auf – von oben nach unten.',
+        faelle: [
+          {
+            titel: 'Ein Preis steigt von 80 € auf 100 €. Um wie viel Prozent?',
+            zeilen: [
+              'Die Erhöhung beträgt 100 € − 80 € = 20 €.',
+              'Der Grundwert ist der neue Preis, also 100 €.',
+              '20 € : 100 € = 0,2',
+              'Antwort: Der Preis ist um 20 % gestiegen.',
+            ],
+            falsch: 1, zeichen: '3',
+          },
+          {
+            titel: 'Eine Jacke kostet nach 20 % Rabatt noch 64 €. Wie teuer war sie vorher?',
+            zeilen: [
+              '20 % Rabatt bedeutet, dass noch 80 % zu zahlen sind – der Faktor ist also 0,8.',
+              'Den alten Preis erhält man, indem man den Endpreis durch den Faktor teilt: 64 € : 0,8.',
+              '64 € : 0,8 = 8 €',
+              'Antwort: Die Jacke kostete vorher 8 €.',
+            ],
+            falsch: 2, zeichen: '0',
+          },
+          {
+            titel: 'Welche Zinsen bringen 2 400 € in 3 Monaten bei 2 % im Jahr?',
+            zeilen: [
+              'Die Zinsen für ein ganzes Jahr betragen 2 400 € · 0,02 = 48 €.',
+              'Gefragt sind aber nur die Zinsen für 3 Monate.',
+              '3 Monate sind ein Viertel eines Jahres.',
+              'Ein Viertel von 48 € erhält man durch Halbieren: 48 € : 2 = 24 €.',
+              'Antwort: Die Zinsen betragen 24 €.',
+            ],
+            falsch: 3, zeichen: '4',
+          },
+          {
+            titel: 'Ein Preis von 200 € steigt um 10 % und sinkt danach um 10 %. Wie hoch ist er dann?',
+            zeilen: [
+              'Nach der Erhöhung kostet die Ware 200 € · 1,1 = 220 €.',
+              'Jetzt sinkt der Preis um 10 %, gerechnet wird also mit dem Faktor 0,9.',
+              'Die Senkung bezieht sich auf den ursprünglichen Preis von 200 €.',
+              '200 € · 0,9 = 180 €',
+              'Antwort: Am Ende kostet die Ware 180 €.',
+            ],
+            falsch: 2, zeichen: '8',
+          },
         ],
-        loesung: '30 (40 % von 75) < 33 < 36 < 40 < 42 < 48 (12 % von 400).',
+        tipps: [
+          'Prüft jede Zeile für sich: Stimmt genau dieser Schritt noch? In einem der vier Wege steckt der Fehler schon im Ansatz, in den anderen erst mitten in der Rechnung.',
+          'Der Grundwert ist immer der Wert, auf den sich die Prozentangabe bezieht – bei einer Veränderung also der <em>alte</em> Wert. Beim Teilen durch eine Zahl kleiner als 1 wird das Ergebnis größer, nicht kleiner. Und ein Viertel bekommt man durch zweimaliges Halbieren.',
+          'Weg 1: Zeile 2 – Grundwert ist der alte Preis 80 €, also 20 : 80 = 0,25 = 25 %. Weg 2: Zeile 3 – 64 € : 0,8 = 80 €, nicht 8 €. '
+            + 'Weg 3: Zeile 4 – ein Viertel heißt 48 € : 4 = 12 €. Weg 4: Zeile 3 – die Senkung bezieht sich auf die 220 €: 220 € · 0,9 = 198 €. → 3, 0, 4, 8.',
+        ],
+        loesung: 'Zeile 2; Zeile 3; Zeile 4; Zeile 3 → 3, 0, 4, 8. Richtig wären 25 %; 80 €; 12 €; 198 €.',
       },
       {
         titel: 'Rätsel 6: Das Sparbuch',
@@ -504,20 +779,49 @@ const GRUNDRAEUME = [
           + 'gesuchten Ursprungspreis und einen Wachstumsfaktor.',
         auftrag: 'Beantworte die vier Fragen. Jede richtige Antwort deckt einen Buchstaben auf.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Auf 500 € gibt es 2 % Zinsen im Jahr. Wie viel Geld ist nach einem Jahr auf dem Konto?', antwort: '510', einheit: '€', zeichen: 'B' },
-          { frage: '1 000 € werden mit 5 % für zwei Jahre angelegt, die Zinsen bleiben auf dem Konto. Wie viel Geld ist es am Ende?', antwort: ['1102,50', '1102,5'], einheit: '€', zeichen: 'A' },
-          { frage: 'Ein Pullover kostet nach 30 % Rabatt noch 42 €. Wie teuer war er vorher?', antwort: '60', einheit: '€', zeichen: 'N' },
-          { frage: 'Welcher Wachstumsfaktor gehört zu einer Erhöhung um 15 %?', antwort: ['1,15', '1.15'], zeichen: 'K' },
-        ],
         code: 'BANK',
         codeRegel: 'Jede richtige Antwort deckt einen Buchstaben auf – von oben nach unten.',
         tipps: [
-          'Mit dem Wachstumsfaktor geht es schnell: 2 % mehr bedeutet mal 1,02.',
-          'Beim Zinseszins wird zweimal mit demselben Faktor multipliziert: 1 000 · 1,05 · 1,05. Beim Rabatt sind 42 € gerade 70 % des alten Preises.',
-          '500 · 1,02 = 510 €; 1 000 · 1,05² = 1 102,50 €; 42 : 70 · 100 = 60 €; 15 % mehr bedeutet Faktor 1,15.',
+          'Mit dem Wachstumsfaktor geht es schnell: Ein Prozent mehr bedeutet mal 1,01.',
+          'Beim Zinseszins wird zweimal mit demselben Faktor multipliziert. Beim Rabatt ist der Endpreis der verminderte Grundwert – teile ihn durch den passenden Faktor.',
         ],
-        loesung: '510 € · 1 102,50 € · 60 € · 1,15 → B, A, N, K.',
+        zufall: (z) => {
+          const wort = 'BANK';   // Buchstabencode bleibt fest, nur die Zahlen würfeln
+          const w = bis(() => {
+            const kapital = z.vielfach(400, 1000, 100), zins = z.ganz(2, 5);
+            // Zinseszins über zwei Jahre – in Cent gerechnet, damit nichts rundet.
+            const [zins2, schritt2] = z.aus([[5, 400], [4, 1250]]);
+            const kapital2 = z.vielfach(schritt2, 5000, schritt2);
+            // Rabatt rückwärts: der Endpreis bleibt ein ganzer Eurobetrag.
+            const rabatt = z.aus([10, 15, 20, 25, 30, 40]);
+            const vorher = z.vielfach(40, 180, 20);
+            const wachstum = z.aus([5, 12, 15, 18, 22, 24, 25, 32, 35, 36, 45]);
+            return { kapital, zins, zins2, kapital2, rabatt, vorher, wachstum,
+              erg: [kapital + (kapital / 100) * zins, (kapital2 * (100 + zins2) ** 2) / 10000, vorher] };
+          }, (w) => verschieden(w.erg));
+          const { kapital, zins, zins2, kapital2, rabatt, vorher, wachstum } = w;
+          const nachEinemJahr = kapital + (kapital / 100) * zins;
+          // Beide Fälle gehen auf ganze Euro auf – in Cent gerechnet, dann geteilt.
+          const ende = (kapital2 * (100 + zins2) ** 2) / 10000;
+          const endPreis = (vorher * (100 - rabatt)) / 100;
+          const faktor = (100 + wachstum) / 100;
+          return {
+            regel: 'buchstaben',
+            code: wort,
+            aufgaben: [
+              { frage: `Auf ${fmt(kapital)} € gibt es ${zins} % Zinsen im Jahr. Wie viel Geld ist nach einem Jahr auf dem Konto?`, antwort: antw(nachEinemJahr), einheit: '€' },
+              { frage: `${fmt(kapital2)} € werden mit ${zins2} % für zwei Jahre angelegt, die Zinsen bleiben auf dem Konto. Wie viel Geld ist es am Ende?`, antwort: antw(ende), einheit: '€' },
+              { frage: `Ein Pullover kostet nach ${rabatt} % Rabatt noch ${fmt(endPreis)} €. Wie teuer war er vorher?`, antwort: antw(vorher), einheit: '€' },
+              { frage: `Welcher Wachstumsfaktor gehört zu einer Erhöhung um ${wachstum} %?`, antwort: antw(faktor) },
+            ],
+            tipp: `${fmt(kapital)} · ${fmt((100 + zins) / 100)} = ${fmt(nachEinemJahr)} €; `
+              + `${fmt(kapital2)} · ${fmt((100 + zins2) / 100)} · ${fmt((100 + zins2) / 100)} = ${fmt(ende)} €; `
+              + `${fmt(endPreis)} : ${fmt((100 - rabatt) / 100)} = ${fmt(vorher)} €; `
+              + `${wachstum} % mehr bedeutet Faktor ${fmt(faktor)}. `
+              + `Die vier Buchstaben lauten ${wort.split('').join(', ')}.`,
+            loesung: `${fmt(nachEinemJahr)} €; ${fmt(ende)} €; ${fmt(vorher)} €; ${fmt(faktor)} → ${wort.split('').join(', ')}.`,
+          };
+        },
       },
     ],
   },
@@ -548,20 +852,44 @@ const GRUNDRAEUME = [
           + 'die richtige Zahl einsetzt. Unter den Waagen stehen vier leere Kästchen.',
         auftrag: 'Löse die vier Gleichungen. Die <strong>Einerziffer</strong> jeder Lösung ist eine Codeziffer.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Löse: 4x + 7 = 31', antwort: '6', zeichen: '6' },
-          { frage: 'Löse: 5x − 12 = 3x + 8', antwort: '10', zeichen: '0' },
-          { frage: 'Löse: 3 · (x − 2) = 18', antwort: '8', zeichen: '8' },
-          { frage: 'Löse: x : 4 + 5 = 12', antwort: '28', zeichen: '8' },
-        ],
-        code: '6088',
         codeRegel: 'Die Einerziffern der vier Lösungen – von oben nach unten.',
         tipps: [
           'Bringe zuerst alle Zahlen auf die eine und alle x auf die andere Seite.',
-          'Was auf einer Seite addiert wird, ziehst du auf beiden Seiten ab. Bei 3 · (x − 2) = 18 kannst du zuerst durch 3 teilen.',
-          '4x = 24 → x = 6; 2x = 20 → x = 10; x − 2 = 6 → x = 8; x : 4 = 7 → x = 28. Einerziffern: 6, 0, 8, 8.',
+          'Was auf einer Seite addiert wird, ziehst du auf beiden Seiten ab. Steht vor einer Klammer ein Faktor, kannst du zuerst durch diesen Faktor teilen.',
         ],
-        loesung: 'x = 6 · x = 10 · x = 8 · x = 28 → Einerziffern 6, 0, 8, 8.',
+        zufall: (z) => {
+          const w = bis(() => {
+            const a1 = z.ganz(3, 9), x1 = z.ganz(3, 12), b1 = z.ganz(4, 20);
+            const a2 = z.ganz(4, 9), c2 = z.ganz(2, 6), b2 = z.ganz(5, 20), x2 = z.ganz(3, 14);
+            const a3 = z.ganz(2, 6), b3 = z.ganz(2, 9), x3 = z.ganz(5, 16);
+            const a4 = z.ganz(3, 8), b4 = z.ganz(3, 12), q4 = z.ganz(4, 15);
+            return { a1, x1, b1, a2, c2, b2, x2, a3, b3, x3, a4, b4, q4,
+              erg: [x1, x2, x3, q4 * a4] };
+          }, (w) => verschieden(w.erg)
+            && w.a2 - w.c2 >= 2 && (w.a2 - w.c2) * w.x2 > w.b2
+            && w.x3 > w.b3 + 1);
+          const { a1, x1, b1, a2, c2, b2, x2, a3, b3, x3, a4, b4, q4 } = w;
+          const c1 = a1 * x1 + b1;
+          const d2 = (a2 - c2) * x2 - b2;
+          const c3 = a3 * (x3 - b3);
+          const x4 = q4 * a4, c4 = q4 + b4;
+          const ziffern = w.erg.map(einerziffer).join(', ');
+          return {
+            regel: 'einer',
+            aufgaben: [
+              { frage: `Löse: ${a1}x + ${b1} = ${fmt(c1)}`, antwort: antw(x1) },
+              { frage: `Löse: ${a2}x − ${b2} = ${c2}x + ${fmt(d2)}`, antwort: antw(x2) },
+              { frage: `Löse: ${a3} · (x − ${b3}) = ${fmt(c3)}`, antwort: antw(x3) },
+              { frage: `Löse: x : ${a4} + ${b4} = ${c4}`, antwort: antw(x4) },
+            ],
+            tipp: `${a1}x = ${fmt(c1 - b1)} → x = ${x1}; `
+              + `${a2 - c2}x = ${fmt(d2 + b2)} → x = ${x2}; `
+              + `x − ${b3} = ${fmt(c3 / a3)} → x = ${x3}; `
+              + `x : ${a4} = ${q4} → x = ${fmt(x4)}. `
+              + `Einerziffern: ${ziffern}.`,
+            loesung: `x = ${x1}; x = ${x2}; x = ${x3}; x = ${fmt(x4)} → Einerziffern ${ziffern}.`,
+          };
+        },
       },
       {
         titel: 'Rätsel 2: Die Regeltafel des Eichmeisters',
@@ -583,35 +911,48 @@ const GRUNDRAEUME = [
           'Beim Ausmultiplizieren wird jeder Summand in der Klammer mit dem Faktor multipliziert. Mit 0 zu multiplizieren macht aus jeder Gleichung 0 = 0 – das hilft nicht weiter.',
           '3a + 5a − 2a = 6a; 2 · (x + 4) = 2x + 8; erlaubt ist dieselbe Rechnung auf beiden Seiten; 2 · (−3) + 10 = 4.',
         ],
-        loesung: '6a · 2x + 8 · beidseitig subtrahieren · 4 → T, E, R, M.',
+        loesung: '6a; 2x + 8; beidseitig subtrahieren; 4 → T, E, R, M.',
       },
       {
-        titel: 'Rätsel 3: Worte werden Terme',
-        text: 'In einer Schublade liegen zwölf Kärtchen: sechs mit Sätzen, wie der Eichmeister sie diktiert hat, '
-          + 'und sechs mit den passenden Termen. Die Reihenfolge der Wörter entscheidet – „das Dreifache der '
-          + 'verminderten Zahl" ist eben etwas anderes als „das verminderte Dreifache".',
-        auftrag: 'Ordne jedem Satz den passenden <strong>Term</strong> zu.',
-        typ: 'zuordnen',
-        titelLinks: 'in Worten',
-        titelRechts: 'Term',
-        codeAmEnde: true,
-        saat: 827,
-        paare: [
-          { links: 'das Dreifache einer Zahl, vermindert um 4', rechts: '3x − 4' },
-          { links: 'das Dreifache der um 4 verminderten Zahl', rechts: '3 · (x − 4)' },
-          { links: 'die Hälfte der um 4 vergrößerten Zahl', rechts: '(x + 4) : 2' },
-          { links: 'die um 4 vergrößerte Hälfte einer Zahl', rechts: 'x : 2 + 4' },
-          { links: 'das Quadrat einer Zahl, vermehrt um 4', rechts: 'x² + 4' },
-          { links: 'das Quadrat der um 4 vermehrten Zahl', rechts: '(x + 4)²' },
-        ],
+        titel: 'Rätsel 3: Die verdeckten Gewichte',
+        text: 'Auf vier Waagen liegt links jeweils ein verdecktes Gewicht, dessen Masse auf einem abgerissenen '
+          + 'Zettel stand. Der Eichmeister hat nur noch notiert, in welchem Bereich die Zahl liegen muss. '
+          + 'Rechnen darf man natürlich – aber man darf auch Zahlen einsetzen und schauen, ob die Waage kippt: '
+          + 'Jeder Versuch bleibt stehen und meldet, ob er zu klein oder zu groß war.',
+        auftrag: 'Gib eine Zahl ein und tippe auf „Probieren". Jeder Versuch bleibt stehen und meldet '
+          + '<strong>zu klein</strong> oder <strong>zu groß</strong>. Kreise den Wert so ein.',
+        typ: 'probieren',
         code: '1181',
-        codeRegel: 'Wenn alle Paare stimmen, erscheint der Code: die Werte von <strong>3x − 4</strong> und <strong>(x + 4)²</strong> für x = 5 – jeweils zweistellig.',
-        tipps: [
-          'Lies jeden Satz langsam: Was wird zuerst getan, was danach? Das Zuerst steht in der Klammer.',
-          '„Das Dreifache der um 4 verminderten Zahl" heißt: erst 4 abziehen, dann verdreifachen.',
-          'Für x = 5 ist 3 · 5 − 4 = 11 und (5 + 4)² = 81. Der Code lautet 1181.',
+        codeRegel: 'Die <strong>Einerziffern</strong> der vier gefundenen Zahlen – von oben nach unten.',
+        aufgaben: [
+          {
+            frage: 'Für welche Zahl x gilt 7x + 13 = 160?',
+            antwort: '21', von: 1, bis: 40, zeichen: '1',
+            pruefe: (x) => `7 · ${dz(x)} + 13 = ${dz(7 * x + 13)}`,
+          },
+          {
+            frage: 'Für welche Zahl x gilt 4 · (x + 5) = 184?',
+            antwort: '41', von: 1, bis: 80, zeichen: '1',
+            pruefe: (x) => `4 · (${dz(x)} + 5) = ${dz(4 * (x + 5))}`,
+          },
+          {
+            frage: 'Für welche Zahl x gilt 9x − 24 = 5x + 88?',
+            antwort: '28', von: 1, bis: 60, zeichen: '8',
+            pruefe: (x) => `links ${dz(9 * x - 24)}, rechts ${dz(5 * x + 88)}`,
+          },
+          {
+            frage: 'Ein Rechteck ist 8 cm länger als breit und hat den Umfang 140 cm. Wie breit ist es?',
+            antwort: '31', von: 5, bis: 60, einheit: 'cm', zeichen: '1',
+            pruefe: (x) => `Breite ${dz(x)} cm, Länge ${dz(x + 8)} cm → Umfang ${dz(4 * x + 16)} cm`,
+          },
         ],
-        loesung: '3x − 4; 3 · (x − 4); (x + 4) : 2; x : 2 + 4; x² + 4; (x + 4)².',
+        tipps: [
+          'Fang mit einem Versuch mitten im Bereich an. Jede Rückmeldung halbiert den Bereich, in dem die Zahl noch liegen kann – nach vier bis fünf Versuchen bist du da.',
+          'Du kannst jede Aufgabe auch rückwärts rechnen: bei der ersten erst 13 abziehen, dann durch 7 teilen. Bei der dritten bringst du zuerst alle x auf eine Seite. Beim Rechteck nennst du die Breite x und die Länge x + 8.',
+          '7 · 21 + 13 = 160, also x = 21; 4 · (41 + 5) = 4 · 46 = 184, also x = 41; 9x − 24 = 5x + 88 → 4x = 112 → x = 28; '
+            + '4x + 16 = 140 → 4x = 124 → x = 31 cm. Einerziffern: 1, 1, 8, 1.',
+        ],
+        loesung: 'x = 21; x = 41; x = 28; Breite 31 cm → Einerziffern 1, 1, 8, 1.',
       },
       {
         titel: 'Rätsel 4: Die Gleichungen mit demselben Gewicht',
@@ -639,52 +980,92 @@ const GRUNDRAEUME = [
         loesung: 'Treffer: 2x+3 = 11; 5x−8 = 12; x+9 = 13; 3x = x+8; 20:x = 5; 7x−10 = 18. Die übrigen haben die Lösungen 5, 3, 16, 3, 3 und 8.',
       },
       {
-        titel: 'Rätsel 5: Die Reihe der Lösungen',
-        text: 'An einer langen Stange hängen sechs Gewichte, auf jedem steht eine Gleichung. Der Eichmeister '
-          + 'hängt sie immer nach der Größe ihrer Lösung auf, von links nach rechts aufsteigend. '
-          + 'Die Nachtschicht hat sie offenbar wild zurückgehängt.',
-        auftrag: 'Ordne die Gleichungen nach ihrer <strong>Lösung</strong> – von der kleinsten zur größten.',
-        typ: 'reihenfolge',
-        codeAmEnde: true,
-        saat: 929,
-        elemente: [
-          { text: '2x = 6' },
-          { text: 'x + 7 = 12' },
-          { text: '3x − 4 = 20' },
-          { text: '4x + 2 = 42' },
-          { text: '2 · (x + 3) = 30' },
-          { text: '5x = 75' },
-        ],
+        titel: 'Rätsel 5: Der Setzkasten des Eichmeisters',
+        text: 'Auf der Werkbank steht ein Setzkasten mit Zahlen- und Rechenplättchen, Klammern inbegriffen. '
+          + 'Vier Massen und Längen hat der Eichmeister mit Kreide auf das Holz geschrieben, und zu jeder soll '
+          + 'ein Term gelegt werden, der genau diesen Wert ergibt. Dabei kommt es wie immer auf die Klammern an: '
+          + 'Jedes Plättchen darf nur einmal benutzt werden, alle müsst ihr nicht benutzen.',
+        auftrag: 'Baue zu jedem Zielwert einen passenden Term. Jedes Plättchen lässt sich nur '
+          + '<strong>einmal</strong> benutzen, und du musst nicht alle benutzen.',
+        typ: 'termbauen',
         code: '1215',
-        codeRegel: 'Der Code: die <strong>beiden größten</strong> Lösungen – jeweils zweistellig und in dieser Reihenfolge.',
-        tipps: [
-          'Löse jede Gleichung einzeln und schreibe die Lösung daneben.',
-          'Bei 2 · (x + 3) = 30 teilst du zuerst durch 2, dann bleibt x + 3 = 15.',
-          'Lösungen: 3, 5, 8, 10, 12, 15. Die beiden größten sind 12 und 15.',
+        codeRegel: 'Jeder getroffene Zielwert deckt eine <strong>Ziffer</strong> auf – von oben nach unten.',
+        aufgaben: [
+          {
+            frage: 'Auf beiden Schalen liegt je ein 12-kg-Stein und ein 5-kg-Gewicht. So schwer ist alles zusammen: '
+              + 'Baue einen Term mit dem Wert <strong>34</strong>.',
+            ziel: 34, bausteine: ['2', '12', '5', '3', '(', ')', '·', '+', ':'], zeichen: '1',
+            musterloesung: '2 · (12 + 5)',
+          },
+          {
+            frage: 'Drei Gewichte von je 16 kg und dazu ein 9-kg-Gewicht: Baue einen Term mit dem Wert <strong>57</strong>.',
+            ziel: 57, bausteine: ['3', '16', '9', '2', '·', '+', ':'], zeichen: '2',
+            musterloesung: '3 · 16 + 9',
+          },
+          {
+            frage: 'Der Umfang einer rechteckigen Platte, 27 cm lang und 18 cm breit: Baue einen Term mit dem Wert <strong>90</strong>.',
+            ziel: 90, bausteine: ['2', '27', '18', '5', '(', ')', '·', '+', '−'], zeichen: '1',
+            musterloesung: '2 · (27 + 18)',
+          },
+          {
+            frage: 'Von vier Stangen zu je 21 cm werden jeweils 3 cm abgesägt. So lang sind die Reste zusammen: '
+              + 'Baue einen Term mit dem Wert <strong>72</strong>.',
+            ziel: 72, bausteine: ['4', '21', '3', '2', '(', ')', '·', '−', '+'], zeichen: '5',
+            musterloesung: '4 · (21 − 3)',
+          },
         ],
-        loesung: '3 < 5 < 8 < 10 < 12 < 15 – die beiden größten Lösungen ergeben 1215.',
+        tipps: [
+          'Überlegt zuerst in Worten, was zuerst passiert und was danach – das Zuerst gehört in die Klammer.',
+          'Bei der zweiten Aufgabe braucht ihr keine Klammer: Punkt vor Strich erledigt das von allein. Bei den drei anderen muss zuerst addiert oder subtrahiert und erst danach malgenommen werden.',
+          '2 · (12 + 5) = 2 · 17 = 34; 3 · 16 + 9 = 48 + 9 = 57; 2 · (27 + 18) = 2 · 45 = 90; 4 · (21 − 3) = 4 · 18 = 72.',
+        ],
+        loesung: '34; 57; 90; 72 → Ziffern 1, 2, 1, 5.',
       },
       {
         titel: 'Rätsel 6: Die letzte Waage',
         text: 'Ganz hinten steht die größte Waage der Kammer, auf ihren Schalen liegen Steine und Gewichte. '
-          + 'Vier Fragen stehen auf dem Messingschild davor – eine Sachaufgabe, zwei Gleichungen und eine '
-          + 'Bruchgleichung. Erst wenn alle vier stimmen, gibt die Waage den Schlüssel frei.',
+          + 'Vier Fragen stehen auf dem Messingschild davor – eine Sachaufgabe, eine Gleichung, ein Term zum '
+          + 'Einsetzen und eine Bruchgleichung. Erst wenn alle vier stimmen, gibt die Waage den Schlüssel frei.',
         auftrag: 'Beantworte die vier Fragen. Jede richtige Antwort deckt einen Buchstaben auf.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Links liegen 3 gleich schwere Steine und 2 kg, rechts 14 kg. Die Waage ist im Gleichgewicht. Wie schwer ist ein Stein?', antwort: '4', einheit: 'kg', zeichen: 'W' },
-          { frage: 'Löse: 6x − 5 = 4x + 11', antwort: '8', zeichen: 'A' },
-          { frage: 'Ein Rechteck hat den Umfang 2 · (x + 7). Wie groß ist der Umfang für x = 5?', antwort: '24', zeichen: 'A' },
-          { frage: 'Löse die Bruchgleichung 24 : x = 6', antwort: '4', zeichen: 'G' },
-        ],
         code: 'WAAG',
         codeRegel: 'Jede richtige Antwort deckt einen Buchstaben auf – von oben nach unten.',
         tipps: [
-          'Übersetze die Waage in eine Gleichung: 3x + 2 = 14.',
-          'Bei 6x − 5 = 4x + 11 ziehst du auf beiden Seiten 4x ab und addierst 5. Bei 24 : x = 6 fragst du: Welche Zahl passt 6-mal in 24?',
-          '3x + 2 = 14 → x = 4 kg; 2x = 16 → x = 8; 2 · (5 + 7) = 24; 24 : 4 = 6, also x = 4.',
+          'Übersetze die Waage in eine Gleichung: Ein Stein ist das Unbekannte, und beide Seiten sind gleich schwer.',
+          'Steht x auf beiden Seiten, bringst du zuerst alle x auf eine Seite. Bei einer Bruchgleichung fragst du: Welche Zahl passt so oft in den Zähler?',
         ],
-        loesung: '4 kg · x = 8 · Umfang 24 · x = 4 → W, A, A, G.',
+        zufall: (z) => {
+          const wort = 'WAAG';   // Buchstabencode bleibt fest, nur die Zahlen würfeln
+          const w = bis(() => {
+            const steine = z.ganz(2, 5), stein = z.ganz(2, 9), zusatz = z.ganz(2, 8);
+            const a = z.ganz(4, 9), c = z.ganz(2, 6), b = z.ganz(4, 18), x = z.ganz(3, 14);
+            const k = z.ganz(4, 12), v = z.ganz(3, 11);
+            const teiler = z.ganz(3, 8), loesungB = z.ganz(3, 9);
+            return { steine, stein, zusatz, a, c, b, x, k, v, teiler, loesungB,
+              erg: [stein, x, 2 * (v + k), loesungB] };
+          }, (w) => verschieden(w.erg) && w.a - w.c >= 2 && (w.a - w.c) * w.x > w.b);
+          const { steine, stein, zusatz, a, c, b, x, k, v, teiler, loesungB } = w;
+          const rechts = steine * stein + zusatz;
+          const d = (a - c) * x - b;
+          const umfang = 2 * (v + k);
+          const zaehler = teiler * loesungB;
+          return {
+            regel: 'buchstaben',
+            code: wort,
+            aufgaben: [
+              { frage: `Links liegen ${steine} gleich schwere Steine und ${zusatz} kg, rechts ${rechts} kg. Die Waage ist im Gleichgewicht. Wie schwer ist ein Stein?`, antwort: antw(stein), einheit: 'kg' },
+              { frage: `Löse: ${a}x − ${b} = ${c}x + ${fmt(d)}`, antwort: antw(x) },
+              { frage: `Ein Rechteck hat den Umfang 2 · (x + ${k}). Wie groß ist der Umfang für x = ${v}?`, antwort: antw(umfang) },
+              { frage: `Löse die Bruchgleichung ${fmt(zaehler)} : x = ${teiler}`, antwort: antw(loesungB) },
+            ],
+            tipp: `${steine}x + ${zusatz} = ${rechts} → ${steine}x = ${rechts - zusatz} → x = ${stein} kg; `
+              + `${a - c}x = ${fmt(d + b)} → x = ${x}; `
+              + `2 · (${v} + ${k}) = 2 · ${v + k} = ${umfang}; `
+              + `${fmt(zaehler)} : ${loesungB} = ${teiler}, also x = ${loesungB}. `
+              + `Die vier Buchstaben lauten ${wort.split('').join(', ')}.`,
+            loesung: `${stein} kg; x = ${x}; Umfang ${umfang}; x = ${loesungB} → ${wort.split('').join(', ')}.`,
+          };
+        },
       },
     ],
   },
@@ -715,20 +1096,39 @@ const GRUNDRAEUME = [
           + 'Am Rand des Bretts sind vier Kästchen eingeritzt.',
         auftrag: 'Berechne die vier Winkel. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Wie groß ist der Nebenwinkel von 115°?', antwort: '65', einheit: '°', zeichen: '5' },
-          { frage: 'Ein Dreieck hat die Winkel 48° und 69°. Wie groß ist der dritte Winkel?', antwort: '63', einheit: '°', zeichen: '3' },
-          { frage: 'Ein Außenwinkel ist so groß wie die Summe der beiden nicht anliegenden Innenwinkel. Wie groß ist er bei 52° und 46°?', antwort: '98', einheit: '°', zeichen: '8' },
-          { frage: 'Ein gleichschenkliges Dreieck hat den Spitzenwinkel 40°. Wie groß ist ein Basiswinkel?', antwort: '70', einheit: '°', zeichen: '0' },
-        ],
-        code: '5380',
         codeRegel: 'Die Einerziffern der vier Winkel – von oben nach unten.',
         tipps: [
-          'Nebenwinkel ergänzen sich zu 180°, die Innenwinkel eines Dreiecks ebenfalls.',
-          'Im gleichschenkligen Dreieck sind die beiden Basiswinkel gleich groß: (180° − 40°) : 2.',
-          '180 − 115 = 65°; 180 − 48 − 69 = 63°; 52 + 46 = 98°; (180 − 40) : 2 = 70°.',
+          'Nebenwinkel ergänzen sich zu 180°, die drei Innenwinkel eines Dreiecks ebenfalls.',
+          'Im gleichschenkligen Dreieck sind die beiden Basiswinkel gleich groß: Zieh den Spitzenwinkel von 180° ab und halbiere den Rest.',
         ],
-        loesung: '65° · 63° · 98° · 70° → Einerziffern 5, 3, 8, 0.',
+        zufall: (z) => {
+          const w = bis(() => {
+            const neben = z.ganz(95, 160);
+            const w1 = z.ganz(35, 80), w2 = z.ganz(40, 85);
+            const aussen1 = z.ganz(30, 70), aussen2 = z.ganz(30, 70);
+            const spitze = z.vielfach(20, 120, 2);
+            return { neben, w1, w2, aussen1, aussen2, spitze,
+              erg: [180 - neben, 180 - w1 - w2, aussen1 + aussen2, (180 - spitze) / 2] };
+          }, (w) => verschieden(w.erg)
+            && w.erg[1] >= 15 && w.erg[2] >= 65 && w.aussen1 !== w.aussen2 && w.w1 !== w.w2);
+          const { neben, w1, w2, aussen1, aussen2, spitze } = w;
+          const ziffern = w.erg.map(einerziffer).join(', ');
+          return {
+            regel: 'einer',
+            aufgaben: [
+              { frage: `Wie groß ist der Nebenwinkel von ${neben}°?`, antwort: antw(180 - neben), einheit: '°' },
+              { frage: `Ein Dreieck hat die Winkel ${w1}° und ${w2}°. Wie groß ist der dritte Winkel?`, antwort: antw(180 - w1 - w2), einheit: '°' },
+              { frage: `Ein Außenwinkel ist so groß wie die Summe der beiden nicht anliegenden Innenwinkel. Wie groß ist er bei ${aussen1}° und ${aussen2}°?`, antwort: antw(aussen1 + aussen2), einheit: '°' },
+              { frage: `Ein gleichschenkliges Dreieck hat den Spitzenwinkel ${spitze}°. Wie groß ist ein Basiswinkel?`, antwort: antw((180 - spitze) / 2), einheit: '°' },
+            ],
+            tipp: `180 − ${neben} = ${180 - neben}°; `
+              + `180 − ${w1} − ${w2} = ${180 - w1 - w2}°; `
+              + `${aussen1} + ${aussen2} = ${aussen1 + aussen2}°; `
+              + `(180 − ${spitze}) : 2 = ${180 - spitze} : 2 = ${(180 - spitze) / 2}°. `
+              + `Einerziffern: ${ziffern}.`,
+            loesung: `${180 - neben}°; ${180 - w1 - w2}°; ${aussen1 + aussen2}°; ${(180 - spitze) / 2}° → Einerziffern ${ziffern}.`,
+          };
+        },
       },
       {
         titel: 'Rätsel 2: Die Steinmetztafel',
@@ -750,35 +1150,48 @@ const GRUNDRAEUME = [
           'Ein Viereck lässt sich durch eine Diagonale in zwei Dreiecke zerlegen.',
           'Scheitelwinkel sind gleich groß, Stufenwinkel an Parallelen ebenfalls. SWS steht für Seite-Winkel-Seite. Zwei Dreiecke ergeben 2 · 180° = 360°.',
         ],
-        loesung: 'gleich groß · gleich groß · SWS · 360° → E, C, K, E.',
+        loesung: 'gleich groß; gleich groß; SWS; 360° → E, C, K, E.',
       },
       {
-        titel: 'Rätsel 3: Die fehlenden Winkel',
-        text: 'Sechs Dreiecksrisse hängen an der Wand, bei jedem fehlt genau ein Winkel. Daneben liegen sechs '
-          + 'Zettel mit den fehlenden Größen. Der Baumeister hat sie heute Morgen vom Haken geweht – '
-          + 'jetzt passt nichts mehr zusammen.',
-        auftrag: 'Ordne jedem Dreieck seinen <strong>fehlenden Winkel</strong> zu.',
-        typ: 'zuordnen',
-        titelLinks: 'gegebene Winkel',
-        titelRechts: 'fehlender Winkel',
-        codeAmEnde: true,
-        saat: 1033,
-        paare: [
-          { links: 'Dreieck mit 90° und 35°', rechts: '55°' },
-          { links: 'Dreieck mit 60° und 60°', rechts: '60°' },
-          { links: 'gleichschenklig, Spitzenwinkel 100°', rechts: '40°' },
-          { links: 'Dreieck mit 25° und 45°', rechts: '110°' },
-          { links: 'Dreieck mit 90° und 18°', rechts: '72°' },
-          { links: 'gleichschenklig, Basiswinkel 65°', rechts: '50°' },
-        ],
+        titel: 'Rätsel 3: Die verstellbaren Winkellehren',
+        text: 'An der Längswand hängen vier verstellbare Winkellehren aus Messing. An jeder lässt sich der '
+          + 'Winkel stufenlos verstellen, und über jeder steht auf einem Schildchen, was mit dem eingestellten '
+          + 'Winkel passieren soll. Eine kleine Anzeige verrät nur die Wirkung der Einstellung – ob sie richtig '
+          + 'ist, sagt sie nicht. Erst wenn alle vier Lehren richtig stehen, gibt das Schloss nach.',
+        auftrag: 'Schiebe jeden Regler, bis der eingestellte Winkel passt. Die Anzeige zeigt dir die '
+          + '<strong>Wirkung</strong> deines Wertes, nicht die Lösung.',
+        typ: 'schieben',
         code: '0150',
-        codeRegel: 'Wenn alle Paare stimmen, erscheint der Code: die <strong>Summe des kleinsten und des größten</strong> fehlenden Winkels – vierstellig, mit führender Null.',
-        tipps: [
-          'Die Innenwinkelsumme im Dreieck beträgt immer 180°.',
-          'Bei „gleichschenklig, Spitzenwinkel 100°" sind die beiden Basiswinkel gesucht und gleich groß. Bei „Basiswinkel 65°" fehlt der Spitzenwinkel.',
-          'Die fehlenden Winkel sind 55°, 60°, 40°, 110°, 72° und 50°. Der kleinste ist 40°, der größte 110°, zusammen 150°.',
+        codeRegel: 'Die <strong>Einerziffern</strong> der vier eingestellten Winkel – von oben nach unten.',
+        aufgaben: [
+          {
+            frage: 'Stelle den Winkel so ein, dass sein <strong>Nebenwinkel</strong> 110° misst.',
+            von: 10, bis: 170, schritt: 2, antwort: 70, einheit: '°', zeichen: '0',
+            anzeige: (w) => `Nebenwinkel: ${180 - w}°`,
+          },
+          {
+            frage: 'Stelle den <strong>Spitzenwinkel</strong> eines gleichschenkligen Dreiecks so ein, dass ein Basiswinkel 69,5° misst.',
+            von: 20, bis: 80, schritt: 1, antwort: 41, einheit: '°', zeichen: '1',
+            anzeige: (w) => `Basiswinkel: je ${dz((180 - w) / 2)}°`,
+          },
+          {
+            frage: 'Zwei Winkel eines Dreiecks messen 63° und 72°. Stelle den <strong>dritten Winkel</strong> ein.',
+            von: 10, bis: 120, schritt: 1, antwort: 45, einheit: '°', zeichen: '5',
+            anzeige: (w) => `Winkelsumme: 63° + 72° + ${w}° = ${135 + w}°`,
+          },
+          {
+            frage: 'Stelle den Winkel so ein, dass er <strong>fünfmal so groß</strong> ist wie sein Nebenwinkel.',
+            von: 90, bis: 175, schritt: 5, antwort: 150, einheit: '°', zeichen: '0',
+            anzeige: (w) => `Nebenwinkel: ${180 - w}° · eingestellter Winkel geteilt durch Nebenwinkel: ${dz(w / (180 - w))}`,
+          },
         ],
-        loesung: '55°, 60°, 40°, 110°, 72°, 50° – kleinster 40°, größter 110°, Summe 150.',
+        tipps: [
+          'Schiebt erst einmal hin und her und beobachtet die Anzeige: Sie zeigt euch, was euer Winkel bewirkt.',
+          'Nebenwinkel ergänzen sich zu 180°. Im gleichschenkligen Dreieck teilen sich die beiden Basiswinkel den Rest zu 180°, und die drei Innenwinkel eines Dreiecks sind zusammen 180°. Für die letzte Lehre hilft eine Gleichung: x = 5 · (180° − x).',
+          '180° − 110° = 70°; 180° − 2 · 69,5° = 180° − 139° = 41°; 180° − 63° − 72° = 45°; x = 5 · (180° − x) ergibt 6x = 900°, also x = 150°. '
+            + 'Einerziffern: 0, 1, 5, 0.',
+        ],
+        loesung: '70°; 41°; 45°; 150° → Einerziffern 0, 1, 5, 0.',
       },
       {
         titel: 'Rätsel 4: Die Latten des Zimmermanns',
@@ -812,52 +1225,91 @@ const GRUNDRAEUME = [
         loesung: 'Möglich: (4|5|7), (3|4|5), (6|6|6), (2|5|6), (7|8|10), (5|5|9). Bei (2|3|5) und (4|5|10) ist die Dreiecksungleichung verletzt. Summe der c: 43.',
       },
       {
-        titel: 'Rätsel 5: Die Winkellehren',
-        text: 'An einem Brett hängen sechs hölzerne Winkellehren. Auf jeder steht, wie ihr Winkel bestimmt '
-          + 'wird – mal über einen Nebenwinkel, mal über die Winkelsumme. Sortiert hängen sie nach Größe, '
-          + 'doch seit der Renovierung hängt keine mehr an ihrem Platz.',
-        auftrag: 'Ordne die Winkel nach ihrer <strong>Größe</strong> – vom kleinsten zum größten.',
-        typ: 'reihenfolge',
-        codeAmEnde: true,
-        saat: 1151,
-        elemente: [
-          { text: 'Innenwinkelsumme eines Dreiecks geteilt durch 4' },
-          { text: 'Basiswinkel bei einem Spitzenwinkel von 80°' },
-          { text: 'Nebenwinkel von 105°' },
-          { text: 'rechter Winkel' },
-          { text: 'Vollwinkel geteilt durch 3' },
-          { text: 'Scheitelwinkel von 128°' },
-        ],
+        titel: 'Rätsel 5: Die Winkelkartei',
+        text: 'In der Schublade unter dem Reißbrett liegt die Winkelkartei des Baumeisters: acht Karten mit '
+          + 'Winkelaufgaben und acht Karten mit Winkelgrößen. Auf der Rückseite des Schubladenbodens ist eine '
+          + 'vierstellige Zahl aufgemalt – sie wird erst sichtbar, wenn jede Aufgabenkarte bei ihrer Winkelgröße '
+          + 'liegt. Seit der Renovierung liegt alles durcheinander im Fach.',
+        auftrag: 'Tippe eine Aufgabenkarte an und dann die passende Winkelkarte. Jedes richtige Paar deckt ein '
+          + 'Stück des Bildes auf. Die Zahl im fertigen Bild ist der Code.',
+        typ: 'legen',
         code: '4550',
-        codeRegel: 'Der Code: die <strong>beiden kleinsten</strong> Winkel – jeweils zweistellig und in dieser Reihenfolge.',
-        tipps: [
-          'Rechne jeden Winkel zuerst aus: Der Vollwinkel misst 360°, der rechte Winkel 90°.',
-          'Scheitelwinkel sind gleich groß, Nebenwinkel ergänzen sich zu 180°. Der Basiswinkel ist (180° − 80°) : 2.',
-          'Die Winkel sind 75°, 45°, 128°, 50°, 120° und 90°. Die beiden kleinsten: 45° und 50°.',
+        zahlbild: '4550',
+        spalten: 4,
+        saat: 1151,
+        titelLinks: 'Winkelaufgabe',
+        titelRechts: 'Winkelgröße',
+        karten: [
+          { rechnung: 'Nebenwinkel von 115°', ergebnis: '65°' },
+          { rechnung: 'Scheitelwinkel von 128°', ergebnis: '128°' },
+          { rechnung: 'dritter Winkel bei 48° und 57°', ergebnis: '75°' },
+          { rechnung: 'Basiswinkel bei Spitzenwinkel 80°', ergebnis: '50°' },
+          { rechnung: 'Spitzenwinkel bei Basiswinkel 72°', ergebnis: '36°' },
+          { rechnung: 'Außenwinkel bei den Innenwinkeln 35° und 60°', ergebnis: '95°' },
+          { rechnung: 'Innenwinkelsumme im Viereck geteilt durch 4', ergebnis: '90°' },
+          { rechnung: 'Vollwinkel geteilt durch 8', ergebnis: '45°' },
         ],
-        loesung: '45° < 50° < 75° < 90° < 120° < 128°.',
+        codeRegel: 'Die Zahl, die das fertige Bild zeigt.',
+        tipps: [
+          'Fangt mit den beiden Karten an, bei denen ihr nichts rechnen müsst: Ein Scheitelwinkel ist genauso groß wie sein Partner, und ein rechter Winkel steckt im Viereck.',
+          'Nebenwinkel ergänzen sich zu 180°, die Innenwinkel eines Dreiecks ebenso. Im gleichschenkligen Dreieck sind die beiden Basiswinkel gleich groß. Ein Außenwinkel ist so groß wie die beiden nicht anliegenden Innenwinkel zusammen. Der Vollwinkel misst 360°, die Innenwinkelsumme im Viereck ebenfalls.',
+          '180° − 115° = 65°; Scheitelwinkel 128°; 180° − 48° − 57° = 75°; (180° − 80°) : 2 = 50°; 180° − 2 · 72° = 36°; '
+            + '35° + 60° = 95°; 360° : 4 = 90°; 360° : 8 = 45°. Das Bild zeigt 4550.',
+        ],
+        loesung: '65°; 128°; 75°; 50°; 36°; 95°; 90°; 45° – das Bild zeigt 4550.',
       },
       {
         titel: 'Rätsel 6: Der Dachstuhl',
         text: 'Im Hinterraum steht das Modell eines Dachstuhls aus Eichenholz. Auf dem Sockel sind vier Fragen '
           + 'eingebrannt – über Basiswinkel, Wechselwinkel, Außenwinkel und über ein Dreieck, dessen Winkel '
-          + 'im Verhältnis 3 : 4 : 5 stehen.',
+          + 'in einem festen Verhältnis stehen.',
         auftrag: 'Beantworte die vier Fragen. Jede richtige Antwort deckt einen Buchstaben auf.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Ein Dachstuhl bildet ein gleichschenkliges Dreieck mit 36° Spitzenwinkel. Wie groß ist ein Basiswinkel?', antwort: '72', einheit: '°', zeichen: 'D' },
-          { frage: 'Zwei Parallelen werden von einer Geraden geschnitten. Ein Wechselwinkel misst 118°. Wie groß ist sein Partner?', antwort: '118', einheit: '°', zeichen: 'A' },
-          { frage: 'Wie groß ist die Summe der drei Außenwinkel eines Dreiecks?', antwort: '360', einheit: '°', zeichen: 'C' },
-          { frage: 'Ein Dreieck hat die Winkel 3x, 4x und 5x. Wie groß ist x?', antwort: '15', einheit: '°', zeichen: 'H' },
-        ],
         code: 'DACH',
         codeRegel: 'Jede richtige Antwort deckt einen Buchstaben auf – von oben nach unten.',
         tipps: [
           'Im gleichschenkligen Dreieck teilen sich die beiden Basiswinkel den Rest zu 180°.',
-          'Wechselwinkel an Parallelen sind gleich groß. Bei 3x + 4x + 5x stellst du eine Gleichung mit der Winkelsumme auf.',
-          '(180 − 36) : 2 = 72°; der Wechselwinkel misst ebenfalls 118°; die Außenwinkelsumme beträgt 360°; 12x = 180 → x = 15°.',
+          'Wechselwinkel an geschnittenen Parallelen sind gleich groß, und zwei Nebenwinkel ergänzen sich zu 180°. Der Außenwinkel an einer Ecke ist so groß wie die beiden Innenwinkel der anderen Ecken zusammen. Beim Winkelverhältnis stellst du mit der Winkelsumme eine Gleichung auf.',
         ],
-        loesung: '72° · 118° · 360° · x = 15° → D, A, C, H.',
+        zufall: (z) => {
+          const wort = 'DACH';   // Buchstabencode bleibt fest, nur die Zahlen würfeln
+          const w = bis(() => {
+            const spitze = z.vielfach(26, 70, 2);
+            const wechsel = z.ganz(95, 150);
+            const innenA = z.ganz(35, 80), innenB = z.ganz(30, 75);
+            // Nur Verhältnisse, deren Summe 180 ohne Rest teilt – und drei verschiedene
+            // Faktoren ab 2, damit der gesuchte Wert x nie einer der Winkel selbst ist.
+            const [v1, v2, v3] = z.aus([
+              [2, 3, 4], [2, 3, 5], [2, 4, 6], [2, 4, 9], [2, 5, 8],
+              [2, 6, 7], [2, 7, 9], [2, 8, 10], [3, 4, 5], [3, 4, 8],
+              [3, 5, 7], [3, 6, 9], [3, 7, 8], [3, 8, 9], [4, 5, 6],
+              [4, 5, 9], [4, 6, 8], [4, 7, 9], [5, 6, 7], [5, 6, 9],
+              [5, 7, 8], [6, 10, 14], [7, 9, 14], [11, 12, 13],
+            ]);
+            return { spitze, wechsel, innenA, innenB, v1, v2, v3,
+              erg: [(180 - spitze) / 2, 180 - wechsel, innenA + innenB, 180 / (v1 + v2 + v3)] };
+          }, (w) => verschieden(w.erg) && w.innenA + w.innenB < 170);
+          const { spitze, wechsel, innenA, innenB, v1, v2, v3 } = w;
+          const basis = (180 - spitze) / 2, neben = 180 - wechsel, aussen = innenA + innenB;
+          const summe = v1 + v2 + v3, x = 180 / summe;
+          const term = (v) => `${v === 1 ? '' : v}x`;
+          return {
+            regel: 'buchstaben',
+            code: wort,
+            aufgaben: [
+              { frage: `Ein Dachstuhl bildet ein gleichschenkliges Dreieck mit ${spitze}° Spitzenwinkel. Wie groß ist ein Basiswinkel?`, antwort: antw(basis), einheit: '°' },
+              { frage: `Zwei Parallelen werden von einer Geraden geschnitten. Ein Wechselwinkel misst ${wechsel}°. Wie groß ist der Nebenwinkel seines Partners?`, antwort: antw(neben), einheit: '°' },
+              { frage: `Ein Dreieck hat die Innenwinkel ${innenA}° und ${innenB}°. Wie groß ist der Außenwinkel an der dritten Ecke?`, antwort: antw(aussen), einheit: '°' },
+              { frage: `Ein Dreieck hat die Winkel ${term(v1)}, ${term(v2)} und ${term(v3)}. Wie groß ist x?`, antwort: antw(x), einheit: '°' },
+            ],
+            tipp: `(180 − ${spitze}) : 2 = ${basis}°; `
+              + `der Partner misst ebenfalls ${wechsel}°, sein Nebenwinkel also 180 − ${wechsel} = ${neben}°; `
+              + `der Außenwinkel an der dritten Ecke ist ${innenA} + ${innenB} = ${aussen}°; `
+              + `${term(v1)} + ${term(v2)} + ${term(v3)} = ${summe}x = 180 → x = ${x}°. `
+              + `Die vier Buchstaben lauten ${wort.split('').join(', ')}.`,
+            loesung: `${basis}°; ${neben}°; ${aussen}°; x = ${x}° → ${wort.split('').join(', ')}.`,
+          };
+        },
       },
     ],
   },
@@ -884,24 +1336,54 @@ const GRUNDRAEUME = [
       {
         titel: 'Rätsel 1: Die Gewinnstatistik',
         text: 'An der Theke hängt die Gewinnstatistik des Tages. Vier Anteile sind nicht zu Ende gerechnet – '
-          + 'rote Felder am Glücksrad, Sechsen beim Würfeln, blaue Kugeln in der Urne. Der Besitzer rechnet '
-          + 'grundsätzlich in Prozent und notiert sich nur die letzte Ziffer.',
+          + 'rote Felder am Glücksrad, Sechsen beim Würfeln, blaue Kugeln in der Urne und die Nieten in der '
+          + 'Lostrommel. Der Besitzer arbeitet dabei mit Prozentangaben und notiert sich nur die letzte Ziffer.',
         auftrag: 'Rechne die vier Aufgaben. Die <strong>Einerziffer</strong> jedes Ergebnisses ist eine Codeziffer.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Ein Glücksrad hat 20 gleich große Felder, 5 davon sind rot. Wie viel Prozent sind rot?', antwort: '25', einheit: '%', zeichen: '5' },
-          { frage: 'Bei 200 Würfen fällt 34-mal die Sechs. Wie groß ist die relative Häufigkeit in Prozent?', antwort: '17', einheit: '%', zeichen: '7' },
-          { frage: 'In einer Urne liegen 12 rote und 8 blaue Kugeln. Wie viel Prozent sind blau?', antwort: '40', einheit: '%', zeichen: '0' },
-          { frage: 'Ein Würfel wird geworfen. Wie viel Prozent beträgt die Wahrscheinlichkeit für eine gerade Zahl?', antwort: '50', einheit: '%', zeichen: '0' },
-        ],
-        code: '5700',
         codeRegel: 'Die Einerziffern der vier Ergebnisse – von oben nach unten.',
         tipps: [
-          'Wahrscheinlichkeit heißt: günstige Fälle geteilt durch alle Fälle.',
-          'Zum Umrechnen in Prozent multiplizierst du den Anteil mit 100: 34 : 200 = 0,17 = 17 %.',
-          '5 : 20 = 25 %; 34 : 200 = 17 %; 8 : 20 = 40 %; 3 : 6 = 50 %.',
+          'Rechne bei jeder Aufgabe zuerst aus, wie viel ein Prozent des Ganzen ist – teile dazu durch 100.',
+          'Ist der Anteil gesucht, teilst du den Teil durch das Ganze und nimmst das Ergebnis mal 100. Zweimal ist nach dem Rest gefragt – gehe dort vom Ganzen aus und ziehe den berechneten Anteil ab.',
         ],
-        loesung: '25 % · 17 % · 40 % · 50 % → Einerziffern 5, 7, 0, 0.',
+        zufall: (z) => {
+          const w = bis(() => {
+            // 1) Prozentwert am Glücksrad: Feldzahl und Prozentsatz passen so zusammen,
+            //    dass die Zahl der roten Felder ganzzahlig wird und über alle Ziffern streut.
+            const felder = z.aus([20, 25]);
+            const satzRot = felder === 20 ? z.vielfach(15, 60, 5) : z.vielfach(16, 60, 4);
+            const rot = (felder * satzRot) / 100;
+            // 2) relative Häufigkeit aus einer Wurfreihe.
+            const wuerfe = z.vielfach(100, 500, 100), haeufig = z.ganz(12, 24);
+            // 3) Urne: Prozentwert und Rest – der Grundwert lässt auch ungerade Ergebnisse zu.
+            const kugeln = z.aus([50, 60]);
+            const satzRotKugel = kugeln === 50 ? z.vielfach(12, 70, 2) : z.vielfach(15, 70, 5);
+            const blau = (kugeln * (100 - satzRotKugel)) / 100;
+            // 4) Gegenereignis in der Lostrommel.
+            const lose = z.vielfach(100, 500, 100), nieten = z.ganz(70, 94);
+            return { felder, satzRot, rot, wuerfe, haeufig, kugeln, satzRotKugel, blau, lose, nieten,
+              erg: [rot, haeufig, blau, nieten] };
+          }, (w) => verschieden(w.erg));
+          const { felder, satzRot, rot, wuerfe, haeufig, kugeln, satzRotKugel, blau, lose, nieten } = w;
+          const sechsen = (wuerfe / 100) * haeufig;
+          const roteKugeln = kugeln - blau;
+          const gewinne = (lose / 100) * (100 - nieten);
+          const ziffern = w.erg.map(einerziffer).join(', ');
+          return {
+            regel: 'einer',
+            aufgaben: [
+              { frage: `Ein Glücksrad hat ${felder} gleich große Felder. ${satzRot} % davon sind rot. Wie viele Felder sind rot?`, antwort: antw(rot), einheit: 'Felder' },
+              { frage: `Bei ${fmt(wuerfe)} Würfen fällt ${sechsen}-mal die Sechs. Wie groß ist die relative Häufigkeit in Prozent?`, antwort: antw(haeufig), einheit: '%' },
+              { frage: `In einer Urne liegen ${kugeln} Kugeln. ${satzRotKugel} % davon sind rot, der Rest ist blau. Wie viele blaue Kugeln sind es?`, antwort: antw(blau), einheit: 'Kugeln' },
+              { frage: `In der Lostrommel liegen ${fmt(lose)} Lose, ${gewinne} davon sind Gewinne. Wie viel Prozent sind Nieten?`, antwort: antw(nieten), einheit: '%' },
+            ],
+            tipp: `${felder} : 100 · ${satzRot} = ${rot} rote Felder; `
+              + `${sechsen} : ${fmt(wuerfe)} = ${fmt(haeufig / 100)} = ${haeufig} %; `
+              + `${kugeln} : 100 · ${satzRotKugel} = ${roteKugeln} rote Kugeln, also ${kugeln} − ${roteKugeln} = ${blau} blaue; `
+              + `${gewinne} : ${fmt(lose)} = ${fmt((100 - nieten) / 100)} = ${100 - nieten} % Gewinne, also 100 % − ${100 - nieten} % = ${nieten} % Nieten. `
+              + `Einerziffern: ${ziffern}.`,
+            loesung: `${rot} Felder; ${haeufig} %; ${blau} Kugeln; ${nieten} % → Einerziffern ${ziffern}.`,
+          };
+        },
       },
       {
         titel: 'Rätsel 2: Die Fragen des Budenbesitzers',
@@ -923,35 +1405,41 @@ const GRUNDRAEUME = [
           'Beim Würfel sind 5 und 6 größer als 4, das sind 2 von 6 Fällen. Bei zwei Münzen gibt es vier Ergebnisse: KK, KZ, ZK, ZZ.',
           'P(größer als 4) = 2/6 = 1/3; Laplace heißt gleich wahrscheinlich; P(zweimal Kopf) = 1/4; die relative Häufigkeit nähert sich der Wahrscheinlichkeit an.',
         ],
-        loesung: '1/3 · gleich wahrscheinlich · 1/4 · Annäherung der relativen Häufigkeit → L, O, S, E.',
+        loesung: '1/3; gleich wahrscheinlich; 1/4; Annäherung der relativen Häufigkeit → L, O, S, E.',
       },
       {
-        titel: 'Rätsel 3: Die Würfelkartei',
-        text: 'In einer Blechdose liegen zwölf Kärtchen: sechs mit Ereignissen beim Würfeln und sechs mit den '
-          + 'zugehörigen Wahrscheinlichkeiten. Der Budenbesitzer hat sie zum Üben gemacht, als ihm die Gäste '
-          + 'ständig erklären wollten, die Sechs komme seltener.',
-        auftrag: 'Ordne jedem Ereignis seine <strong>Wahrscheinlichkeit</strong> zu.',
-        typ: 'zuordnen',
-        titelLinks: 'Ereignis beim Würfeln',
-        titelRechts: 'Wahrscheinlichkeit',
-        codeAmEnde: true,
-        saat: 1259,
-        paare: [
-          { links: 'eine Sechs', rechts: '<sup>1</sup>⁄<sub>6</sub>' },
-          { links: 'eine gerade Zahl', rechts: '<sup>1</sup>⁄<sub>2</sub>' },
-          { links: 'eine Zahl kleiner als 3', rechts: '<sup>1</sup>⁄<sub>3</sub>' },
-          { links: 'keine Sechs', rechts: '<sup>5</sup>⁄<sub>6</sub>' },
-          { links: 'eine Zahl größer als 0', rechts: '1' },
-          { links: 'eine Sieben', rechts: '0' },
-        ],
+        titel: 'Rätsel 3: Die Würfelstrichliste',
+        text: 'An der Innenseite der Bude hängt ein großes Säulendiagramm. Der Budenbesitzer hat an einem '
+          + 'ruhigen Nachmittag immer wieder gewürfelt und für jede Augenzahl gezählt, wie oft sie fiel – '
+          + 'der Beweis, dass die Sechs nicht seltener kommt als alle anderen. Alle Säulen enden genau auf '
+          + 'einer Gitterlinie, geschätzt wird hier nichts.',
+        auftrag: 'Lies die vier Werte aus dem Diagramm ab und rechne, wo gefragt. Jede richtige Antwort deckt eine Ziffer auf.',
+        typ: 'ablesen',
         code: '0203',
-        codeRegel: 'Wenn alle Paare stimmen, erscheint der Code: die <strong>Anzahl der Ereignisse mit einer Wahrscheinlichkeit größer als <sup>1</sup>⁄<sub>2</sub></strong> und die <strong>Anzahl derer mit einer Wahrscheinlichkeit kleiner als <sup>1</sup>⁄<sub>2</sub></strong> – jeweils zweistellig.',
-        tipps: [
-          'Zähle bei jedem Ereignis, wie viele der sechs Augenzahlen dazugehören.',
-          'Ein sicheres Ereignis hat die Wahrscheinlichkeit 1, ein unmögliches die Wahrscheinlichkeit 0. Das Ereignis mit genau 1/2 zählt für den Code bei keiner der beiden Gruppen mit.',
-          'Größer als 1/2 sind 5/6 und 1 – also 2. Kleiner als 1/2 sind 1/6, 1/3 und 0 – also 3. Code 0203.',
+        codeRegel: 'Jede richtige Antwort deckt eine <strong>Ziffer</strong> auf – von oben nach unten.',
+        diagramm: {
+          art: 'saeulen',
+          yName: 'Würfe',
+          ySchritt: 5,
+          yBis: 50,
+          werte: [
+            { name: '1', wert: 30 }, { name: '2', wert: 40 }, { name: '3', wert: 25 },
+            { name: '4', wert: 35 }, { name: '5', wert: 45 }, { name: '6', wert: 25 },
+          ],
+          beschreibung: 'Säulendiagramm der Augenzahlen 1 bis 6 mit den Häufigkeiten 30, 40, 25, 35, 45 und 25',
+        },
+        aufgaben: [
+          { frage: 'Wie oft fiel die Fünf?', antwort: '45', einheit: 'Würfe', zeichen: '0' },
+          { frage: 'Wie oft fiel die Zwei häufiger als die Drei?', antwort: '15', einheit: 'Würfe', zeichen: '2' },
+          { frage: 'Wie viele Würfe hat der Budenbesitzer insgesamt notiert?', antwort: '200', einheit: 'Würfe', zeichen: '0' },
+          { frage: 'Welche relative Häufigkeit hatte die Eins? Gib sie in Prozent an.', antwort: '15', einheit: '%', zeichen: '3' },
         ],
-        loesung: 'Sechs → 1/6; gerade → 1/2; kleiner als 3 → 1/3; keine Sechs → 5/6; größer als 0 → 1; Sieben → 0.',
+        tipps: [
+          'Liest zuerst ab, wie viel ein Abstand zwischen zwei Gitterlinien wert ist – danach geht jede Säule in einem Blick.',
+          'Für die dritte Frage addiert ihr alle sechs Säulen. Für die relative Häufigkeit teilt ihr die Häufigkeit der Eins durch die Gesamtzahl der Würfe und nehmt das Ergebnis mal 100.',
+          'Die Fünf fiel 45-mal; 40 − 25 = 15; 30 + 40 + 25 + 35 + 45 + 25 = 200 Würfe; 30 : 200 = 0,15 = 15 %. → 0, 2, 0, 3.',
+        ],
+        loesung: '45 Würfe; 15 Würfe; 200 Würfe; 15 % → 0, 2, 0, 3.',
       },
       {
         titel: 'Rätsel 4: Die faire Hälfte',
@@ -985,30 +1473,47 @@ const GRUNDRAEUME = [
         loesung: 'Treffer: gerade Zahl (3/6), Kopf (1/2), größer als 3 (3/6), kleiner als 4 (3/6), 5 von 10 Kugeln, 4 von 8 Feldern.',
       },
       {
-        titel: 'Rätsel 5: Die Gewinnchancen',
-        text: 'Sechs Spielstände hat der Jahrmarkt – und jeder wirbt mit einer anderen Gewinnchance. '
-          + 'Mal steht sie als Bruch da, mal als Dezimalzahl, mal in Prozent. Der Budenbesitzer will sie '
-          + 'endlich geordnet an die Tafel hängen, von der kleinsten Chance zur größten.',
-        auftrag: 'Ordne die Gewinnchancen – von der <strong>kleinsten</strong> zur <strong>größten</strong>.',
-        typ: 'reihenfolge',
-        codeAmEnde: true,
-        saat: 1373,
-        elemente: [
-          { text: '0,15' },
-          { text: '<sup>1</sup>⁄<sub>6</sub>' },
-          { text: '0,25' },
-          { text: '30 %' },
-          { text: '<sup>1</sup>⁄<sub>3</sub>' },
-          { text: '<sup>3</sup>⁄<sub>5</sub>' },
-        ],
+        titel: 'Rätsel 5: Die ausgeschnittenen Zahlen',
+        text: 'Im Papierkorb unter der Theke liegen vier zerknüllte Notizzettel. Auf jedem hat der Budenbesitzer '
+          + 'eine Angabe zu einem seiner Spiele festgehalten – und genau die gesuchte Zahl ist herausgeschnitten, '
+          + 'offenbar mit Absicht. Daneben klebt ein Zettel: „Wer rechnen kann, muss nicht raten. Wer klug rät, '
+          + 'kommt aber auch hin."',
+        auftrag: 'Gib eine Zahl ein und tippe auf „Probieren". Jeder Versuch bleibt stehen und meldet '
+          + '<strong>zu klein</strong> oder <strong>zu groß</strong>. Kreise den Wert so ein. '
+          + 'Die Rückmeldungen sind auf drei Stellen gerundet.',
+        typ: 'probieren',
         code: '1560',
-        codeRegel: 'Der Code: die <strong>kleinste</strong> und die <strong>größte</strong> Chance in Prozent – jeweils zweistellig.',
-        tipps: [
-          'Schreibe alle Angaben in derselben Form auf, am besten in Prozent.',
-          '1/6 sind etwa 16,7 %, 1/3 sind etwa 33,3 % und 3/5 sind 60 %.',
-          'Reihenfolge: 0,15 (15 %) < 1/6 (16,7 %) < 0,25 (25 %) < 30 % < 1/3 (33,3 %) < 3/5 (60 %).',
+        codeRegel: 'Die <strong>Einerziffern</strong> der vier gefundenen Zahlen – von oben nach unten.',
+        aufgaben: [
+          {
+            frage: 'Ein Glücksrad hat 7 rote Felder; die Wahrscheinlichkeit für Rot beträgt <sup>1</sup>⁄<sub>3</sub>. Wie viele Felder hat das Rad insgesamt?',
+            antwort: '21', von: 5, bis: 60, einheit: 'Felder', zeichen: '1',
+            pruefe: (x) => `Bei ${dz(x)} Feldern: ${dz(x)} : 7 = ${dz(x / 7)} – bei <sup>1</sup>⁄<sub>3</sub> müsste 3 herauskommen`,
+          },
+          {
+            frage: 'In einer Urne liegen 12 rote Kugeln. Wie viele Kugeln müssen insgesamt darin liegen, damit die Wahrscheinlichkeit für Rot 0,8 beträgt?',
+            antwort: '15', von: 5, bis: 40, einheit: 'Kugeln', zeichen: '5',
+            pruefe: (x) => (x > 0
+              ? `12 rote von ${dz(x)} Kugeln: P(Rot) = ${dz(12 / x)}`
+              : 'In der Urne müssen mehr als null Kugeln liegen.'),
+          },
+          {
+            frage: 'Ein zweistufiger Versuch: erst eine Drehung am Glücksrad, dann ein Wurf mit einem Würfel. Das Baumdiagramm hat 96 Pfade. Wie viele Felder hat das Rad?',
+            antwort: '16', von: 2, bis: 40, einheit: 'Felder', zeichen: '6',
+            pruefe: (x) => `${dz(x)} · 6 = ${dz(6 * x)} Pfade`,
+          },
+          {
+            frage: 'Bei 400 Würfen fiel die Sechs so oft, dass ihre relative Häufigkeit 15 % betrug. Wie oft fiel sie?',
+            antwort: '60', von: 20, bis: 120, einheit: 'Würfe', zeichen: '0',
+            pruefe: (x) => `${dz(x)} : 400 = ${dz(x / 400)} = ${dz((100 * x) / 400)} %`,
+          },
         ],
-        loesung: '15 % < 16,7 % < 25 % < 30 % < 33,3 % < 60 % – kleinste 15 %, größte 60 %.',
+        tipps: [
+          'Fang mit einem Versuch mitten im Bereich an. Jede Rückmeldung halbiert den Bereich, in dem die Zahl noch liegen kann.',
+          'Du kannst jede Aufgabe auch rückwärts rechnen. Bei einem Bruch fragst du: Welcher Anteil der Felder ist rot – und wie oft passt dieser Anteil ins Ganze? Ein Baumdiagramm hat so viele Pfade, wie das Produkt der Astzahlen beider Stufen angibt. Und einen Prozentwert von 400 bekommst du bequem über 1 %.',
+          '7 · 3 = 21 Felder; 12 : 0,8 = 15 Kugeln; 96 : 6 = 16 Felder; 400 : 100 · 15 = 60 Würfe. Einerziffern: 1, 5, 6, 0.',
+        ],
+        loesung: '21 Felder; 15 Kugeln; 16 Felder; 60 Würfe → Einerziffern 1, 5, 6, 0.',
       },
       {
         titel: 'Rätsel 6: Das rote Feld',
@@ -1017,20 +1522,71 @@ const GRUNDRAEUME = [
           + 'Erst wenn alle vier stimmen, gibt der Kassenschrank nach.',
         auftrag: 'Beantworte die vier Fragen. Jede richtige Antwort deckt einen Buchstaben auf.',
         typ: 'rechnen',
-        aufgaben: [
-          { frage: 'Ein Glücksrad hat 12 Felder, 4 sind rot. Wie viele Felder müssen rot sein, damit die Wahrscheinlichkeit für Rot genau <sup>1</sup>⁄<sub>2</sub> beträgt?', antwort: '6', einheit: 'Felder', zeichen: 'R' },
-          { frage: 'Zwei Würfel werden geworfen. Wie viele verschiedene Ergebnisse (Zahlenpaare) gibt es?', antwort: '36', einheit: 'Ergebnisse', zeichen: 'O' },
-          { frage: 'In einer Urne liegen 15 Kugeln, die Wahrscheinlichkeit für Rot beträgt <sup>2</sup>⁄<sub>5</sub>. Wie viele rote Kugeln sind es?', antwort: '6', einheit: 'Kugeln', zeichen: 'T' },
-          { frage: 'Eine Münze wird dreimal geworfen. Wie viele Pfade hat das Baumdiagramm?', antwort: '8', einheit: 'Pfade', zeichen: 'E' },
-        ],
         code: 'ROTE',
         codeRegel: 'Jede richtige Antwort deckt einen Buchstaben auf – von oben nach unten.',
         tipps: [
-          'Die Hälfte von 12 Feldern ist schnell gefunden.',
-          'Bei zwei Würfeln hat jeder 6 Möglichkeiten: 6 · 6. Bei drei Münzwürfen verdoppelt sich die Anzahl der Pfade mit jeder Stufe.',
-          '12 : 2 = 6 Felder; 6 · 6 = 36 Ergebnisse; 15 : 5 · 2 = 6 Kugeln; 2 · 2 · 2 = 8 Pfade.',
+          'Rechne bei den Wahrscheinlichkeiten zuerst aus, zu wie vielen Feldern oder Kugeln der genannte Bruch gehört: Teile durch den Nenner und nimm das Ergebnis mal den Zähler.',
+          'Bei zwei Würfeln hilft eine Tabelle aller 36 Augenpaare – zähle darin die günstigen Felder. Bei einem zweistufigen Versuch multiplizierst du die Zahl der Möglichkeiten der ersten Stufe mit der Zahl der Möglichkeiten der zweiten.',
         ],
-        loesung: '6 Felder · 36 Ergebnisse · 6 Kugeln · 8 Pfade → R, O, T, E.',
+        zufall: (z) => {
+          const wort = 'ROTE';   // Buchstabencode bleibt fest, nur die Zahlen würfeln
+          const anzahlPaare = (s) => 6 - Math.abs(7 - s);
+          const geraet = (n) => (n === 2 ? 'ein Wurf mit einer Münze'
+            : n === 6 ? 'ein Wurf mit einem Würfel'
+              : `eine Drehung an einem Glücksrad mit ${n} Feldern`);
+          const w = bis(() => {
+            // 1) Zielanteil als Bruch – der Bruch würfelt mit, die Zahl der roten Felder auch.
+            const [zaR, neR] = z.aus([[1, 2], [1, 3], [2, 3], [1, 4], [3, 4], [2, 5], [3, 5], [5, 6]]);
+            const vielfaches = z.ganz(Math.ceil(9 / neR), Math.floor(24 / neR));
+            const felder = neR * vielfaches, ziel = zaR * vielfaches;
+            const rot = z.ganz(1, ziel - 1);
+            // 2) zwei Würfel, Augensumme mindestens – gibt deutlich mehr mögliche Antworten
+            //    als die Frage nach genau einer Augensumme.
+            const summe = z.ganz(4, 11);
+            // 3) Urne mit Bruchangabe.
+            const [za, ne] = z.aus([[2, 5], [1, 3], [2, 3], [3, 4], [1, 4], [3, 5], [1, 5], [5, 6], [1, 6], [2, 7], [3, 7]]);
+            const teile = z.ganz(2, 5);
+            // 4) zweistufiger Versuch (Lehrplan Jg. 7: höchstens zwei Stufen) –
+            //    die Pfadzahl würfelt über die Astzahl je Stufe.
+            const stufe1 = z.aus([2, 3, 4, 5]), stufe2 = z.ganz(3, 8);
+            let paareAbSumme = 0;
+            for (let s = summe; s <= 12; s++) paareAbSumme += anzahlPaare(s);
+            return { zaR, neR, felder, ziel, rot, summe, za, ne, teile, stufe1, stufe2,
+              erg: [ziel - rot, paareAbSumme, za * teile, stufe1 * stufe2] };
+          }, (w) => verschieden(w.erg) && w.ziel - w.rot >= 1 && w.stufe1 !== w.stufe2);
+          const { zaR, neR, felder, ziel, rot, summe, za, ne, teile, stufe1, stufe2 } = w;
+          const fehlend = ziel - rot;
+          let guenstig = 0;
+          for (let s = summe; s <= 12; s++) guenstig += anzahlPaare(s);
+          const kugeln = ne * teile, rote = za * teile;
+          const pfade = stufe1 * stufe2;
+          // Für den Lösungsweg die kürzere der beiden Abzählungen wählen.
+          const liste = [];
+          if (summe <= 7) {
+            for (let s = 2; s < summe; s++) liste.push(`Augensumme ${s} kommt ${anzahlPaare(s)}-mal vor`);
+          } else {
+            for (let s = summe; s <= 12; s++) liste.push(`Augensumme ${s} kommt ${anzahlPaare(s)}-mal vor`);
+          }
+          const wegSumme = summe <= 7
+            ? `${liste.join(', ')} – zusammen ${36 - guenstig} Fälle, also 36 − ${36 - guenstig} = ${guenstig} Ergebnisse mit mindestens ${summe}`
+            : `${liste.join(', ')} – zusammen ${guenstig} Ergebnisse mit mindestens ${summe}`;
+          return {
+            regel: 'buchstaben',
+            code: wort,
+            aufgaben: [
+              { frage: `Ein Glücksrad hat ${felder} Felder, ${rot} davon sind rot. Wie viele weitere Felder müssen rot werden, damit die Wahrscheinlichkeit für Rot genau <sup>${zaR}</sup>⁄<sub>${neR}</sub> beträgt?`, antwort: antw(fehlend), einheit: 'Felder' },
+              { frage: `Zwei Würfel werden geworfen. Bei wie vielen der 36 Ergebnisse ist die Augensumme mindestens ${summe}?`, antwort: antw(guenstig), einheit: 'Ergebnisse' },
+              { frage: `In einer Urne liegen ${kugeln} Kugeln, die Wahrscheinlichkeit für Rot beträgt <sup>${za}</sup>⁄<sub>${ne}</sub>. Wie viele rote Kugeln sind es?`, antwort: antw(rote), einheit: 'Kugeln' },
+              { frage: `An einem Stand folgen zwei Spiele aufeinander: ${geraet(stufe1)}, danach ${geraet(stufe2)}. Wie viele Pfade hat das Baumdiagramm dieses zweistufigen Versuchs?`, antwort: antw(pfade), einheit: 'Pfade' },
+            ],
+            tipp: `${felder} : ${neR} · ${zaR} = ${ziel} rote Felder wären nötig, also fehlen ${ziel} − ${rot} = ${fehlend}; `
+              + `${wegSumme}; `
+              + `${za}/${ne} von ${kugeln} = ${kugeln} : ${ne} · ${za} = ${rote} Kugeln; `
+              + `${stufe1} · ${stufe2} = ${pfade} Pfade. `
+              + `Die vier Buchstaben lauten ${wort.split('').join(', ')}.`,
+            loesung: `${fehlend} Felder; ${guenstig} Ergebnisse; ${rote} Kugeln; ${pfade} Pfade → ${wort.split('').join(', ')}.`,
+          };
+        },
       },
     ],
   },
@@ -1038,5 +1594,5 @@ const GRUNDRAEUME = [
 
 export default {
   stufe: 7,
-  raeume: [...GRUNDRAEUME, ...weitereRaeume],
+  raeume: [...GRUNDRAEUME, ...weitereRaeume, ...sportRaeume],
 };
